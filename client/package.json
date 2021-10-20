@@ -1,0 +1,17 @@
+{
+  "name": "shuli_client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@vuepress/theme-vue": "^1.8.2",
+    "vuepress": "^1.8.2",
+    "vuepress-theme-vdoing": "^1.8.3"
+  }
+}
