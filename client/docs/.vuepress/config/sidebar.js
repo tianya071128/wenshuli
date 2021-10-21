@@ -9,7 +9,8 @@ module.exports = {
       children: [
         // 这个表示的是路径?
         '01_html/01_index',
-        '01_html/02_meta',
+        '01_html/02_head',
+        '01_html/03_meta',
       ]
     },
   ],

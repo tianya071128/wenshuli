@@ -10,8 +10,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@vuepress/plugin-back-to-top": "^1.8.2",
     "@vuepress/theme-vue": "^1.8.2",
+    "dayjs": "^1.10.7",
     "vuepress": "^1.8.2",
+    "vuepress-plugin-thirdparty-search": "^1.0.2",
+    "vuepress-plugin-zooming": "^1.1.8",
     "vuepress-theme-vdoing": "^1.8.3"
   }
 }
