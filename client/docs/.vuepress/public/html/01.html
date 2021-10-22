@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      div {
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sign" title="我是提示信息" id="title">
+      我是有一个有提示信息的 div
+    </div>
+    <div class="sign" contenteditable="true" id="contenteditable">
+      双击我, 我可以编辑的
+    </div>
+    <div class="sign" id="dir" dir="rtl">
+      我是文本从右边开始的
+    </div>
+    <div class="sign" id="draggable" draggable="true">
+      可拖拽元素
+    </div>
+    <div
+      class="sign"
+      id="hidden"
+      onclick="((that) => { that.setAttribute('hidden', 'true'); })(this)"
+    >
+      点击就会添加 hidden 属性将其隐藏
+    </div>
+    <div class="sign" id="tabindex">
+      <input type="text" value="tabindex: 1" tabindex="1" />
+      <input type="text" value="我是负数, 不能通过 tab 切换" tabindex="-1" />
+      <input type="text" value="tabindex: 3" tabindex="3" />
+      <input type="text" value="tabindex: 2" tabindex="2" />
+      <input type="text" value="tabindex: 4" tabindex="4" />
+    </div>
+  </body>
+</html>
+<script>
+  const test = new URLSearchParams(location.search).get("test");
+  for (const dom of document.body.querySelectorAll(".sign")) {
+    if (dom.id !== test) {
+      dom.parentNode.removeChild(dom);
+    }
+  }
+</script>
