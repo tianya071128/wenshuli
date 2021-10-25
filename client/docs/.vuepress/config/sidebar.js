@@ -12,6 +12,7 @@ module.exports = {
         "01_html/02_全局属性",
         "01_html/03_head",
         "01_html/04_meta",
+        "01_html/05_img图片",
       ],
     },
     // {
