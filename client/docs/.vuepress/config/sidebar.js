@@ -4,7 +4,7 @@ module.exports = {
   "/01_前端/": [
     {
       title: "基础标签", // 分组标题
-      collapsable: false, // 是否可折叠，可选的，默认true
+      collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
         // 这个表示的是路径?
@@ -17,7 +17,7 @@ module.exports = {
     },
     // {
     //   title: "表单", // 分组标题
-    //   collapsable: false, // 是否可折叠，可选的，默认true
+    //   collapsable: true, // 是否可折叠，可选的，默认true
     //   sidebarDepth: 2, // 深度，可选的, 默认值是 1
     //   children: [
     //     // 这个表示的是路径?
@@ -27,5 +27,16 @@ module.exports = {
     //     "01_html/04_meta",
     //   ],
     // },
+  ],
+  "/05_其他/": [
+    {
+      title: "HTTP", // 分组标题
+      collapsable: true, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: [
+        // 这个表示的是路径?
+        "01_http/01_index",
+      ],
+    },
   ],
 };

@@ -8,4 +8,10 @@ module.exports = [
       { text: 'css', link: '/css/' },
     ],
   },
+  {
+    text: '其他',
+    items: [
+      { text: 'http', link: '/http/' },
+    ],
+  },
 ]
