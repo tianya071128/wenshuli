@@ -13,9 +13,18 @@
     "@vuepress/plugin-back-to-top": "^1.8.2",
     "@vuepress/theme-vue": "^1.8.2",
     "dayjs": "^1.10.7",
+    "install": "^0.13.0",
+    "less": "^4.1.2",
+    "less-loader": "^10.2.0",
+    "npm": "^8.1.1",
     "vuepress": "^1.8.2",
     "vuepress-plugin-thirdparty-search": "^1.0.2",
     "vuepress-plugin-zooming": "^1.1.8",
     "vuepress-theme-vdoing": "^1.8.3"
+  },
+  "dependencies": {
+    "async-validator": "^1.11.5",
+    "axios": "^0.24.0",
+    "element-ui": "^2.15.6"
   }
 }
