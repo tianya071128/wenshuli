@@ -11,7 +11,14 @@ module.exports = {
   markdown: {
     lineNumbers: true, // 代码行号
   },
-  
+  devServer: {
+    proxy: {
+      '/vuepress_test': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      }
+    }
+  },
   plugins,
   head, // 额外的需要被注入到当前页面的 HTML <head> 中的标签
   themeConfig, // 主题配置 - 暂时使用默认主题
