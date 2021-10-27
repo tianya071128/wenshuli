@@ -1,3 +1,6 @@
+const fs = require('fs').promises;
+const path = require('path');
+
 module.exports = {
   // 测试缓存
   cache({ res }) {
@@ -6,8 +9,7 @@ module.exports = {
     res.end("测试是否会缓存");
   },
   // 测试状态码
-  status({ req, res, query, getHeader }) {
-    console.log(getHeader('authorization'));
+  status({ res, query, getHeader }) {
     if (getHeader('authorization')) {
       res.writeHead(200, {
         "Content-Type": "text/plain; charset=utf-8",
@@ -26,4 +28,14 @@ module.exports = {
     });
     res.end("状态码");
   },
+  // 测试内容编码
+  async encoding({ res }) {
+    const data = await fs.readFile(path.join(__dirname, '../assets/1.txt.gz'));
+
+    res.writeHead(200, {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Encoding": "gzip"
+    });
+    res.end(data);
+  }
 };

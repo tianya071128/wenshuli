@@ -38,6 +38,7 @@ module.exports = {
         "01_http/01_index",
         "01_http/02_method",
         "01_http/03_status",
+        "01_http/04_content",
       ],
     },
   ],

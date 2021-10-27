@@ -1,32 +1,37 @@
-const httpController = require('../controller/http');
+const httpController = require("../controller/http");
 
-const basePath = '/vuepress_test';
-const  routers = [
+const basePath = "/vuepress_test";
+const routers = [
   {
-    method: ['get', 'post', 'head'],
-    path: '/http/cache',
+    method: ["get", "post", "head"],
+    path: "/http/cache",
     controller: httpController.cache,
   },
   {
-    method: ['get'],
-    path: '/http/status',
+    method: ["get"],
+    path: "/http/status",
     controller: httpController.status,
-  }
+  },
+  {
+    method: ["get"],
+    path: "/http/encoding",
+    controller: httpController.encoding,
+  },
 ];
 const conterollers = routers.reduce(function (total, item) {
   return {
     ...total,
-    ...(Array.isArray(item.method) ? item.method : [item.method]).reduce((total2, item2) => {
-      return {
-        ...total2,
-        [`${basePath}${item.path}_${item2}`]: item.controller
-      }
-    }, {})
-  }
-}, {})
-
-
-
+    ...(Array.isArray(item.method) ? item.method : [item.method]).reduce(
+      (total2, item2) => {
+        return {
+          ...total2,
+          [`${basePath}${item.path}_${item2}`]: item.controller,
+        };
+      },
+      {}
+    ),
+  };
+}, {});
 
 module.exports = async function staticMiddeware(ctx) {
   const ctx2 = { ...ctx };

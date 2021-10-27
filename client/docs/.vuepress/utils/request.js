@@ -3,7 +3,7 @@
  * @Author: 温祖彪
  * @Date: 2021-09-17 10:28:35
  * @LastEditors: sueRimn
- * @LastEditTime: 2021-10-26 11:45:22
+ * @LastEditTime: 2021-10-27 15:51:36
  */
 import axios from 'axios';
 import { Loading } from 'element-ui';
@@ -33,7 +33,7 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   response => {
     loadingInstance.close();
-
+    console.log(response);
     return response;
   },
   error => {
