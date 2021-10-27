@@ -1,11 +1,18 @@
 const httpController = require('../controller/http');
 
 const basePath = '/vuepress_test';
-const  routers = [{
-  method: ['get', 'post', 'head'],
-  path: '/http/cache',
-  controller: httpController.cache,
-}];
+const  routers = [
+  {
+    method: ['get', 'post', 'head'],
+    path: '/http/cache',
+    controller: httpController.cache,
+  },
+  {
+    method: ['get'],
+    path: '/http/status',
+    controller: httpController.status,
+  }
+];
 const conterollers = routers.reduce(function (total, item) {
   return {
     ...total,

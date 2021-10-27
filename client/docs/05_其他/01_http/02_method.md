@@ -3,8 +3,8 @@ title: HTTP 请求方法
 date: 2021-10-21 15:00:00
 permalink: /http/method
 categories: 
-  - 前端
-  - HTML
+  - 其他
+  - HTTP
 tags: 
   - null
 ---

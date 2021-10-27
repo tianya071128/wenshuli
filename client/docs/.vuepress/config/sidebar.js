@@ -37,6 +37,7 @@ module.exports = {
         // 这个表示的是路径?
         "01_http/01_index",
         "01_http/02_method",
+        "01_http/03_status",
       ],
     },
   ],

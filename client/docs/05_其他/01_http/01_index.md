@@ -3,8 +3,8 @@ title: HTTP 介绍
 date: 2021-10-21 15:00:00
 permalink: /http/
 categories: 
-  - 前端
-  - HTML
+  -- 其他
+  -- HTTP
 tags: 
   - null
 ---

@@ -3,7 +3,7 @@
  * @Author: 温祖彪
  * @Date: 2021-10-26 11:03:45
  * @LastEditors: sueRimn
- * @LastEditTime: 2021-10-26 16:34:59
+ * @LastEditTime: 2021-10-27 09:24:54
 -->
 <template>
   <div class="http-test">
@@ -12,6 +12,7 @@
       <el-button type="primary" @click="sendPOST">发送 POST 请求, 不会缓存</el-button>
     </template>
     <el-button v-else-if="type === 'head'" type="primary" @click="sendHEAD">发送 HEAD 请求, 响应体不会接收到</el-button>
+    <el-button v-else-if="type === 'status'" type="primary" @click="sendStatus">发送请求, 查看状态码</el-button>
   </div>
 </template>
 
@@ -19,7 +20,8 @@
 export default {
   name: 'HttpTest',
   props: {
-    type: String
+    type: String,
+    status: String,
   },
   methods: {
     sendGET() {
@@ -31,6 +33,9 @@ export default {
     sendHEAD() {
       this.$http.head('/http/cache');
     },
+    sendStatus() {
+      this.$http.get('/http/status', { params: { status: this.status } });
+    }
   }
 }
 </script>
