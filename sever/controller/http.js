@@ -25,6 +25,7 @@ module.exports = {
     }
     res.writeHead(parseInt(query.status), {
       "Content-Type": "text/plain; charset=utf-8",
+      
     });
     res.end("状态码");
   },
