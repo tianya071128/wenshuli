@@ -40,6 +40,7 @@ module.exports = {
         "01_http/03_status",
         "01_http/04_content",
         "01_http/05_connection",
+        "01_http/06_cookie",
       ],
     },
   ],
