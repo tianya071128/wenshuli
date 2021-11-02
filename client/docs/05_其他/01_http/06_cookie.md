@@ -98,3 +98,6 @@ Cookie 一般带有用户信息的凭证, 需要保证 Cookie 一定的安全性
 
   参考文档: [SameSite 属性](https://www.ruanyifeng.com/blog/2019/09/cookie-samesite.html)、[SameSite 小识](https://zhuanlan.zhihu.com/p/121048298)
 
+  ## 跨域 Cookie
+  待续
+

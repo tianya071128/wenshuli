@@ -17,6 +17,11 @@ const routers = [
     path: "/http/encoding",
     controller: httpController.encoding,
   },
+  {
+    method: ["get"],
+    path: "/http/pragma",
+    controller: httpController.pragma,
+  },
 ];
 const conterollers = routers.reduce(function (total, item) {
   return {

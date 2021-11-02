@@ -38,5 +38,12 @@ module.exports = {
       "Content-Encoding": "gzip"
     });
     res.end(data);
+  },
+  // 测试 pragma 缓存 and 优先级
+  async pragma({ res }) {
+    res.setHeader("Cache-Control", "max-age=60");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.end("hello words");
   }
 };
