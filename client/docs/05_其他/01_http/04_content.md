@@ -63,7 +63,7 @@ Accept: text/html,application/xhtml+xml,application/xml;q=0.9
 Content-Type: text/html; charset=UTF-8
 ```
 
-## 数据编码协商
+## 数据编码(压缩)协商
 
 HTTP 有时为了节约带宽, 会对实体数据进行压缩, 此时就需要告诉客户端压缩方式, 以便客户端进行数据解压
 
