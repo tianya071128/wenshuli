@@ -43,6 +43,7 @@ module.exports = {
         "01_http/05_connection",
         "01_http/06_cookie",
         "01_http/07_cache",
+        "01_http/09_cors",
       ],
     },
   ],

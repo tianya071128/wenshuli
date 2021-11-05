@@ -45,5 +45,16 @@ module.exports = {
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.end("hello words");
+  },
+  // 测试跨域
+  async cors({res}) {
+    res.writeHead(200, {
+      "Access-Control-Allow-Origin": '*',
+      "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+      "Access-Control-Allow-Methods": "PUT, POST, GET, DELETE, OPTIONS",
+      "Access-Control-Allow-Credentials": true
+    });
+
+    res.end("跨域请求");
   }
 };
