@@ -49,10 +49,23 @@ module.exports = {
   // 测试跨域
   async cors({res}) {
     res.writeHead(200, {
+      "Content-Type": "text/plain; charset=utf-8",
       "Access-Control-Allow-Origin": '*',
       "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
       "Access-Control-Allow-Methods": "PUT, POST, GET, DELETE, OPTIONS",
-      "Access-Control-Allow-Credentials": true
+      "Access-Control-Allow-Credentials": true,
+      "Access-Control-Max-Age": 60 * 1000
+    });
+
+    res.end("跨域请求");
+  },
+  corsCookie({ res, getHeader }) {
+    res.writeHead(200, {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Access-Control-Allow-Origin": getHeader('Origin'),
+      "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+      "Access-Control-Allow-Methods": "PUT, POST, GET, DELETE, OPTIONS",
+      "Access-Control-Allow-Credentials": true,
     });
 
     res.end("跨域请求");

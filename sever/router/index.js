@@ -23,9 +23,14 @@ const routers = [
     controller: httpController.pragma,
   },
   {
-    method: ["get", "post", "head", "delete"],
+    method: ["get", "post", "head", "delete", "put", "options"],
     path: "/http/cors",
     controller: httpController.cors,
+  },
+  {
+    method: ["get"],
+    path: "/http/corsCookie",
+    controller: httpController.corsCookie,
   },
 ];
 const conterollers = routers.reduce(function (total, item) {

@@ -124,6 +124,17 @@ Origin: http://localhost:8080
 ...
 ```
 
+对于响应报文，通过以下字段判断是否可以跨域
+
+* Access-Control-Allow-Origin：**必须**， 表示能够接受的域名（* 表示接受所有的域名）。
+
+* Access-Control-Allow-Methods： **必需字段**，允许的方法。当后续请求方法不在列表中，则不允许跨域
+* Access-Control-Allow-Headers：如果浏览器请求包括`Access-Control-Request-Headers`字段，则`Access-Control-Allow-Headers`字段是必需的。允许的自定义字段
+* Access-Control-Allow-Credentials：可选字段，是否允许发送 cookie。
+* Access-Control-Max-Age：可选字段，本次预检请求的有效期，单位为秒。
+
+浏览器会根据 `Access-Control-Allow-Origin`、`Access-Control-Allow-Methods`、`Access-Control-Allow-Headers` 字段综合判断是否允许该请求跨域
+
 ::: tip 测试
 
 <http-test type="非简单请求"/>
@@ -132,5 +143,37 @@ Origin: http://localhost:8080
 
 :::
 
+### 预检请求后的请求
 
+预览请求通过后，浏览器会像发送简单请求一样，添加 `Origin` 请求字段，服务器还是需要返回 `Access-Control-Allow-Origin`
+
+## 跨域 cookie
+
+一般而言，对于跨域请求，浏览器默认不会发送 cookie，需要经过如下设置才会发送
+
+* 对于浏览器：需要将 xhr 的 withCredentials` 标志设置为 `true，从而向服务器发送 cookie
+* 对于服务器：需要设置响应首部字段 `Access-Control-Allow-Credentials: true`，并且 `Access-Control-Allow-Origin` 的值不能为 true
+
+而且对于简单请求和非简单请求，策略也不相同：
+
+* 简单请求：因为没有预检请求，如果 xhr 的 withCredentials 标志设置为 true，那么直接会发送 cookie 到服务器，但是如果服务器不允许发送 cookie，那么响应会失败
+
+  ::: tip 测试
+
+  <http-test type="简单请求cookie"/> 
+
+  发送这个请求，因为 `Access-Control-Allow-Origin: *`，所以这个请求跨域失败
+
+  <http-test type="简单请求cookieOk"/> 
+
+  发送这个请求，就会成功
+
+  :::
+
+* 非简单请求：会根据预检请求返回机制，判断是否允许发送 cookie
+
+## 参考资料
+
+* [阮一峰-跨域资源共享 CORS 详解](http://www.ruanyifeng.com/blog/2016/04/cors.html)
+* [MDN-跨源资源共享（CORS）](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/CORS)
 

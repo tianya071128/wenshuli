@@ -3,7 +3,7 @@
  * @Author: 温祖彪
  * @Date: 2021-10-26 11:03:45
  * @LastEditors: sueRimn
- * @LastEditTime: 2021-11-05 17:32:41
+ * @LastEditTime: 2021-11-08 09:42:24
 -->
 <template>
   <div class="http-test">
@@ -18,6 +18,8 @@
     <el-button v-else-if="type === 'cacheControl'" type="primary" @click="sendGET">只存在 Cache-Control 时, 会进行强缓存, </el-button>
     <el-button v-else-if="type === '简单请求'" type="primary" @click="sendJiandan">发送简单请求 </el-button>
     <el-button v-else-if="type === '非简单请求'" type="primary" @click="sendFeiJiandan">发送非简单请求 </el-button>
+    <el-button v-else-if="type === '简单请求cookie'" type="primary" @click="sendFeiJiandanCookie">简单请求-cookie </el-button>
+    <el-button v-else-if="type === '简单请求cookieOk'" type="primary" @click="sendFeiJiandanCookieOk">简单请求-cookie </el-button>
   </div>
 </template>
 
@@ -52,6 +54,12 @@ export default {
     },
     sendFeiJiandan() {
       this.$http.put(`${process.env.BASE_URL}/http/cors`, {}, { headers: {'X-Requested-With': 'XMLHttpRequest'} });
+    },
+    sendFeiJiandanCookie() {
+      this.$http.get(`${process.env.BASE_URL}/http/cors`,{ withCredentials: true });
+    },
+    sendFeiJiandanCookieOk() {
+      this.$http.get(`${process.env.BASE_URL}/http/corsCookie`,{ withCredentials: true });
     }
   }
 }
