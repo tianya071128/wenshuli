@@ -48,6 +48,15 @@
         </div>
       </div>
     </div>
+    <div v-if="type === 'imgUpdateNode'">
+      <a href="javascript: void(0)" @click="updateNode"
+        >点击下载下面图片（百度翻译中找的图片，通过 Node 返回二进制图片数据下载）</a
+      ><br /><br />
+      <img
+        src="https://fanyi-cdn.cdn.bcebos.com/static/translation/widget/footer/Products/img/product-desktop@2x_c85778a.png"
+        alt=""
+      />
+    </div>
   </div>
 </template>
 
@@ -73,7 +82,7 @@ export default {
           // 下载图片
           const aTag = document.createElement("a");
           aTag.href = canvas.toDataURL("image/png");
-          aTag.download = '下载图片.png';
+          aTag.download = "下载图片.png";
           aTag.click();
         } catch (err) {
           console.log("Error: " + err);
@@ -87,6 +96,18 @@ export default {
       // 在图片加载完成后, 通过 canvas 下载图片
       downloadedImg.addEventListener("load", imageReceived, false);
       downloadedImg.src = imageURL;
+    },
+    async updateNode() {
+      const data = await this.$http.get("/html/getImg", {
+        responseType: "arraybuffer",
+      });
+      console.log(Object.prototype.toString.call(data.data))
+      const myBolb = new Blob([data.data], { type: data.headers["content-type"] });
+      const imageUrl = (window.URL || window.webkitURL).createObjectURL(myBolb);
+      const aTag = document.createElement("a");
+      aTag.href = imageUrl;
+      aTag.download = "下载图片.png";
+      aTag.click();
     },
   },
 };

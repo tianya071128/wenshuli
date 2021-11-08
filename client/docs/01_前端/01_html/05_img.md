@@ -97,7 +97,13 @@ imgDOM.addEventListener('load', function (e) {
 
   **图片是有版权的, 如果没有授权的话, 还是要尊重原创的**
 
-  * 可以利用服务器去请求这张图片, 将图片的二进制信息传回给前端, 前端进行二进制数据下载? => 待验证
+  * 可以利用服务器去请求这张图片, 将图片的二进制信息传回给前端, 前端进行二进制数据下载
+
+    ::: tip 测试
+
+    <html-test type="imgUpdateNode" />
+
+    :::
 
   * 图片启动 `CORS` 跨域支持
 
@@ -106,11 +112,11 @@ imgDOM.addEventListener('load', function (e) {
     ::: tip 测试
 
     这种方式需要服务器配合, 可以对图片响应正确 `Access-Control-Allow-Origin` 响应头的服务器
-
+  
     <html-test type="imgUpdate" status="cors" />
-
+  
     :::
-
+  
     ```js
     let imageURL = `${this.BASE_URL}/public/01.jpg`;
     let downloadedImg = new Image();``
@@ -139,7 +145,7 @@ imgDOM.addEventListener('load', function (e) {
          }
     }
     ```
-    
+  
     
 
 ## 图片懒加载

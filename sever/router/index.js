@@ -1,4 +1,5 @@
 const httpController = require("../controller/http");
+const htmlController = require("../controller/html");
 
 const basePath = "/vuepress_test";
 const routers = [
@@ -31,6 +32,11 @@ const routers = [
     method: ["get"],
     path: "/http/corsCookie",
     controller: httpController.corsCookie,
+  },
+  {
+    method: ["get"],
+    path: "/html/getImg",
+    controller: htmlController.getImg,
   },
 ];
 const conterollers = routers.reduce(function (total, item) {
