@@ -3,13 +3,18 @@
  * @Author: 温祖彪
  * @Date: 2021-10-26 11:03:45
  * @LastEditors: sueRimn
- * @LastEditTime: 2021-11-08 09:42:24
+ * @LastEditTime: 2021-11-08 10:20:14
 -->
 <template>
   <div class="http-test">
-    <template v-if="type === 'cache'">cacheControl
-      <el-button type="primary" @click="sendGET">发送 GET 请求, 会缓存</el-button>
-      <el-button type="primary" @click="sendPOST">发送 POST 请求, 不会缓存</el-button>
+    <template v-if="type === 'cache'"
+      >cacheControl
+      <el-button type="primary" @click="sendGET"
+        >发送 GET 请求, 会缓存</el-button
+      >
+      <el-button type="primary" @click="sendPOST"
+        >发送 POST 请求, 不会缓存</el-button
+      >
     </template>
     <el-button v-else-if="type === 'head'" type="primary" @click="sendHEAD">发送 HEAD 请求, 响应体不会接收到</el-button>
     <el-button v-else-if="type === 'status'" type="primary" @click="sendStatus">发送请求, 查看状态码</el-button>
@@ -35,7 +40,7 @@ export default {
       this.$http.get('/http/cache');
     },
     sendPOST() {
-      this.$http.post('/http/cache', {test: '123'});
+      this.$http.post('/http/cache', { test: '123' });
     },
     sendHEAD() {
       this.$http.head('/http/cache');
@@ -65,8 +70,8 @@ export default {
 }
 </script>
 
-<style  scoped>
-  .http-test {
-    margin: 15px 0;
-  }
+<style scoped>
+.http-test {
+  margin: 15px 0;
+}
 </style>

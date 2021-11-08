@@ -27,7 +27,7 @@ module.exports = {
         "process.env.BASE_URL": JSON.stringify(
           process.env.NODE_ENV === "development"
             ? "http://localhost:5000/vuepress_test"
-            : "http://localhost:5000/vuepress_test"
+            : "http://1.12.248.68:5000/vuepress_test"
         ),
       }),
     ],
