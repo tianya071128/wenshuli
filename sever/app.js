@@ -1,7 +1,7 @@
 const http = require("http");
 const baseMiddleware = require("./middleware/baseMiddleware");
 const bodyMiddleware = require("./middleware/bodyMiddleware");
-// const staticMiddeware = require("./middleware/staticMiddeware");
+const staticMiddeware = require("./middleware/staticMiddeware");
 const router = require('./router/index');
 
 http
@@ -11,6 +11,12 @@ http
       res,
     };
     await baseMiddleware(ctx); // 基础处理
+
+    try {
+      await staticMiddeware(ctx); // 静态资源处理
+    } catch(e) {
+      return;
+    } 
 
     await bodyMiddleware(ctx); // post - 请求体处理
 

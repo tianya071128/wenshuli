@@ -1,10 +1,3 @@
-<!--
- * @Descripttion: 
- * @Author: 温祖彪
- * @Date: 2021-10-26 11:03:45
- * @LastEditors: sueRimn
- * @LastEditTime: 2021-11-08 10:20:14
--->
 <template>
   <div class="http-test">
     <template v-if="type === 'cache'"
@@ -55,16 +48,16 @@ export default {
       this.$http.get('/http/pragma');
     },
     sendJiandan() {
-      this.$http.get(`${process.env.BASE_URL}/http/cors`);
+      this.$http.get(`${process.env.BASE_URL}/vuepress_test/http/cors`);
     },
     sendFeiJiandan() {
-      this.$http.put(`${process.env.BASE_URL}/http/cors`, {}, { headers: {'X-Requested-With': 'XMLHttpRequest'} });
+      this.$http.put(`${process.env.BASE_URL}/vuepress_test/http/cors`, {}, { headers: {'X-Requested-With': 'XMLHttpRequest'} });
     },
     sendFeiJiandanCookie() {
-      this.$http.get(`${process.env.BASE_URL}/http/cors`,{ withCredentials: true });
+      this.$http.get(`${process.env.BASE_URL}/vuepress_test/http/cors`,{ withCredentials: true });
     },
     sendFeiJiandanCookieOk() {
-      this.$http.get(`${process.env.BASE_URL}/http/corsCookie`,{ withCredentials: true });
+      this.$http.get(`${process.env.BASE_URL}/vuepress_test/http/corsCookie`,{ withCredentials: true });
     }
   }
 }

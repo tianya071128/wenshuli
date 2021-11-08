@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "compressing": "^1.5.1"
+    "compressing": "^1.5.1",
+    "mime-types": "^2.1.33"
   }
 }

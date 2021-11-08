@@ -12,4 +12,5 @@ export default ({
   // window.Vue = vue // 使页面中可以使用Vue构造函数 （使页面中的vue demo生效）
   Vue.use(ElementUI);
   Vue.prototype.$http = http;
+  Vue.prototype.BASE_URL = process.env.BASE_URL;
 }
