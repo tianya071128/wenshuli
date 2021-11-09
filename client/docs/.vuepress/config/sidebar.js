@@ -15,18 +15,6 @@ module.exports = {
         "01_html/05_img",
       ],
     },
-    // {
-    //   title: "表单", // 分组标题
-    //   collapsable: true, // 是否可折叠，可选的，默认true
-    //   sidebarDepth: 2, // 深度，可选的, 默认值是 1
-    //   children: [
-    //     // 这个表示的是路径?
-    //     "01_html/01_index",
-    //     "01_html/02_全局属性",
-    //     "01_html/03_head",
-    //     "01_html/04_meta",
-    //   ],
-    // },
   ],
   "/05_其他/": [
     {
@@ -44,6 +32,15 @@ module.exports = {
         "01_http/06_cookie",
         "01_http/07_cache",
         "01_http/09_cors",
+      ],
+    },
+    {
+      title: "HTTPS", // 分组标题
+      collapsable: true, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: [
+        "01_http/10_https",
+        "01_http/11_https安全性",
       ],
     },
   ],
