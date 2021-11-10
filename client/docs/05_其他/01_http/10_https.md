@@ -4,7 +4,7 @@ date: 2021-10-21 15:00:00
 permalink: /http/https
 categories: 
   - 其他
-  - HTTP
+  - HTTPS
 tags: 
   - null
 ---
