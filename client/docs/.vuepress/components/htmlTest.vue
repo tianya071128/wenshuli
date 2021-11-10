@@ -50,12 +50,21 @@
     </div>
     <div v-if="type === 'imgUpdateNode'">
       <a href="javascript: void(0)" @click="updateNode"
-        >点击下载下面图片（百度翻译中找的图片，通过 Node 返回二进制图片数据下载）</a
+        >点击下载下面图片（百度翻译中找的图片，通过 Node
+        返回二进制图片数据下载）</a
       ><br /><br />
       <img
         src="https://fanyi-cdn.cdn.bcebos.com/static/translation/widget/footer/Products/img/product-desktop@2x_c85778a.png"
         alt=""
       />
+    </div>
+    <div v-if="type === 'a_Target'">
+      <a href="https://www.runoob.com/">target 默认为 _self</a><br />
+      <a href="https://www.runoob.com/" target="_blank"
+        >target: _blank - 新窗口(新标签页)打开</a
+      ><br />
+      <div>下面两个链接是在 iframe 中的</div>
+      <iframe src="/html/04.html" frameborder="0"></iframe>
     </div>
   </div>
 </template>
@@ -101,8 +110,10 @@ export default {
       const data = await this.$http.get("/html/getImg", {
         responseType: "arraybuffer",
       });
-      console.log(Object.prototype.toString.call(data.data))
-      const myBolb = new Blob([data.data], { type: data.headers["content-type"] });
+      console.log(Object.prototype.toString.call(data.data));
+      const myBolb = new Blob([data.data], {
+        type: data.headers["content-type"],
+      });
       const imageUrl = (window.URL || window.webkitURL).createObjectURL(myBolb);
       const aTag = document.createElement("a");
       aTag.href = imageUrl;

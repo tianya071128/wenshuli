@@ -1,6 +1,6 @@
 ---
 # 页面 title, 同时也是 侧边栏 title
-title: img 标签
+title: img 元素
 date: 2021-10-21 17:00:00
 # 永久链接, 不与页面目录路径
 permalink: /html/img
@@ -78,7 +78,7 @@ imgDOM.addEventListener('load', function (e) {
 
 * 同源图片下载
 
-  利用 a 标签的 `download` 属性下载
+  利用 a 元素的 `download` 属性下载
 
   **注意: 如果不是同源图片, 不是执行下载操作**
 

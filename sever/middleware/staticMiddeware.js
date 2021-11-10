@@ -3,7 +3,7 @@
  * @Author: 温祖彪
  * @Date: 2021-10-19 09:10:16
  * @LastEditors: sueRimn
- * @LastEditTime: 2021-11-08 11:40:18
+ * @LastEditTime: 2021-11-10 15:36:15
  */
 const { access, readFile, stat } = require("fs").promises;
 const { cwd } = require("process");
@@ -84,7 +84,6 @@ module.exports = function staticMiddeware(ctx) {
     if (reqEtag) {
       // 判断 ETag 是否一致
       if (fileTag === reqEtag) {
-        console.log("进入了缓存请求");
         // 注意注意: 在浏览器上的地址栏上输入 url, 会强制请求过来, 并且状态码就算返回了 304, 还是会显示 200,
         res.writeHead(304, "Not Modified", {
           "Cache-Control": "max-age=60",
