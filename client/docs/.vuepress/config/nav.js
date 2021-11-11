@@ -9,7 +9,7 @@ module.exports = [
     ],
   },
   {
-    text: '其他',
+    text: '网络协议',
     items: [
       { text: 'http', link: '/http/' },
     ],

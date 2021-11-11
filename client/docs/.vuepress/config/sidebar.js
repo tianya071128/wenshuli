@@ -16,8 +16,17 @@ module.exports = {
         "01_html/06_a",
       ],
     },
+    {
+      title: "表单", // 分组标题
+      collapsable: true, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: [
+        // 这个表示的是路径?
+        "01_html/07_form",
+      ],
+    },
   ],
-  "/05_其他/": [
+  "/05_网络协议/": [
     {
       title: "HTTP", // 分组标题
       collapsable: true, // 是否可折叠，可选的，默认true
