@@ -38,6 +38,11 @@ const routers = [
     path: "/html/getImg",
     controller: htmlController.getImg,
   },
+  {
+    method: ["get"],
+    path: "/html/formElement",
+    controller: htmlController.formElement,
+  },
 ];
 const conterollers = routers.reduce(function (total, item) {
   return {

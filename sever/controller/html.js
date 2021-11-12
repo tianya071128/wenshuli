@@ -31,4 +31,10 @@ module.exports = {
     });
     req2.end();
   },
+  async formElement({ res, query }) {
+    res.writeHead(200, {
+      "Content-Type": "text/plain; charset=utf-8",
+    })
+    res.end(`请求参数：${JSON.stringify(query)} => 服务端做了处理，才会显示出数组。观察 URL 可知，复选框是通过多个 name 传递的`);
+  },
 };
