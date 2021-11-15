@@ -24,6 +24,7 @@ module.exports = {
         // 这个表示的是路径?
         "01_html/07_form",
         "01_html/08_form_data",
+        "01_html/09_form_js",
       ],
     },
   ],

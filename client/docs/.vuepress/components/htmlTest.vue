@@ -109,6 +109,35 @@
         <button type="submit">提交</button>
       </form>
     </div>
+    <div v-if="type === 'getCursor'">
+      <input type="text" @focus="onFocus" value="点击输入框获取光标位置" />
+    </div>
+    <div v-if="type === 'setCursor'">
+      <input
+        type="text"
+        ref="setCursor"
+        value="点击按钮设置光标位置"
+      /><br /><br />
+      <el-button @click="setCursor">设置光标位置</el-button>
+    </div>
+    <div v-if="type === 'selectAllText'">
+      <input type="text" @focus="onFocus2" value="获取焦点选择全部文本" />
+    </div>
+    <div v-if="type === 'selectPartText'">
+      <input
+        type="text"
+        @select="onSelect"
+        value="尝试选择文本，查看选择文本的内容"
+      />
+    </div>
+    <div v-if="type === 'setPartText'">
+      <input
+        type="text"
+        ref="setPartText"
+        value="点击按钮，设置选择文本"
+      /><br /><br />
+      <el-button @click="setSelectText">设置选择文本</el-button>
+    </div>
   </div>
 </template>
 
@@ -225,7 +254,6 @@ export default {
             // 根据 checked 属性判断是否选中
             if (field.checked) {
               data2[field.name] = field.value;
-              
             }
             break;
           case "checkbox": // 多选按钮
@@ -245,6 +273,103 @@ export default {
       console.log(data2); // {name: '1111', hobby: Array(1), sex: '1', select: '2', selectMultiple: Array(2)}
 
       e.preventDefault();
+    },
+    onFocus(e) {
+      const dom = e.target;
+
+      setTimeout(() => {
+        this.$message(`光标位置${this.getCursorPos(dom)}`);
+      }, 0);
+    },
+    setCursor() {
+      this.setCursorPos(this.$refs.setCursor, 5);
+    },
+    /**
+     * 获取光标位置
+     * @params {DOM} dom 输入框控件
+     */
+    getCursorPos(dom) {
+      if (
+        (dom instanceof HTMLInputElement ||
+          dom instanceof HTMLTextAreaElement) &&
+        document.activeElement === dom
+      ) {
+        let pos = 0;
+        if ("selectionStart" in dom) {
+          // IE8- 不支持
+          pos = dom.selectionStart; // 获取光标开始的位置
+        } else if ("selection" in document) {
+          // 兼容 IE
+          dom.focus();
+          const selectRange = document.selection.createRange();
+          selectRange.moveStart("character", -dom.value.length);
+          pos = selectRange.text.length;
+        }
+        return pos;
+      } else {
+        throw new Error("参数错误或输入框没有获取焦点");
+      }
+    },
+    /**
+     * 设置光标位置
+     * @params {DOM} dom 输入框控件
+     * @params {Number} pos 需要设置光标位置
+     */
+    setCursorPos(dom, pos) {
+      if (
+        dom instanceof HTMLInputElement ||
+        dom instanceof HTMLTextAreaElement
+      ) {
+        if (dom.setSelectionRange) {
+          dom.focus();
+          dom.setSelectionRange(pos, pos);
+        } else if (dom.createTextRange) {
+          const range = dom.createTextRange; // 创建文本范围
+          range.collapse(true);
+          range.moveEnd("character", pos);
+          range.moveStart("character", pos);
+          range.select();
+        }
+      } else {
+        throw new TypeError("no");
+      }
+    },
+    onFocus2(e) {
+      e.target.select();
+    },
+    onSelect(e) {
+      const dom = e.target;
+
+      this.$message(`选择的文本为：${this.getSelectText(dom)}`);
+    },
+    /**
+     * 设置光标位置
+     * @params {DOM} dom 输入框控件
+     * @returns {String} 选择的文本
+     */
+    getSelectText(dom) {
+      if (typeof dom.selectionStart === "number") {
+        // IE8- 不支持
+        return dom.value.substring(dom.selectionStart, dom.selectionEnd);
+      } else if (document.selection) {
+        // 兼容 IE8-
+        return document.selection.createRange().text;
+      }
+    },
+    setSelectText() {
+      this.setSelectPartText(this.$refs.setPartText, 2, 5);
+    },
+    setSelectPartText(dom, startIndex, endIndex) {
+      dom.focus(); // 要想看到效果，需要获取焦点
+      if (dom.setSelectionRange) {
+        dom.setSelectionRange(startIndex, endIndex);
+      } else if (dom.createTextRange) {
+        const range = dom.createTextRange; // 创建文本范围
+        range.collapse(true);
+        range.moveEnd("character", startIndex);
+        range.moveStart("character", endIndex - startIndex);
+        range.select();
+      }
     },
   },
 };
