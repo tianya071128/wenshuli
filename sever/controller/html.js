@@ -1,4 +1,6 @@
 const https = require("https");
+const { readFile } = require("fs").promises;
+const path = require("path");
 
 module.exports = {
   async getImg({ res }) {
@@ -34,7 +36,22 @@ module.exports = {
   async formElement({ res, query }) {
     res.writeHead(200, {
       "Content-Type": "text/plain; charset=utf-8",
-    })
-    res.end(`请求参数：${JSON.stringify(query)} => 服务端做了处理，才会显示出数组。观察 URL 可知，复选框是通过多个 name 传递的`);
+    });
+    res.end(
+      `请求参数：${JSON.stringify(
+        query
+      )} => 服务端做了处理，才会显示出数组。观察 URL 可知，复选框是通过多个 name 传递的`
+    );
+  },
+  async scriptCors({ query, res }) {
+
+    const fileData = await readFile(path.join(__dirname, "../public/01.js"));
+    res.setHeader("Content-Length", fileData.length);
+    res.setHeader("Content-Type", 'application/javascript; charset=utf-8');
+    
+    if (query.cors) {
+      // res.setHeader("Content-Length", fileData.length);
+    }
+    res.end(fileData);
   },
 };

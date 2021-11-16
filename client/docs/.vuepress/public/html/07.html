@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div>
+      不添加 crossorigin 属性，正常请求资源：<br />
+      &lt;script
+      src="https://developer.mozilla.org/static/js/main.a2cb3def.chunk.js"&gt;&lt;/script&gt;
+    </div>
+    <br />
+    <div>
+      添加 crossorigin("" 或 anonymous) 属性，请求资源不携带凭证（cookie，客户端
+      SSL 证书或 HTTP 认证交换用户凭据。），控制台报跨域错误，资源请求错误：<br />
+      &lt;script
+      src="https://developer.mozilla.org/static/js/main.a2cb3def.chunk.js"
+      crossorigin&gt;&lt;/script&gt;
+    </div>
+    <br />
+    <div>
+      添加 crossorigin(use-credentials)
+      属性，请求资源携带凭证（实测没有携带，可能是 cookie 不能跨站），控制台报跨域错误，资源请求错误：<br />
+      &lt;script
+      src="https://developer.mozilla.org/static/js/main.a2cb3def.chunk.js"
+      crossorigin="use-credentials"&gt;&lt;/script&gt;
+    </div>
+  </body>
+</html>
+<script
+  src="https://developer.mozilla.org/static/js/main.a2cb3def.chunk.js"
+  crossorigin
+></script>
+<script src="https://developer.mozilla.org/static/js/main.a2cb3def.chunk.js"></script>
+<script
+  src="https://developer.mozilla.org/static/js/main.a2cb3def.chunk.js"
+  crossorigin="use-credentials"
+></script>

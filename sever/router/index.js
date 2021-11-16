@@ -43,6 +43,11 @@ const routers = [
     path: "/html/formElement",
     controller: htmlController.formElement,
   },
+  {
+    method: ["get"],
+    path: "/html/scriptCors",
+    controller: htmlController.scriptCors,
+  },
 ];
 const conterollers = routers.reduce(function (total, item) {
   return {

@@ -166,6 +166,9 @@
         /><br />
       </form>
     </div>
+    <div v-if="type === 'scriptCors'">
+      <el-button @click="sendScript">点击按钮请求脚本(没有设置 crossOrigin 属性)</el-button>
+    </div>
   </div>
 </template>
 
@@ -437,6 +440,16 @@ export default {
       input2.addEventListener("input", tabForward);
       input3.addEventListener("input", tabForward);
     },
+    // 发送脚本
+    sendScript() {
+      window.onerror = function (error) {
+        console.dir(error); // 对于跨域脚本，通过 onerror 捕获的错误信息只有 Script error 错误信息
+      }
+
+      const dom = document.createElement('script');
+      dom.src = `${this.BASE_URL}/vuepress_test/html/scriptCors`;
+      document.body.appendChild(dom);
+    }
   },
 };
 </script>

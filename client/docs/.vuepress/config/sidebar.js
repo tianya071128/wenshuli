@@ -14,6 +14,7 @@ module.exports = {
         "01_html/04_meta",
         "01_html/05_img",
         "01_html/06_a",
+        "01_html/10_other",
       ],
     },
     {

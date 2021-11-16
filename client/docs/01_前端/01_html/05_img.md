@@ -60,6 +60,8 @@ tags:
   一个有证书的跨域请求（比如，有 Origin HTTP header）被发送 （比如，cookie, 一份证书，或者 HTTP 基本验证信息）。如果服务器没有给源站发送证书（通过 Access-Control-Allow-Credentials HTTP header），图像将会被污染，且它的使用会受限制。
   
   当用户并未显式使用本属性时，默认不使用 CORS 发起请求（例如，不会向服务器发送原有的HTTP 头部信息），可防止其在 `<canvas>` 中的使用。如果无效，默认当做 anonymous 关键字生效。更多信息，请查看 CORS 属性设置 。
+  
+  **默认不使用 CORS 发起请求：如果没有设置 crossorigin 属性的话，那么就会默认使用浏览器自带跨域功能去加载。但如果设置了 crossorigin 属性，就会使用 CORS 请求资源（类似于 xhr 请求），此时需要服务器配置 CORS**
 
 ## 监听图像 error, load 事件
 
@@ -158,11 +160,21 @@ imgDOM.addEventListener('load', function (e) {
 
 ## 跨域图片 cookie
 
-图片默认不会发送 cookie，因为 crossorigin 属性默认为 anonymous
+图片默认不会发送 cookie
 
 ::: tip 测试
 
 <html-test type="imgCookie" status="anonymous" />
+
+:::
+
+设置 crossorigin 属性为 anonymous，使用 CORS 方式请求资源（类似于 xhr 请求，需服务端配置），但不会发送 cookie 凭证
+
+::: tip 测试
+
+<img data-v-0003f6e8="" src="https://developer.mozilla.org/static/media/twitter.cc5b37fe.svg" width="100" alt="图片显示失败" style="cursor: zoom-in;" crossOrigin>
+
+这张图片设置了 crossorigin 属性，服务端没有配置 CORS，所以显示失败，控制台报错
 
 :::
 
