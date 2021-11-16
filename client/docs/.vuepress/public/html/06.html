@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      #textarea {
+        display: block;
+        margin: 0 auto;
+        overflow: hidden;
+        width: 550px;
+        font-size: 14px;
+        height: 18px;
+        line-height: 24px;
+        padding: 2px;
+      }
+      textarea {
+        outline: 0 none;
+        border-color: rgba(82, 168, 236, 0.8);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1),
+          0 0 8px rgba(82, 168, 236, 0.6);
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="textarea" placeholder="回复内容"></textarea>
+    <script>
+      /**
+       * 文本框根据输入内容自适应高度
+       * @param  {HTMLElement} elem 输入框元素
+       * @param  {Number} extra 设置下方留白高度
+       * @param  {Number} maxHeight 设置最大高度(可选)
+       */
+      var autoTextarea = function(elem, extra, maxHeight) {
+        extra = extra || 0;
+        var isFirefox =
+            !!document.getBoxObjectFor || "mozInnerScreenX" in window, // 是否为 firefox 浏览器
+          isOpera =
+            !!window.opera && !!window.opera.toString().indexOf("Opera"), // 是否为 opera 浏览器
+          addEvent = function(type, callback) { // 监听事件兼容方法
+            elem.addEventListener
+              ? elem.addEventListener(type, callback, false)
+              : elem.attachEvent("on" + type, callback);
+          },
+          // 返回样式
+          getStyle = elem.currentStyle 
+            ? function(name) {
+                var val = elem.currentStyle[name]; // currentStyle 应该是为了兼容性
+
+                if (name === "height" && val.search(/px/i) !== 1) {
+                  var rect = elem.getBoundingClientRect();
+                  return (
+                    rect.bottom -
+                    rect.top -
+                    parseFloat(getStyle("paddingTop")) -
+                    parseFloat(getStyle("paddingBottom")) +
+                    "px"
+                  );
+                }
+
+                return val;
+              }
+            : function(name) {
+                // getComputedStyle 返回一个对象，该对象在应用活动样式表并解析这些值可能包含的任何基本计算后报告元素的所有CSS属性的值。
+                return getComputedStyle(elem, null)[name];
+              },
+          minHeight = parseFloat(getStyle("height")); // 返回高度
+
+        elem.style.resize = "none"; // 不允许拖拽
+
+        var change = function() {
+          var scrollTop,
+            height,
+            padding = 0,
+            style = elem.style;
+          if (elem._length === elem.value.length) return; // 防止多次触发
+          elem._length = elem.value.length; // 缓存一下输入字符
+
+          if (!isFirefox && !isOpera) { // 浏览器检测
+            padding =
+              parseInt(getStyle("paddingTop")) +
+              parseInt(getStyle("paddingBottom")); // 获取到上下边距
+          }
+          scrollTop =
+            document.body.scrollTop || document.documentElement.scrollTop; // 获取页面滚动距离
+
+          elem.style.height = minHeight + "px"; // 首先设置一下高度
+          // scrollHeight 容器整体高度（包含滚动距离、上下边距、边框）
+          if (elem.scrollHeight > minHeight) { // 输入完成后，textarea 容器高度大于容器可视区高度的话，此时需要调整高度
+            debugger;
+            if (maxHeight && elem.scrollHeight > maxHeight) { // 容器高度大于最大高度
+              height = maxHeight - padding; // 计算出差值
+              style.overflowY = "auto"; // 此时需要出现滚动条
+            } else { 
+              height = elem.scrollHeight - padding; // 直接计算出应该的高度
+              style.overflowY = "hidden"; // 此时不需要滚动
+            }
+            style.height = height + extra + "px"; // 计算出整体高度
+            // 下面是为了让页面也随之滚动
+            // 如果页面没有需要滚动的话，即使设置了 scrollTop 为有效值，也不会随之滚动的
+            // scrollTop 是需要实时获取，实时计算的，设置 scrollTop 值后，浏览器就会重排，再次获取 scrollTop 就是实时值
+            // 但是下面有一个问题：如果 textarea 的父元素也存在滚动条的话，页面滚动就没有必要了
+            scrollTop += parseInt(style.height) - elem.currHeight; // elem.currHeight 初始会调用这个方法一次，所以会存储着初始值
+            document.body.scrollTop = scrollTop;
+            document.documentElement.scrollTop = scrollTop;
+            elem.currHeight = parseInt(style.height); // 上一次的高度
+          }
+        };
+
+        addEvent("propertychange", change); // IE8-专属事件却是实时触发，即每增加或删除一个字符就会触发。
+        addEvent("input", change);
+        addEvent("focus", change); // 获焦触发一次
+        change(); // 首先手动触发一下
+      };
+
+      const el = document.getElementById("textarea");
+      autoTextarea(el); // 调用
+    </script>
+  </body>
+</html>

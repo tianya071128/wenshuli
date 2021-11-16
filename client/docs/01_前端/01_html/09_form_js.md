@@ -241,11 +241,163 @@ function formatter(textBox) {
 }
 ```
 
-在 js 高程中过滤输入是通过 keypress 事件，但是输入中文是复合输入的，此时不会触发 keypress 事件。
+其他方案：
+
+* js 高程 14.2.2 过滤输入
+
+   -过滤输入是通过 keypress 事件，但是输入中文是复合输入的，此时不会触发 keypress 事件。
+
+* 通过  `textInput` 事件，“DOM3级” 事件， 兼容性应该不佳
+
+## 多行文本框高度自适应
+
+下面两种可以看下
+
+* [element 框架的实现](https://element.eleme.io/#/zh-CN/component/input)
+* [使用 div 模拟](https://www.cnblogs.com/7qin/p/10660687.html)
+
+接下来通过 `<textarea>` 元素实现
+
+打开这个 <a href="/html/06.html" target="_blank">HTML</a> 试试
+
+```js
+var autoTextarea = function(elem, extra, maxHeight) {
+  extra = extra || 0;
+  var isFirefox = !!document.getBoxObjectFor || "mozInnerScreenX" in window, // 是否为 firefox 浏览器
+    isOpera = !!window.opera && !!window.opera.toString().indexOf("Opera"), // 是否为 opera 浏览器
+    addEvent = function(type, callback) {
+      // 监听事件兼容方法
+      elem.addEventListener
+        ? elem.addEventListener(type, callback, false)
+        : elem.attachEvent("on" + type, callback);
+    },
+    // 返回样式
+    getStyle = elem.currentStyle
+      ? function(name) {
+          var val = elem.currentStyle[name]; // currentStyle 应该是为了兼容性
+
+          if (name === "height" && val.search(/px/i) !== 1) {
+            var rect = elem.getBoundingClientRect();
+            return (
+              rect.bottom -
+              rect.top -
+              parseFloat(getStyle("paddingTop")) -
+              parseFloat(getStyle("paddingBottom")) +
+              "px"
+            );
+          }
+
+          return val;
+        }
+      : function(name) {
+          // getComputedStyle 返回一个对象，该对象在应用活动样式表并解析这些值可能包含的任何基本计算后报告元素的所有CSS属性的值。
+          return getComputedStyle(elem, null)[name];
+        },
+    minHeight = parseFloat(getStyle("height")); // 返回高度
+
+  elem.style.resize = "none"; // 不允许拖拽
+
+  var change = function() {
+    var scrollTop,
+      height,
+      padding = 0,
+      style = elem.style;
+    if (elem._length === elem.value.length) return; // 防止多次触发
+    elem._length = elem.value.length; // 缓存一下输入字符
+
+    if (!isFirefox && !isOpera) {
+      // 浏览器检测
+      padding =
+        parseInt(getStyle("paddingTop")) + parseInt(getStyle("paddingBottom")); // 获取到上下边距
+    }
+    scrollTop = document.body.scrollTop || document.documentElement.scrollTop; // 获取页面滚动距离
+
+    elem.style.height = minHeight + "px"; // 首先设置一下高度
+    // scrollHeight 容器整体高度（包含滚动距离、上下边距、边框）
+    if (elem.scrollHeight > minHeight) {
+      // 输入完成后，textarea 容器高度大于容器可视区高度的话，此时需要调整高度
+      debugger;
+      if (maxHeight && elem.scrollHeight > maxHeight) {
+        // 容器高度大于最大高度
+        height = maxHeight - padding; // 计算出差值
+        style.overflowY = "auto"; // 此时需要出现滚动条
+      } else {
+        height = elem.scrollHeight - padding; // 直接计算出应该的高度
+        style.overflowY = "hidden"; // 此时不需要滚动
+      }
+      style.height = height + extra + "px"; // 计算出整体高度
+      // 下面是为了让页面也随之滚动
+      // 如果页面没有需要滚动的话，即使设置了 scrollTop 为有效值，也不会随之滚动的
+      // scrollTop 是需要实时获取，实时计算的，设置 scrollTop 值后，浏览器就会重排，再次获取 scrollTop 就是实时值
+      // 但是下面有一个问题：如果 textarea 的父元素也存在滚动条的话，页面滚动就没有必要了
+      scrollTop += parseInt(style.height) - elem.currHeight; // elem.currHeight 初始会调用这个方法一次，所以会存储着初始值
+      document.body.scrollTop = scrollTop;
+      document.documentElement.scrollTop = scrollTop;
+      elem.currHeight = parseInt(style.height); // 上一次的高度
+    }
+  };
+
+  addEvent("propertychange", change); // IE8-专属事件却是实时触发，即每增加或删除一个字符就会触发。
+  addEvent("input", change);
+  addEvent("focus", change); // 获焦触发一次
+  change(); // 首先手动触发一下
+};
+```
+
+## 焦点管理-自动切换焦点
+
+在上一个表单元素输入完成后（例如输入到最大字符），自动切换焦点到下一个应该切换的元素
+
+使用方法、属性、事件
+
+* focus()：获取焦点
+* blur()：失去焦点
+* input 事件：表单元素 value 改变时触发
+* focus 事件：获取焦点触发
+* blur 事件：失去焦点触发
+
+::: tip 测试
+
+<html-test type="switchFocus" />
+
+:::
+
+```js
+function switchFocus() {
+  // 获取到表单元素
+  const formDOM = document.getElementById("myForm2");
+  const input1 = document.getElementById("tex1");
+  const input2 = document.getElementById("tex2");
+  const input3 = document.getElementById("tex3");
+  const tabForward = function (e) {
+    const target = e.target;
+    if (target.composing) return; // 文本复合过程中不参与
+    const maxLength = target.maxLength;
+
+    // 在这里格式化内容
+    target.value = target.value.replace(/[^\d]/g, '');
+    if (target.value.length == maxLength) {
+      debugger;
+      // 输入了最大字符，切换到下一个输入框
+      const i = (Array.from(formDOM.elements)).indexOf(target);
+      if (formDOM.elements[i + 1]) {
+        formDOM.elements[i + 1].focus()
+      }
+    }
+  };
+
+  input1.addEventListener("input", tabForward); // 直接使用 input，因为这是在 vue 环境， 已经处理好了 input 事件
+  input2.addEventListener("input", tabForward);
+  input3.addEventListener("input", tabForward);
+}
+```
+
+
 
 ## 参考
 
 * [CSDN-js获取光标位置](https://blog.csdn.net/mafan121/article/details/78519348)
+* [博客-textarea如何实现高度自适应？](https://www.cnblogs.com/7qin/p/10660687.html)
 
 * 书籍（JS 高程 14.2-文本框脚本）
 

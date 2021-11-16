@@ -37,3 +37,4 @@ module.exports = {
   themeConfig, // 主题配置 - 暂时使用默认主题
   evergreen: true, // 如果你的对象只有那些 “常青树” 浏览器，你可以将其设置成 true，这将会禁止 ESNext 到 ES5 的转译以及对 IE 的 polyfills，同时会带来更快的构建速度和更小的文件体积。
 };
+

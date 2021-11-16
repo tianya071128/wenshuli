@@ -138,15 +138,55 @@
       /><br /><br />
       <el-button @click="setSelectText">设置选择文本</el-button>
     </div>
+    <div v-if="type === 'switchFocus'">
+      <form name="myForm2" id="myForm2">
+        <input
+          type="text"
+          id="tex1"
+          name="tex1"
+          placeholder="手机号"
+          maxlength="11"
+          v-model="test"
+        /><br />
+        <input
+          type="text"
+          id="tex2"
+          name="tex2"
+          placeholder="手机号22"
+          maxlength="11"
+          v-model="test2"
+        /><br />
+        <input
+          type="text"
+          id="tex3"
+          name="tex3"
+          placeholder="手机号33"
+          maxlength="11"
+          v-model="test3"
+        /><br />
+      </form>
+    </div>
   </div>
 </template>
 
 <script>
 export default {
   name: "HtmlTest",
+  data() {
+    return {
+      test: '',
+      test2: '',
+      test3: '',
+    };
+  },
   props: {
     type: String,
     status: String,
+  },
+  mounted() {
+    setTimeout(() => {
+      this.switchFocus();
+    }, 0);
   },
   methods: {
     startDownload() {
@@ -370,6 +410,32 @@ export default {
         range.moveStart("character", endIndex - startIndex);
         range.select();
       }
+    },
+    switchFocus() {
+      const formDOM = document.getElementById("myForm2");
+      const input1 = document.getElementById("tex1");
+      const input2 = document.getElementById("tex2");
+      const input3 = document.getElementById("tex3");
+      const tabForward = function (e) {
+        const target = e.target;
+        if (target.composing) return; // 文本复合过程中不参与
+        const maxLength = target.maxLength;
+
+        // 在这里格式化内容
+        target.value = target.value.replace(/[^\d]/g, '');
+        if (target.value.length == maxLength) {
+          debugger;
+          // 输入了最大字符，切换到下一个输入框
+          const i = (Array.from(formDOM.elements)).indexOf(target);
+          if (formDOM.elements[i + 1]) {
+            formDOM.elements[i + 1].focus()
+          }
+        }
+      };
+
+      input1.addEventListener("input", tabForward);
+      input2.addEventListener("input", tabForward);
+      input3.addEventListener("input", tabForward);
     },
   },
 };
