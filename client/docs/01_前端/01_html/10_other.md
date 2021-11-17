@@ -10,9 +10,9 @@ categories:
 tags: 
   - null
 ---
-# 高级主题
+# 其他主题
 
-## CORS 设置主题
+## CORS 设置属性：crossorigin
 
 在 HTML5 中，一些 HTML 元素提供了对 CORS 的支持。例如：`audio`、`img`、`link`、`script`和 `video` 均有一个跨域属性(crossorigin)，用于配置元素获取数据的 CORS 请求
 
@@ -27,6 +27,8 @@ tags:
 这些 HTML 元素默认是可以实现跨域资源请求的，并不会像 xhr 请求资源一样，需要服务端设置 CORS 跨域。
 
 **但如果添加了 crossorigin 属性，就会通过 CORS 方式加载这些资源，此时就需要服务器进行 CORS 跨域设置**
+
+**注意：通过 js 脚本设置 crossorigin 时，需要使用 crossOrigin 属性**
 
 ### 对于 img 图片
 

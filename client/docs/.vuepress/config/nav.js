@@ -6,6 +6,7 @@ module.exports = [
     items: [
       { text: 'html', link: '/html/' },
       { text: 'css', link: '/css/' },
+      { text: 'js', link: '/js/' },
     ],
   },
   {

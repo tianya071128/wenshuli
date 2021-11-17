@@ -1,7 +1,7 @@
 ---
 title: HTTP 介绍
 date: 2021-10-21 15:00:00
-permalink: /http/
+permalink: /http/base
 categories: 
   -- 其他
   -- HTTP
