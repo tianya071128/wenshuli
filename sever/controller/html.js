@@ -44,13 +44,13 @@ module.exports = {
     );
   },
   async scriptCors({ query, res }) {
-
+    console.log(query);
     const fileData = await readFile(path.join(__dirname, "../public/01.js"));
     res.setHeader("Content-Length", fileData.length);
     res.setHeader("Content-Type", 'application/javascript; charset=utf-8');
     
     if (query.cors) {
-      // res.setHeader("Content-Length", fileData.length);
+      res.setHeader("Access-Control-Allow-Origin", '*');
     }
     res.end(fileData);
   },

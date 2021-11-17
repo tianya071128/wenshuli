@@ -167,7 +167,17 @@
       </form>
     </div>
     <div v-if="type === 'scriptCors'">
-      <el-button @click="sendScript">点击按钮请求脚本(没有设置 crossOrigin 属性)</el-button>
+      <el-button @click="sendScript"
+        >点击按钮请求脚本(没有设置 crossorigin 属性)</el-button
+      >
+      <br /><br />
+      <el-button @click="sendScript2"
+        >点击按钮请求脚本(设置 crossorigin(anonymous) 属性)</el-button
+      >
+      <br /><br />
+      <el-button @click="sendScript3"
+        >点击按钮请求脚本(设置 crossorigin(use-credentials) 属性)</el-button
+      >
     </div>
   </div>
 </template>
@@ -177,9 +187,9 @@ export default {
   name: "HtmlTest",
   data() {
     return {
-      test: '',
-      test2: '',
-      test3: '',
+      test: "",
+      test2: "",
+      test3: "",
     };
   },
   props: {
@@ -425,13 +435,13 @@ export default {
         const maxLength = target.maxLength;
 
         // 在这里格式化内容
-        target.value = target.value.replace(/[^\d]/g, '');
+        target.value = target.value.replace(/[^\d]/g, "");
         if (target.value.length == maxLength) {
           debugger;
           // 输入了最大字符，切换到下一个输入框
-          const i = (Array.from(formDOM.elements)).indexOf(target);
+          const i = Array.from(formDOM.elements).indexOf(target);
           if (formDOM.elements[i + 1]) {
-            formDOM.elements[i + 1].focus()
+            formDOM.elements[i + 1].focus();
           }
         }
       };
@@ -442,14 +452,34 @@ export default {
     },
     // 发送脚本
     sendScript() {
-      window.onerror = function (error) {
-        console.dir(error); // 对于跨域脚本，通过 onerror 捕获的错误信息只有 Script error 错误信息
-      }
+      window.onerror = function (message, url, line) {
+        console.log("没有设置 crossorigin 属性", message, url, line); // 对于跨域脚本，通过 onerror 捕获的错误信息只有 Script error 错误信息
+      };
 
-      const dom = document.createElement('script');
+      const dom = document.createElement("script");
       dom.src = `${this.BASE_URL}/vuepress_test/html/scriptCors`;
       document.body.appendChild(dom);
-    }
+    },
+    sendScript2() {
+      window.onerror = function (message, url, line) {
+        console.log("设置了 crossorigin：anonymous 属性", message, url, line);
+      };
+
+      const dom = document.createElement("script");
+      dom.src = `${this.BASE_URL}/vuepress_test/html/scriptCors?cors=true`;
+      dom.crossOrigin = "anonymous"; // 需要使用驼峰命名
+      document.body.appendChild(dom);
+    },
+    sendScript3() {
+      window.onerror = function (message, url, line) {
+        console.log("设置了 crossorigin：anonymous 属性", message, url, line);
+      };
+
+      const dom = document.createElement("script");
+      dom.src = `${this.BASE_URL}/vuepress_test/html/scriptCors?cors=true`;
+      dom.crossOrigin = "use-credentials"; // 需要使用驼峰命名
+      document.body.appendChild(dom);
+    },
   },
 };
 </script>
