@@ -36,6 +36,7 @@ module.exports = {
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
         "01_ES基本概念",
+        "02_内存机制1-数据存储",
       ],
     },
   ],
