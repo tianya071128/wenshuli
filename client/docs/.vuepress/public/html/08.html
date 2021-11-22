@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    .test {
+      width: 200px;
+      height: 500px;
+      overflow: auto;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="test" id="test">
+    测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下测试一下
+  </div>
+  <button id="button">点击按钮，改变上面容器滚动距离</button>
+</body>
+</html>
+
+<script>
+  const buttonDom = document.getElementById('button');
+  const testDom = document.getElementById('test');
+  function fn() {
+    console.log(testDom.scrollTop);
+  }
+  buttonDom.addEventListener('click', (e) => {
+    fn()
+    testDom.scrollTop = testDom.scrollTop + 50;
+    fn()
+  })
+</script>
