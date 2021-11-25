@@ -10,12 +10,14 @@
 </html>
 <script>
   function foo() {
-    var d = 20;
-    function inner(a, b) {
-      const c = a + b + d;
-      return c;
-    }
-    console.dir(inner);
+    let aa22 = 1;
+    const fn2 = () => {
+      let aa = 1111;
+      console.log(this, aa22);
+    };
+    console.dir(fn2);
+    return fn2;
   }
-  const f = foo();
+  const f = foo.call({});
+  f();
 </script>

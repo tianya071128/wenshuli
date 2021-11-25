@@ -15,4 +15,10 @@ module.exports = [
       { text: 'http', link: '/http/' },
     ],
   },
+  {
+    text: '工程化',
+    items: [
+      { text: 'vscode', link: '/vscode/' },
+    ],
+  },
 ]
