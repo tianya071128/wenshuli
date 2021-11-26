@@ -69,11 +69,7 @@ module.exports = {
       title: "HTTPS", // 分组标题
       collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: [
-        "10_https",
-        "11_https安全性",
-        "12_TLS",
-      ],
+      children: ["10_https", "11_https安全性", "12_TLS"],
     },
   ],
   "/06_工程化/01_vscode/": [
@@ -81,10 +77,7 @@ module.exports = {
       title: "vscode", // 分组标题
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: [
-        "01_设置",
-        "02_配置文件",
-      ],
+      children: ["01_设置", "02_Prettier"],
     },
   ],
 };
