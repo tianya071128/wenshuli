@@ -82,10 +82,8 @@ module.exports = {
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
-        "01_快捷键",
-        "02_设置",
-        "03_插件",
-        "04_配置文件",
+        "01_设置",
+        "02_配置文件",
       ],
     },
   ],
