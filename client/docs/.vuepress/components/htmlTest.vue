@@ -2,15 +2,18 @@
   <div class="html-test">
     <div v-if="type === 'imgUpdate'">
       <div v-if="status !== 'cors'">
-        <a href="/img/logo.png" download="logo.png"
-          >点击下载下面图片（同源图片，直接通过 download 属性下载）</a
-        ><br /><br />
+        <a href="/img/logo.png" download="logo.png">
+          点击下载下面图片（同源图片，直接通过 download 属性下载）
+        </a>
+        <br />
+        <br />
         <img src="/img/logo.png" alt="" />
       </div>
       <div v-else>
-        <a class="cors_img" @click="startDownload" href="javascript: void(0)"
-          >点击下载下面跨域图片</a
-        ><br />
+        <a class="cors_img" @click="startDownload" href="javascript: void(0)">
+          点击下载下面跨域图片
+        </a>
+        <br />
         <img :src="`${BASE_URL}/public/01.jpg`" alt="" width="100" />
       </div>
     </div>
@@ -49,20 +52,23 @@
       </div>
     </div>
     <div v-if="type === 'imgUpdateNode'">
-      <a href="javascript: void(0)" @click="updateNode"
-        >点击下载下面图片（百度翻译中找的图片，通过 Node
-        返回二进制图片数据下载）</a
-      ><br /><br />
+      <a href="javascript: void(0)" @click="updateNode">
+        点击下载下面图片（百度翻译中找的图片，通过 Node 返回二进制图片数据下载）
+      </a>
+      <br />
+      <br />
       <img
         src="https://fanyi-cdn.cdn.bcebos.com/static/translation/widget/footer/Products/img/product-desktop@2x_c85778a.png"
         alt=""
       />
     </div>
     <div v-if="type === 'a_Target'">
-      <a href="https://www.runoob.com/">target 默认为 _self</a><br />
-      <a href="https://www.runoob.com/" target="_blank"
-        >target: _blank - 新窗口(新标签页)打开</a
-      ><br />
+      <a href="https://www.runoob.com/">target 默认为 _self</a>
+      <br />
+      <a href="https://www.runoob.com/" target="_blank">
+        target: _blank - 新窗口(新标签页)打开
+      </a>
+      <br />
       <div>下面两个链接是在 iframe 中的</div>
       <iframe src="/html/04.html" frameborder="0"></iframe>
     </div>
@@ -73,21 +79,40 @@
         @submit="onSubmit"
       >
         <div class="pb10">
-          <label
-            >姓名：<input type="text" name="name" placeholder="name"
-          /></label>
+          <label>
+            姓名：
+            <input type="text" name="name" placeholder="name" />
+          </label>
         </div>
         <div class="pb10">
           爱好：
-          <label>测试1<input type="checkbox" name="hobby" value="1" /></label>
-          <label>测试2<input type="checkbox" name="hobby" value="2" /></label>
-          <label>测试3<input type="checkbox" name="hobby" value="3" /></label>
-          <label>测试4<input type="checkbox" name="hobby" value="4" /></label>
+          <label>
+            测试1
+            <input type="checkbox" name="hobby" value="1" />
+          </label>
+          <label>
+            测试2
+            <input type="checkbox" name="hobby" value="2" />
+          </label>
+          <label>
+            测试3
+            <input type="checkbox" name="hobby" value="3" />
+          </label>
+          <label>
+            测试4
+            <input type="checkbox" name="hobby" value="4" />
+          </label>
         </div>
         <div class="pb10">
           性别：
-          <label>男<input type="radio" name="sex" value="1" /></label>
-          <label>女<input type="radio" name="sex" value="2" /></label>
+          <label>
+            男
+            <input type="radio" name="sex" value="1" />
+          </label>
+          <label>
+            女
+            <input type="radio" name="sex" value="2" />
+          </label>
         </div>
         <div class="pb10">
           选择框（单选）：
@@ -113,11 +138,9 @@
       <input type="text" @focus="onFocus" value="点击输入框获取光标位置" />
     </div>
     <div v-if="type === 'setCursor'">
-      <input
-        type="text"
-        ref="setCursor"
-        value="点击按钮设置光标位置"
-      /><br /><br />
+      <input type="text" ref="setCursor" value="点击按钮设置光标位置" />
+      <br />
+      <br />
       <el-button @click="setCursor">设置光标位置</el-button>
     </div>
     <div v-if="type === 'selectAllText'">
@@ -131,11 +154,9 @@
       />
     </div>
     <div v-if="type === 'setPartText'">
-      <input
-        type="text"
-        ref="setPartText"
-        value="点击按钮，设置选择文本"
-      /><br /><br />
+      <input type="text" ref="setPartText" value="点击按钮，设置选择文本" />
+      <br />
+      <br />
       <el-button @click="setSelectText">设置选择文本</el-button>
     </div>
     <div v-if="type === 'switchFocus'">
@@ -147,7 +168,8 @@
           placeholder="手机号"
           maxlength="11"
           v-model="test"
-        /><br />
+        />
+        <br />
         <input
           type="text"
           id="tex2"
@@ -155,7 +177,8 @@
           placeholder="手机号22"
           maxlength="11"
           v-model="test2"
-        /><br />
+        />
+        <br />
         <input
           type="text"
           id="tex3"
@@ -163,33 +186,36 @@
           placeholder="手机号33"
           maxlength="11"
           v-model="test3"
-        /><br />
+        />
+        <br />
       </form>
     </div>
     <div v-if="type === 'scriptCors'">
-      <el-button @click="sendScript"
-        >点击按钮请求脚本(没有设置 crossorigin 属性)</el-button
-      >
-      <br /><br />
-      <el-button @click="sendScript2"
-        >点击按钮请求脚本(设置 crossorigin(anonymous) 属性)</el-button
-      >
-      <br /><br />
-      <el-button @click="sendScript3"
-        >点击按钮请求脚本(设置 crossorigin(use-credentials) 属性)</el-button
-      >
+      <el-button @click="sendScript">
+        点击按钮请求脚本(没有设置 crossorigin 属性)
+      </el-button>
+      <br />
+      <br />
+      <el-button @click="sendScript2">
+        点击按钮请求脚本(设置 crossorigin(anonymous) 属性)
+      </el-button>
+      <br />
+      <br />
+      <el-button @click="sendScript3">
+        点击按钮请求脚本(设置 crossorigin(use-credentials) 属性)
+      </el-button>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: "HtmlTest",
+  name: 'HtmlTest',
   data() {
     return {
-      test: "",
-      test2: "",
-      test3: "",
+      test: '',
+      test2: '',
+      test3: '',
     };
   },
   props: {
@@ -204,8 +230,8 @@ export default {
   methods: {
     startDownload() {
       function imageReceived() {
-        let canvas = document.createElement("canvas");
-        let context = canvas.getContext("2d");
+        let canvas = document.createElement('canvas');
+        let context = canvas.getContext('2d');
 
         canvas.width = downloadedImg.width;
         canvas.height = downloadedImg.height;
@@ -214,35 +240,35 @@ export default {
 
         try {
           // 下载图片
-          const aTag = document.createElement("a");
-          aTag.href = canvas.toDataURL("image/png");
-          aTag.download = "下载图片.png";
+          const aTag = document.createElement('a');
+          aTag.href = canvas.toDataURL('image/png');
+          aTag.download = '下载图片.png';
           aTag.click();
         } catch (err) {
-          console.log("Error: " + err);
+          console.log('Error: ' + err);
         }
       }
       let imageURL = `${this.BASE_URL}/public/01.jpg`;
 
       let downloadedImg = new Image();
       ``;
-      downloadedImg.crossOrigin = "Anonymous";
+      downloadedImg.crossOrigin = 'Anonymous';
       // 在图片加载完成后, 通过 canvas 下载图片
-      downloadedImg.addEventListener("load", imageReceived, false);
+      downloadedImg.addEventListener('load', imageReceived, false);
       downloadedImg.src = imageURL;
     },
     async updateNode() {
-      const data = await this.$http.get("/html/getImg", {
-        responseType: "arraybuffer",
+      const data = await this.$http.get('/html/getImg', {
+        responseType: 'arraybuffer',
       });
       console.log(Object.prototype.toString.call(data.data));
       const myBolb = new Blob([data.data], {
-        type: data.headers["content-type"],
+        type: data.headers['content-type'],
       });
       const imageUrl = (window.URL || window.webkitURL).createObjectURL(myBolb);
-      const aTag = document.createElement("a");
+      const aTag = document.createElement('a');
       aTag.href = imageUrl;
-      aTag.download = "下载图片.png";
+      aTag.download = '下载图片.png';
       aTag.click();
     },
     onSubmit(e) {
@@ -270,23 +296,23 @@ export default {
       for (const field of formDOM.elements) {
         // 根据每个表单元素的 type 来区分。
         switch (field.type) {
-          case "select-one":
-          case "select-multiple":
+          case 'select-one':
+          case 'select-multiple':
             // 选择框，需要遍历每个选项 => 表单元素.options 引用着所有的选项
             for (const option of field.options) {
               // 根据 option.selected 属性判断是否选中项
               if (option.selected) {
-                let optValue = "";
+                let optValue = '';
                 if (option.hasAttribute) {
-                  optValue = option.hasAttribute("value")
+                  optValue = option.hasAttribute('value')
                     ? option.value
                     : option.text;
                 } else {
-                  optValue = option.attributes["value"].specified
+                  optValue = option.attributes['value'].specified
                     ? option.value
                     : option.text;
                 }
-                if (field.type === "select-one") {
+                if (field.type === 'select-one') {
                   data2[field.name] = optValue;
                 } else {
                   data2[field.name] = (data2[field.name] || []).concat(
@@ -297,19 +323,19 @@ export default {
             }
             break;
           case undefined: // 字段集
-          case "file": // 文件输入
-          case "submit": // 提交按钮
-          case "reset": // 重置按钮
-          case "button": //自定义按钮
+          case 'file': // 文件输入
+          case 'submit': // 提交按钮
+          case 'reset': // 重置按钮
+          case 'button': //自定义按钮
             // 这些表单元素不理会
             break;
-          case "radio": // 单选框
+          case 'radio': // 单选框
             // 根据 checked 属性判断是否选中
             if (field.checked) {
               data2[field.name] = field.value;
             }
             break;
-          case "checkbox": // 多选按钮
+          case 'checkbox': // 多选按钮
             if (field.checked) {
               data2[field.name] = (data2[field.name] || []).concat(field.value);
             }
@@ -348,19 +374,19 @@ export default {
         document.activeElement === dom
       ) {
         let pos = 0;
-        if ("selectionStart" in dom) {
+        if ('selectionStart' in dom) {
           // IE8- 不支持
           pos = dom.selectionStart; // 获取光标开始的位置
-        } else if ("selection" in document) {
+        } else if ('selection' in document) {
           // 兼容 IE
           dom.focus();
           const selectRange = document.selection.createRange();
-          selectRange.moveStart("character", -dom.value.length);
+          selectRange.moveStart('character', -dom.value.length);
           pos = selectRange.text.length;
         }
         return pos;
       } else {
-        throw new Error("参数错误或输入框没有获取焦点");
+        throw new Error('参数错误或输入框没有获取焦点');
       }
     },
     /**
@@ -379,12 +405,12 @@ export default {
         } else if (dom.createTextRange) {
           const range = dom.createTextRange; // 创建文本范围
           range.collapse(true);
-          range.moveEnd("character", pos);
-          range.moveStart("character", pos);
+          range.moveEnd('character', pos);
+          range.moveStart('character', pos);
           range.select();
         }
       } else {
-        throw new TypeError("no");
+        throw new TypeError('no');
       }
     },
     onFocus2(e) {
@@ -401,7 +427,7 @@ export default {
      * @returns {String} 选择的文本
      */
     getSelectText(dom) {
-      if (typeof dom.selectionStart === "number") {
+      if (typeof dom.selectionStart === 'number') {
         // IE8- 不支持
         return dom.value.substring(dom.selectionStart, dom.selectionEnd);
       } else if (document.selection) {
@@ -419,23 +445,23 @@ export default {
       } else if (dom.createTextRange) {
         const range = dom.createTextRange; // 创建文本范围
         range.collapse(true);
-        range.moveEnd("character", startIndex);
-        range.moveStart("character", endIndex - startIndex);
+        range.moveEnd('character', startIndex);
+        range.moveStart('character', endIndex - startIndex);
         range.select();
       }
     },
     switchFocus() {
-      const formDOM = document.getElementById("myForm2");
-      const input1 = document.getElementById("tex1");
-      const input2 = document.getElementById("tex2");
-      const input3 = document.getElementById("tex3");
+      const formDOM = document.getElementById('myForm2');
+      const input1 = document.getElementById('tex1');
+      const input2 = document.getElementById('tex2');
+      const input3 = document.getElementById('tex3');
       const tabForward = function (e) {
         const target = e.target;
         if (target.composing) return; // 文本复合过程中不参与
         const maxLength = target.maxLength;
 
         // 在这里格式化内容
-        target.value = target.value.replace(/[^\d]/g, "");
+        target.value = target.value.replace(/[^\d]/g, '');
         if (target.value.length == maxLength) {
           debugger;
           // 输入了最大字符，切换到下一个输入框
@@ -446,38 +472,38 @@ export default {
         }
       };
 
-      input1.addEventListener("input", tabForward);
-      input2.addEventListener("input", tabForward);
-      input3.addEventListener("input", tabForward);
+      input1.addEventListener('input', tabForward);
+      input2.addEventListener('input', tabForward);
+      input3.addEventListener('input', tabForward);
     },
     // 发送脚本
     sendScript() {
       window.onerror = function (message, url, line) {
-        console.log("没有设置 crossorigin 属性", message, url, line); // 对于跨域脚本，通过 onerror 捕获的错误信息只有 Script error 错误信息
+        console.log('没有设置 crossorigin 属性', message, url, line); // 对于跨域脚本，通过 onerror 捕获的错误信息只有 Script error 错误信息
       };
 
-      const dom = document.createElement("script");
+      const dom = document.createElement('script');
       dom.src = `${this.BASE_URL}/vuepress_test/html/scriptCors`;
       document.body.appendChild(dom);
     },
     sendScript2() {
       window.onerror = function (message, url, line) {
-        console.log("设置了 crossorigin：anonymous 属性", message, url, line);
+        console.log('设置了 crossorigin：anonymous 属性', message, url, line);
       };
 
-      const dom = document.createElement("script");
+      const dom = document.createElement('script');
       dom.src = `${this.BASE_URL}/vuepress_test/html/scriptCors?cors=true`;
-      dom.crossOrigin = "anonymous"; // 需要使用驼峰命名
+      dom.crossOrigin = 'anonymous'; // 需要使用驼峰命名
       document.body.appendChild(dom);
     },
     sendScript3() {
       window.onerror = function (message, url, line) {
-        console.log("设置了 crossorigin：anonymous 属性", message, url, line);
+        console.log('设置了 crossorigin：anonymous 属性', message, url, line);
       };
 
-      const dom = document.createElement("script");
+      const dom = document.createElement('script');
       dom.src = `${this.BASE_URL}/vuepress_test/html/scriptCors?cors=true`;
-      dom.crossOrigin = "use-credentials"; // 需要使用驼峰命名
+      dom.crossOrigin = 'use-credentials'; // 需要使用驼峰命名
       document.body.appendChild(dom);
     },
   },

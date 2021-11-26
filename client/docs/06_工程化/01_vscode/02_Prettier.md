@@ -73,7 +73,7 @@ Linter 主要有两类规则：
 
 ### 选项
 
-Prettier 是一个配值项很少的程序，[官方文档-配置项](https://prettier.io/docs/en/options.html)
+Prettier 是一个配值项很少的程序，以下是一般选项, 具体见[官方文档-配置项](https://prettier.io/docs/en/options.html)
 
 ```js
 module.exports = {
@@ -84,11 +84,15 @@ module.exports = {
   semi: true, // 末尾是否需要分号
   trailingComma: 'es5', // 在对象或数组最后一个元素后面是否加逗号（在ES5中加尾逗号）
   bracketSpacing: true, // 在对象，数组括号与文字之间加空格 "{ foo: bar }"
-  bracketSameLine: true, // 文档显示为 html 结束标签不另起一行, 不起作用, 记录一下...(似乎因为 vscode Prettier 插件不支持)
+  bracketSameLine: true, // 文档显示为 html 结束标签不另起一行, 不起作用, 记录一下...(因为 vscode Prettier 插件不支持)
   jsxBracketSameLine: true,
   htmlWhitespaceSensitivity: 'ignore' // 解决包裹文字时候结束标签的结尾尖括号掉到了下一行 -- 虽然并没有碰到这个问题, 记录一下
 };
 ```
+
+## 问题
+
+目前没有找到方式在 vscode 的 Prettier 插件中使用共享配置和插件的方式, 虽然这也不是重要的内容, 备注一下
 
 ## 参考
 
