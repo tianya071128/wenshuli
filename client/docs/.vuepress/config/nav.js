@@ -4,21 +4,21 @@ module.exports = [
   {
     text: '前端',
     items: [
-      { text: 'html', link: '/html/' },
-      { text: 'css', link: '/css/' },
-      { text: 'js', link: '/js/' },
+      {text: 'html', link: '/html/'},
+      {text: 'css', link: '/css/'},
+      {text: 'js', link: '/js/'},
     ],
   },
   {
     text: '网络协议',
-    items: [
-      { text: 'http', link: '/http/' },
-    ],
+    items: [{text: 'http', link: '/http/'}],
   },
   {
     text: '工程化',
-    items: [
-      { text: 'vscode', link: '/vscode/' },
-    ],
+    items: [{text: 'vscode', link: '/vscode/'}],
   },
-]
+  {
+    text: '参考',
+    link: '/reference/',
+  },
+];
