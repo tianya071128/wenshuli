@@ -7,7 +7,7 @@ dist
 yarn.lock
 
 # vscode
-.vscode
+# .vscode
 
 # vuepress
 docs/.vuepress/dist

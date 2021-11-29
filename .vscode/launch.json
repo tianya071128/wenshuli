@@ -1,0 +1,54 @@
+{
+  // 使用 IntelliSense 了解相关属性。
+  // 悬停以查看现有属性的描述。
+  // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "node_launch",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${file}"
+    },
+    /**
+     * 支持 npm 脚本
+     * 例如启动 server 文件夹中的 npm run dev
+     */
+    {
+      "name": "npm script",
+      // 请求配置类型。 launch(启动): 启动一个进程 | attach(附加): 见下面的配置
+      "request": "launch",
+      // 传递给运行时可执行文件的可选参数。
+      "runtimeArgs": ["run-script", "dev"],
+      // 运行时的程序, 默认为 node. 此处可为 npm
+      "runtimeExecutable": "npm",
+      // 自动跳过这些 glob 模式覆盖的文件。
+      "skipFiles": ["<node_internals>/**"],
+      // 被调试程序的工作目录的绝对路径。 如果您已设置 localRoot(包含程序的本地目录的路径。默认为 null)则 cwd 将匹配该值，否则返回到您的 workspaceFolder(当前配置根文件夹路径)
+      "cwd": "${workspaceFolder}/sever",
+      "type": "pwa-node"
+    },
+    /**
+     * 支持 nodemon 等启动程序启动 -- 可见 launch 启动 nodemon https://code.visualstudio.com/docs/nodejs/nodejs-debugging#_restarting-debug-sessions-automatically-when-source-is-edited
+     * 官方文档中说按下停止调试会话只会断开调试, 而 nodemon(和 node.js) 将继续运行. 但是在 1.62.3(2021/11/30) 中, 如果 "request": "launch", 那么 nodemon 也会断开
+     * 例如启动 server 文件夹中的 app.js
+     */
+    {
+      "console": "integratedTerminal",
+      // 控制何时打开内部调试控制台。
+      "internalConsoleOptions": "neverOpen",
+      "name": "nodemon 启动",
+      // 程序的绝对路径 - 启动文件
+      "program": "${workspaceFolder}\\sever\\app.js",
+      "request": "launch",
+      // 如果我们失去连接，请尝试重新连接到程序。如果设置为'true'，我们将每秒尝试一次，直到永远。您可以通过在对象中指定'delay'和'maxAttempts'来自定义尝试的间隔和最大次数。
+      "restart": true,
+      // 运行时的程序, 默认为 node. 此处可为 nodemon
+      "runtimeExecutable": "nodemon",
+      // 调试时自动跳过这些 glob 模式覆盖的文件。
+      "skipFiles": ["<node_internals>/**"],
+      "type": "pwa-node"
+    }
+  ]
+}
