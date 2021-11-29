@@ -77,7 +77,14 @@ module.exports = {
       title: 'vscode', // 分组标题
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['01_设置', '04_快捷键', '02_Prettier', '03_Vetur', '05_git'],
+      children: [
+        '01_设置',
+        '04_快捷键',
+        '06_调试',
+        '02_Prettier',
+        '03_Vetur',
+        '05_git',
+      ],
     },
   ],
   '/07_参考/': ['01.index'],
