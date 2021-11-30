@@ -7,9 +7,32 @@
     {
       "type": "pwa-node",
       "request": "launch",
-      "name": "node_launch",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${file}"
+      "name": "node调试单文件",
+      // 自动跳过这些 glob 模式覆盖的文件。
+      "skipFiles": [
+        "<node_internals>/**", // 跳过 Node 的核心模块
+        "${workspaceFolder}/**/node_modules/**/*.js", // 跳过 node_modules 的模块
+        "!${workspaceFolder}/**/node_modules/mime-types/**/*.js" // 不跳过 node_modules 中 mime-types 模块
+      ],
+      /**
+       * 程序的绝对路径 - 启动文件 - 相当与 node {program} 启动
+       * vscode 的预定义变量，参考：https://code.visualstudio.com/docs/editor/variables-reference
+       */
+      "program": "${file}",
+      /**
+       * 传递给程序以进行调试的参数，node 中 args 参考 http://nodejs.cn/api/process.html#processargv
+       * 如下添加的 args 参数相当于启动命令（ D:\node\node.exe .\client\docs\06_工程化\01_vscode\vscode调试\01_测试args.js Administrator test）
+       * node [options] [V8 options] [script.js | -e "script" | -] [--] [arguments] -- args 参数放在 node 启动命令的最后 [arguments]
+       * ${env:USERNAME}：用于访问环境变量 USERNAME，在这里是 Administrator
+       *
+       */
+      "args": ["${env:USERNAME}", "test"],
+      // 如果添加了这个，启动命令（D:\node\node.exe --no-experimental-repl-await .\client\docs\06_工程化\01_vscode\vscode调试\01_测试args.js Administrator test）
+      // "runtimeArgs": ["--no-experimental-repl-await"]
+      // args 和 env 使用可见 client\docs\06_工程化\01_vscode\vscode调试\01_测试args和env.js 文件
+      "env": {
+        "BASE_URL": "URL"
+      }
     },
     /**
      * 支持 npm 脚本
@@ -19,7 +42,7 @@
       "name": "npm script",
       // 请求配置类型。 launch(启动): 启动一个进程 | attach(附加): 见下面的配置
       "request": "launch",
-      // 传递给运行时可执行文件的可选参数。
+      // 传递给运行时可执行文件的可选参数。 -- 相当于执行 npm run-script dev
       "runtimeArgs": ["run-script", "dev"],
       // 运行时的程序, 默认为 node. 此处可为 npm
       "runtimeExecutable": "npm",

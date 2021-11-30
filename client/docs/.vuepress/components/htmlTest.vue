@@ -455,7 +455,7 @@ export default {
       const input1 = document.getElementById('tex1');
       const input2 = document.getElementById('tex2');
       const input3 = document.getElementById('tex3');
-      const tabForward = function (e) {
+      const tabForward = function(e) {
         const target = e.target;
         if (target.composing) return; // 文本复合过程中不参与
         const maxLength = target.maxLength;
@@ -478,7 +478,7 @@ export default {
     },
     // 发送脚本
     sendScript() {
-      window.onerror = function (message, url, line) {
+      window.onerror = function(message, url, line) {
         console.log('没有设置 crossorigin 属性', message, url, line); // 对于跨域脚本，通过 onerror 捕获的错误信息只有 Script error 错误信息
       };
 
@@ -487,7 +487,7 @@ export default {
       document.body.appendChild(dom);
     },
     sendScript2() {
-      window.onerror = function (message, url, line) {
+      window.onerror = function(message, url, line) {
         console.log('设置了 crossorigin：anonymous 属性', message, url, line);
       };
 
@@ -497,7 +497,7 @@ export default {
       document.body.appendChild(dom);
     },
     sendScript3() {
-      window.onerror = function (message, url, line) {
+      window.onerror = function(message, url, line) {
         console.log('设置了 crossorigin：anonymous 属性', message, url, line);
       };
 

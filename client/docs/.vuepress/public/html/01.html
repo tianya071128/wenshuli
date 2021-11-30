@@ -41,8 +41,8 @@
   </body>
 </html>
 <script>
-  const test = new URLSearchParams(location.search).get("test");
-  for (const dom of document.body.querySelectorAll(".sign")) {
+  const test = new URLSearchParams(location.search).get('test');
+  for (const dom of document.body.querySelectorAll('.sign')) {
     if (dom.id !== test) {
       dom.parentNode.removeChild(dom);
     }
