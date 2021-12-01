@@ -9,15 +9,36 @@
   <body></body>
 </html>
 <script>
-  function foo() {
-    let aa22 = 1;
-    const fn2 = () => {
-      let aa = 1111;
-      console.log(this, aa22);
-    };
-    console.dir(fn2);
-    return fn2;
+  // const list = [];
+  // for (let i = 0; i < 10; i++) {
+  //   list.push(function(params) {
+  //     console.log(i);
+  //   });
+  // }
+  // console.log(list);
+  // function fn() {
+  //   let a = 22;
+  //   let b = null;
+
+  //   {
+  //     let c = 22;
+  //     b = function(params) {
+  //       console.log(a, c);
+  //     };
+  //   }
+  //   return b;
+  // }
+  // console.dir(fn());
+  function fn(params) {
+    debugger;
+    let a = 1;
+    {
+      let b = 1;
+      {
+        let c = 2;
+      }
+    }
+    let d = 4;
   }
-  const f = foo.call({});
-  f();
+  fn();
 </script>
