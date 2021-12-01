@@ -34,6 +34,28 @@ export default {
       activeNames: [0],
       list: [
         {
+          title: 'js',
+          children: [
+            {
+              name: 'HTML 标准',
+              img: 'https://resources.whatwg.org/logo.svg',
+              describe: 'HTML 标准 - 包含 DOM、HTML5 等',
+              link: 'https://whatwg.org/',
+            },
+            {
+              name: 'ES6',
+              img: 'https://es6.ruanyifeng.com/favicon.ico',
+              describe: '书籍 - ES6 入门教程',
+              link: 'https://es6.ruanyifeng.com/',
+            },
+            {
+              name: 'JS 面试题',
+              describe: '面试 - 比较有质量',
+              link: 'https://github.com/yygmind/blog/issues/43',
+            },
+          ],
+        },
+        {
           title: 'vscode',
           children: [
             {
