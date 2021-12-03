@@ -43,7 +43,7 @@ DOM Level 1 在1998 年成为W3C 推荐标准，主要定义了HTML 和XML 文�
 
 * DOM Views(视图)：定义基于样式信息的不同视图。
 
-  这个模块比较小，主要定义了新的属性和方法
+  *这个模块比较小，主要定义了新的属性和方法。*
 
 * DOM Events(事件）：定义通过事件实现DOM文档交互。
 
@@ -53,7 +53,7 @@ DOM Level 1 在1998 年成为W3C 推荐标准，主要定义了HTML 和XML 文�
 
 * DOM HTML：在DOM1 HTML 部分的基础上，增加属性、方法和新接口。
 
-  这个模块比较小，主要定义了新的属性和方法。
+  *这个模块比较小，主要定义了新的属性和方法。*
 
 * DOM Mutation Observers：定义基于DOM变化触发回调的接口。这个模块是DOM4 级模块，
   用于取代Mutation Events。
@@ -166,4 +166,6 @@ Attr 类型表示元素的特性，技术上讲，特性就是存在于元素 at
 ## 参考
 
 * [MDN-DOM概述](https://developer.mozilla.org/zh-CN/docs/Web/API/Document_Object_Model/Introduction)
+* [JS 教程-节点属性：type，tag 和 content](https://zh.javascript.info/basic-dom-node-properties)
+* 书籍 - JS 高级程序设计
 

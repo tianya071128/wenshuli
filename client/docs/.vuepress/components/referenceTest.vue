@@ -14,12 +14,32 @@
           @click="handlerClick(cardItem)"
         >
           <div class="card-header">
-            <img :src="cardItem.img || '/img/default.png'" alt="图标" />
-            <span class="link-name">{{ cardItem.name }}</span>
+            <img
+              :src="cardItem.img || '/img/default.png'"
+              alt="图标"
+              class="no-zoom"
+            />
+            <el-tooltip
+              class="item"
+              effect="light"
+              :content="cardItem.name"
+              placement="top-start"
+              :open-delay="500"
+            >
+              <span class="link-name">{{ cardItem.name }}</span>
+            </el-tooltip>
           </div>
-          <div class="card-describe">
-            {{ cardItem.describe }}
-          </div>
+          <el-tooltip
+            class="item"
+            effect="light"
+            :content="cardItem.describe"
+            placement="bottom"
+            :open-delay="500"
+          >
+            <div class="card-describe">
+              {{ cardItem.describe }}
+            </div>
+          </el-tooltip>
         </div>
       </el-collapse-item>
     </el-collapse>
@@ -37,10 +57,16 @@ export default {
           title: 'js',
           children: [
             {
-              name: 'HTML 标准',
+              name: 'HTML 标准 -- 测试测试测试',
               img: 'https://resources.whatwg.org/logo.svg',
               describe: 'HTML 标准 - 包含 DOM、HTML5 等',
               link: 'https://whatwg.org/',
+            },
+            {
+              name: '现代 JS 教程',
+              img: 'https://zh.javascript.info/img/favicon/favicon.png',
+              describe: 'JS 教程 - 概念讲解的好',
+              link: 'https://zh.javascript.info/',
             },
             {
               name: 'ES6',
@@ -121,7 +147,7 @@ export default {
 .reference-card {
   display: inline-block;
   width: 30%;
-  height: 100px;
+  height: 80px;
   border: 1px solid #ebebeb;
   border-radius: 3px;
   padding: 10px;
@@ -145,13 +171,20 @@ export default {
   height: 30px;
 }
 .card-header .link-name {
+  flex: 1;
   font-size: 16px;
   color: #4d4f91;
   margin-left: 10px;
   margin-right: 30px;
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .card-describe {
   margin-top: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
