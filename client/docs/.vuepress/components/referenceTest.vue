@@ -117,12 +117,6 @@ export default {
 };
 </script>
 
-<style>
-* {
-  box-sizing: border-box;
-}
-</style>
-
 <style scoped>
 .reference-test {
   border: 1px solid #ebebeb;
