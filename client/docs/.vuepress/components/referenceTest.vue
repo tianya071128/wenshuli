@@ -57,7 +57,7 @@ export default {
           title: 'js',
           children: [
             {
-              name: 'HTML 标准 -- 测试测试测试',
+              name: 'HTML 标准',
               img: 'https://resources.whatwg.org/logo.svg',
               describe: 'HTML 标准 - 包含 DOM、HTML5 等',
               link: 'https://whatwg.org/',
@@ -100,6 +100,17 @@ export default {
               name: 'Vetur',
               describe: 'Vetur 官网 - 基于 vue 的编辑器扩展',
               link: 'https://vuejs.github.io/vetur/',
+            },
+          ],
+        },
+        {
+          title: '工具',
+          children: [
+            {
+              name: '扩展迷',
+              img: 'https://extension.extfans.com/static/site/src/img/logo.png',
+              describe: '下载 Chrome 扩展',
+              link: 'https://www.extfans.com/',
             },
           ],
         },

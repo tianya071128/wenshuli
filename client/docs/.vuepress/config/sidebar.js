@@ -50,7 +50,7 @@ module.exports = {
       title: 'DOM', // 分组标题
       collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['10_DOM', '11_DOM_节点操作', '12_DOM_几何位置'],
+      children: ['10_DOM', '11_DOM_节点操作', '12_DOM_几何位置', '13_DOM_事件'],
     },
   ],
   '/05_网络协议/01_http/': [

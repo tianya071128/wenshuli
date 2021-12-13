@@ -5,7 +5,7 @@ module.exports = [
     text: '前端',
     items: [
       { text: 'html', link: '/html/' },
-      { text: 'css', link: '/css/' },
+      // { text: 'css', link: '/css/' },
       { text: 'js', link: '/js/' },
     ],
   },
@@ -23,6 +23,6 @@ module.exports = [
   },
   {
     text: '项目',
-    items: [{ text: '学习记录', link: '/project/study/' }],
+    items: [{ text: '学习记录', link: 'http://weshuli.com/study/#/home' }],
   },
 ];

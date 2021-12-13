@@ -91,11 +91,11 @@ document.body.removeChild(div);
 
 3. [window.scrollTo(pageX,pageY)](https://developer.mozilla.org/zh/docs/Web/API/Window/scrollTo)：将页面滚动至 **绝对坐标。**
 
-### 静止滚动
+### 禁止滚动
 
 要使文档不可滚动，只需要设置 `document.body.style.overflow = "hidden"`。
 
-还需要注意滚动条的存在，如果滚动条存在，在静止滚动的时候需要计算与滚动条的大小，在 `document.body` 中滚动条原来的位置处通过添加 `padding`，来替代滚动条
+还需要注意滚动条的存在，如果滚动条存在，在禁止滚动的时候需要计算与滚动条的大小，在 `document.body` 中滚动条原来的位置处通过添加 `padding`，来替代滚动条
 
 ## 元素坐标
 
