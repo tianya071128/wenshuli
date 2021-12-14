@@ -43,7 +43,7 @@ tags:
 
 ::: warning 事件的传播路径
 
-一旦事件确定了传播路径，就会按照顺序执行上述阶段，如果不支持某个阶段，或者事件对象的传播已停止，则将跳过该阶段。
+一旦事件确定了**传播路径**，就会按照顺序执行上述阶段，如果不支持某个阶段，或者事件对象的传播已停止，则将跳过该阶段。
 
 **例如某个元素的 bubbles 属性为 false，则将跳过冒泡阶段。如果调用了 stopPropagation 方法则跳过后续所有阶段**
 
@@ -171,3 +171,18 @@ document.addEventListener("DOMContentLoaded", function() {
 只有一些事件会存在这种关系
 
 :::
+
+## 参考
+
+* 书籍 - JavaScript 高程
+
+* [W3C-DOM事件](https://www.w3.org/TR/uievents)
+
+* [JS教程-事件简介](https://zh.javascript.info/events)
+
+* [MDN-Event接口](https://developer.mozilla.org/zh-CN/docs/Web/API/Event)
+
+* [MDN-EventTarget](https://developer.mozilla.org/zh-CN/docs/Web/API/EventTarget)
+
+  
+

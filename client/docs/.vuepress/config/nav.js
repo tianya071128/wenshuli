@@ -15,14 +15,17 @@ module.exports = [
   },
   {
     text: '工程化',
-    items: [{ text: 'vscode', link: '/vscode/' }],
-  },
-  {
-    text: '参考',
-    link: '/reference/',
+    items: [
+      { text: 'vscode', link: '/vscode/' },
+      { text: 'ESLint', link: '/eslint/' },
+    ],
   },
   {
     text: '项目',
     items: [{ text: '学习记录', link: 'http://weshuli.com/study/#/home' }],
+  },
+  {
+    text: '参考',
+    link: '/reference/',
   },
 ];

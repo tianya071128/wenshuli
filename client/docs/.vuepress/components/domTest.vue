@@ -26,6 +26,12 @@
         placeholder="阻止了鼠标按下事件，也就无法获取焦点"
       />
     </p>
+    <p v-if="type === 'imgLoad'">
+      <el-button type="primary" @click="onClick9">加载图片</el-button>
+    </p>
+    <p v-if="type === 'jsLoad'">
+      <el-button type="primary" @click="onClick10">加载脚本</el-button>
+    </p>
   </div>
 </template>
 
@@ -62,6 +68,22 @@ export default {
     },
     onClick8() {
       console.log('双击事件');
+    },
+    onClick9() {
+      let image = document.createElement('img');
+      image.addEventListener('load', (event) => {
+        alert('图片加载完成');
+      });
+      document.body.appendChild(image);
+      image.src = '/img/64.png';
+    },
+    onClick10() {
+      let script = document.createElement('script');
+      script.addEventListener('load', (event) => {
+        alert('脚本加载并执行完成');
+      });
+      script.src = '/js/test.js';
+      document.body.appendChild(script);
     },
   },
 };

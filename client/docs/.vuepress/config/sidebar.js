@@ -50,7 +50,32 @@ module.exports = {
       title: 'DOM', // 分组标题
       collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['10_DOM', '11_DOM_节点操作', '12_DOM_几何位置', '13_DOM_事件'],
+      children: [
+        '10_DOM',
+        '11_DOM_节点操作',
+        '12_DOM_几何位置',
+        '13_DOM_事件',
+        '14_DOM_事件类型',
+      ],
+    },
+    {
+      title: 'web API', // 分组标题
+      collapsable: true, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: [
+        {
+          title: '数据存储', // 分组标题
+          collapsable: false, // 是否可折叠，可选的，默认true
+          sidebarDepth: 2, // 深度，可选的, 默认值是 1
+          children: ['15_cookie'],
+        },
+        {
+          title: 'web API2', // 分组标题
+          collapsable: false, // 是否可折叠，可选的，默认true
+          sidebarDepth: 2, // 深度，可选的, 默认值是 1
+          children: ['12_DOM_几何位置'],
+        },
+      ],
     },
   ],
   '/05_网络协议/01_http/': [
@@ -92,6 +117,14 @@ module.exports = {
         '03_Vetur',
         '05_git',
       ],
+    },
+  ],
+  '/06_工程化/02_eslint/': [
+    {
+      title: 'ESLint', // 分组标题
+      collapsable: false, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: ['01.eslint', '02_eslint配置'],
     },
   ],
   '/07_参考/': ['01.index'],
