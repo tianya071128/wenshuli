@@ -82,13 +82,19 @@ export default {
           ],
         },
         {
-          title: 'vscode',
+          title: '前端工程化',
           children: [
             {
               name: 'vscode',
               img: '/img/48.png',
               describe: 'vscode 官方网站',
               link: 'https://code.visualstudio.com/',
+            },
+            {
+              name: 'ESLint',
+              img: 'https://eslint.bootcss.com/img/logo.png',
+              describe: 'ESLint 中文网 - 可组装的JavaScript和JSX检查工具',
+              link: 'https://eslint.bootcss.com/',
             },
             {
               name: 'Prettier',
@@ -114,6 +120,17 @@ export default {
             },
           ],
         },
+        {
+          title: '规范',
+          children: [
+            {
+              name: 'gitignore 规范',
+              describe:
+                '忽略文件的规范，适用于前端工具，例如：ESLint、Prettier等',
+              link: 'http://git-scm.com/docs/gitignore',
+            },
+          ],
+        },
       ],
     };
   },
@@ -134,7 +151,7 @@ export default {
   border-radius: 3px;
   padding: 24px;
 }
-/deep/ .el-collapse-item__header {
+.reference-test /deep/ .el-collapse-item__header {
   position: relative;
   padding-left: 15px;
 }
