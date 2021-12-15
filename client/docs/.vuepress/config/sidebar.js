@@ -124,7 +124,7 @@ module.exports = {
       title: 'ESLint', // 分组标题
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['01.eslint', '02_eslint配置'],
+      children: ['01.eslint', '02_eslint配置', '03_格式化程序'],
     },
   ],
   '/07_参考/': ['01.index'],
