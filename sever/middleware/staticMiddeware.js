@@ -27,7 +27,6 @@ const getHash = function (str) {
 module.exports = function staticMiddeware(ctx) {
   return new Promise(async (resolve, reject) => {
     const { req, res, path: urlPath, method } = ctx;
-    console.log(111);
     // 如果不是 GET 请求, 退出
     if (method !== 'get') return resolve();
     // 如果路径不是访问 /pulic, 退出

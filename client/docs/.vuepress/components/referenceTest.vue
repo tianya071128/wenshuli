@@ -57,12 +57,6 @@ export default {
           title: 'js',
           children: [
             {
-              name: 'HTML 标准',
-              img: 'https://resources.whatwg.org/logo.svg',
-              describe: 'HTML 标准 - 包含 DOM、HTML5 等',
-              link: 'https://whatwg.org/',
-            },
-            {
               name: '现代 JS 教程',
               img: 'https://zh.javascript.info/img/favicon/favicon.png',
               describe: 'JS 教程 - 概念讲解的好',
@@ -117,6 +111,23 @@ export default {
               img: 'https://extension.extfans.com/static/site/src/img/logo.png',
               describe: '下载 Chrome 扩展',
               link: 'https://www.extfans.com/',
+            },
+          ],
+        },
+        {
+          title: '标准',
+          children: [
+            {
+              name: 'HTML 标准',
+              img: 'https://resources.whatwg.org/logo.svg',
+              describe: 'HTML 标准 - 包含 DOM、HTML5 等',
+              link: 'https://whatwg.org/',
+            },
+            {
+              name: 'W3C Web标准',
+              img: 'https://www.w3.org/2008/site/images/logo-w3c-screen-lg',
+              describe: 'W3C',
+              link: 'https://www.w3.org/',
             },
           ],
         },

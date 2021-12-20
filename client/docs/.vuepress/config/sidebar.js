@@ -67,13 +67,17 @@ module.exports = {
           title: '数据存储', // 分组标题
           collapsable: false, // 是否可折叠，可选的，默认true
           sidebarDepth: 2, // 深度，可选的, 默认值是 1
-          children: ['15_cookie'],
+          children: ['15_cookie', '16_Web Storage', '17_IndexedDB'],
         },
         {
-          title: 'web API2', // 分组标题
+          title: '二进制数据，文件', // 分组标题
           collapsable: false, // 是否可折叠，可选的，默认true
           sidebarDepth: 2, // 深度，可选的, 默认值是 1
-          children: ['12_DOM_几何位置'],
+          children: [
+            '18_ArrayBuffer',
+            '19_Blob、File和FileReader',
+            '20_文件操作',
+          ],
         },
       ],
     },

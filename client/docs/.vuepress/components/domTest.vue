@@ -32,6 +32,19 @@
     <p v-if="type === 'jsLoad'">
       <el-button type="primary" @click="onClick10">加载脚本</el-button>
     </p>
+    <p v-if="type === 'updateCustom'">
+      <el-button type="primary" @click="onClick11">
+        下载自定义文件
+      </el-button>
+    </p>
+    <p v-if="type === 'updateResources'">
+      <!-- <a href="http://localhost:8080/js/operation/"> -->
+      <a href="http://localhost:5000/public/loading.zip" target="_blank">
+        <el-button type="primary">
+          下载自定义文件
+        </el-button>
+      </a>
+    </p>
   </div>
 </template>
 
@@ -84,6 +97,19 @@ export default {
       });
       script.src = '/js/test.js';
       document.body.appendChild(script);
+    },
+    onClick11() {
+      /** 变量定义 */
+      let debug = { hello: 'world' };
+      let blob = new Blob([JSON.stringify(debug, null, 2)], {
+        type: 'application/json', // 文件 MIME
+      });
+      let link = document.createElement('a');
+
+      link.download = 'hello.json';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href);
     },
   },
 };
