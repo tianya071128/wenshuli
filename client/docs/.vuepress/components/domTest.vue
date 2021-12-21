@@ -37,14 +37,7 @@
         下载自定义文件
       </el-button>
     </p>
-    <p v-if="type === 'updateResources'">
-      <!-- <a href="http://localhost:8080/js/operation/"> -->
-      <a href="http://localhost:5000/public/loading.zip" target="_blank">
-        <el-button type="primary">
-          下载自定义文件
-        </el-button>
-      </a>
-    </p>
+    <p v-if="type === 'updateResources'"></p>
   </div>
 </template>
 

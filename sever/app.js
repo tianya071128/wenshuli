@@ -12,6 +12,11 @@ http
     };
     await baseMiddleware(ctx); // 基础处理
 
+    const ctx2 = { ...ctx };
+    delete ctx2.res;
+    delete ctx2.req;
+    console.log(ctx2);
+
     try {
       await staticMiddeware(ctx); // 静态资源处理
     } catch (e) {

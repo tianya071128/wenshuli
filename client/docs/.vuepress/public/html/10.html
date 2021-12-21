@@ -1,0 +1,81 @@
+<!--
+ * @Descripttion: 
+ * @Author: 温祖彪
+ * @Date: 2021-10-19 11:05:07
+ * @LastEditors: sueRimn
+ * @LastEditTime: 2021-10-19 17:23:22
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <p>
+      <a href="/vuepress_test/public/01.jpg?update" download="01.jpg">
+        同源图片(服务端会返回 Content-Disposition 头部字段用于兼容 IE，同时使用
+        download 字段)
+      </a>
+    </p>
+    <p>
+      <a href="./test.xlsx">
+        同源 xlsx(浏览器无法直接打开的资源会进行下载或者下载对话框提示下载)
+      </a>
+    </p>
+    <p>
+      <a href="/public/01.jpg?update" download="01.jpg" class="setHost">
+        跨域图片(服务器返回 Content-Disposition 字段)
+      </a>
+    </p>
+    <p>
+      <a href="#" download="01.jpg" id="update" target="_blank">
+        <!-- <a download="01.jpg" id="update" target="_blank"> -->
+        跨域图片(这是一张百度翻译的图片，请求不跨域的地址，然后返回资源的二进制数据过来)
+      </a>
+    </p>
+
+    <a href="/public/loading.zip" download="loading.zip" class="setHost">
+      跨域 xlsx(浏览器无法直接打开的资源会进行下载或者下载对话框提示下载)
+    </a>
+  </body>
+</html>
+
+<script>
+  var setHost = document.querySelectorAll('.setHost');
+  for (let index = 0; index < setHost.length; index++) {
+    const dom = setHost[index];
+    dom.href =
+      location.protocol +
+      '//' +
+      location.hostname +
+      ':5000' +
+      dom.getAttribute('href');
+  }
+
+  var a = document.getElementById('update');
+  a.addEventListener('click', function(e) {
+    e.preventDefault();
+
+    const request = new XMLHttpRequest();
+    request.open('GET', '/vuepress_test/html/getImg');
+    request.responseType = 'blob';
+    request.onload = function() {
+      const imageUrl = (window.URL || window.webkitURL).createObjectURL(
+        request.response
+      );
+      const aTag = document.createElement('a');
+      aTag.href = imageUrl;
+      aTag.download = '下载图片.png';
+      aTag.click();
+
+      // 兼容 IE
+      if (navigator.msSaveBlob) {
+        navigator.msSaveBlob(request.response, '下载图片.png');
+      }
+    };
+    request.send();
+  });
+</script>

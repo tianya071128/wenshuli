@@ -1,51 +1,50 @@
-const httpController = require("../controller/http");
-const htmlController = require("../controller/html");
+const httpController = require('../controller/http');
+const htmlController = require('../controller/html');
 
-const basePath = "/vuepress_test";
 const routers = [
   {
-    method: ["get", "post", "head", "delete"],
-    path: "/http/cache",
+    method: ['get', 'post', 'head', 'delete'],
+    path: '/http/cache',
     controller: httpController.cache,
   },
   {
-    method: ["get"],
-    path: "/http/status",
+    method: ['get'],
+    path: '/http/status',
     controller: httpController.status,
   },
   {
-    method: ["get"],
-    path: "/http/encoding",
+    method: ['get'],
+    path: '/http/encoding',
     controller: httpController.encoding,
   },
   {
-    method: ["get"],
-    path: "/http/pragma",
+    method: ['get'],
+    path: '/http/pragma',
     controller: httpController.pragma,
   },
   {
-    method: ["get", "post", "head", "delete", "put", "options"],
-    path: "/http/cors",
+    method: ['get', 'post', 'head', 'delete', 'put', 'options'],
+    path: '/http/cors',
     controller: httpController.cors,
   },
   {
-    method: ["get"],
-    path: "/http/corsCookie",
+    method: ['get'],
+    path: '/http/corsCookie',
     controller: httpController.corsCookie,
   },
   {
-    method: ["get"],
-    path: "/html/getImg",
+    method: ['get'],
+    path: '/html/getImg',
     controller: htmlController.getImg,
   },
   {
-    method: ["get"],
-    path: "/html/formElement",
+    method: ['get'],
+    path: '/html/formElement',
     controller: htmlController.formElement,
   },
   {
-    method: ["get"],
-    path: "/html/scriptCors",
+    method: ['get'],
+    path: '/html/scriptCors',
     controller: htmlController.scriptCors,
   },
 ];
@@ -56,7 +55,7 @@ const conterollers = routers.reduce(function (total, item) {
       (total2, item2) => {
         return {
           ...total2,
-          [`${basePath}${item.path}_${item2}`]: item.controller,
+          [`${item.path}_${item2}`]: item.controller,
         };
       },
       {}
@@ -65,13 +64,8 @@ const conterollers = routers.reduce(function (total, item) {
 }, {});
 
 module.exports = async function staticMiddeware(ctx) {
-  const ctx2 = { ...ctx };
-  delete ctx2.res;
-  delete ctx2.req;
-  console.log(ctx2);
-
   const { path, method, res } = ctx;
-  const processor = conterollers[path + "_" + method];
+  const processor = conterollers[path + '_' + method];
   if (processor) return processor(ctx);
 
   res.writeHead(404);

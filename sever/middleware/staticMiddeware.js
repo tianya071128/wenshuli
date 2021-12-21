@@ -26,7 +26,7 @@ const getHash = function (str) {
 };
 module.exports = function staticMiddeware(ctx) {
   return new Promise(async (resolve, reject) => {
-    const { req, res, path: urlPath, method } = ctx;
+    const { req, res, path: urlPath, method, query } = ctx;
     // 如果不是 GET 请求, 退出
     if (method !== 'get') return resolve();
     // 如果路径不是访问 /pulic, 退出
@@ -76,6 +76,11 @@ module.exports = function staticMiddeware(ctx) {
         'PUT, POST, GET, DELETE, OPTIONS'
       );
       res.setHeader('Access-Control-Allow-Credentials', true);
+    }
+
+    // 支持下载
+    if (query.hasOwnProperty('update')) {
+      res.setHeader('Content-Disposition', 'attachment');
     }
 
     // 接下来检测一下是否需要协商缓存

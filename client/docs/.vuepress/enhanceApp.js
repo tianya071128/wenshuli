@@ -1,5 +1,5 @@
 // import vue from 'vue/dist/vue.esm.browser'
-import pageComponents from '@internal/page-components';
+// import pageComponents from '@internal/page-components';
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 import http from './utils/request';
@@ -14,7 +14,7 @@ export default ({
   Vue.use(ElementUI);
   Vue.prototype.$http = http;
   Vue.prototype.BASE_URL = process.env.BASE_URL;
-  for (const [name, component] of Object.entries(pageComponents)) {
-    Vue.component(name, component);
-  }
+  // for (const [name, component] of Object.entries(pageComponents)) {
+  //   Vue.component(name, component);
+  // }
 };

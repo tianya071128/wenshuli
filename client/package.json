@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "docs:dev": "vuepress dev docs",
-    "docs:build": "vuepress build docs"
+    "docs:devx": "vuepress dev docs",
+    "docs:dev": "node --max_old_space_size=4096 ./node_modules/vuepress/cli.js dev docs",
+    "docs:buildx": "vuepress build docs",
+    "docs:build": "node --max_old_space_size=4096 ./node_modules/vuepress/cli.js build docs"
   },
   "author": "",
   "license": "ISC",

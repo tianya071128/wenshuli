@@ -1,4 +1,0 @@
-# 默认会忽略 node_modules
-
-# 忽略 dist 目录下的所有文件
-main.js

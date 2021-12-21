@@ -251,7 +251,6 @@ export default {
       let imageURL = `${this.BASE_URL}/public/01.jpg`;
 
       let downloadedImg = new Image();
-      ``;
       downloadedImg.crossOrigin = 'Anonymous';
       // 在图片加载完成后, 通过 canvas 下载图片
       downloadedImg.addEventListener('load', imageReceived, false);
