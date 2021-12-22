@@ -47,6 +47,11 @@ const routers = [
     path: '/html/scriptCors',
     controller: htmlController.scriptCors,
   },
+  {
+    method: ['post'],
+    path: '/html/xhr',
+    controller: htmlController.xhr,
+  },
 ];
 const conterollers = routers.reduce(function (total, item) {
   return {

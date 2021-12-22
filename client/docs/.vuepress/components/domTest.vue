@@ -37,13 +37,61 @@
         下载自定义文件
       </el-button>
     </p>
-    <p v-if="type === 'updateResources'"></p>
+    <p v-if="type === 'xhrExample'">
+      <label>
+        <input
+          type="file"
+          style="display:none"
+          ref="input"
+          @change="onChangeFile"
+        />
+        <el-button size="mini" type="primary" @click="onClick12">
+          选取文件
+        </el-button>
+      </label>
+      <el-input-number
+        size="mini"
+        :step="500"
+        v-model="timeout"
+      ></el-input-number>
+      <el-button size="mini" type="primary" @click="onClick13" v-if="!!xhr">
+        取消上传
+      </el-button>
+    </p>
+    <div>
+      上传进度条：
+      <el-progress
+        v-if="updateStatus"
+        :percentage="updateProgress"
+        :status="updateStatus"
+      ></el-progress>
+      <el-progress v-else :percentage="updateProgress"></el-progress>
+    </div>
+    <div>
+      响应进度条：
+      <el-progress
+        v-if="responseStatus"
+        :percentage="responseProgress"
+        :status="responseStatus"
+      ></el-progress>
+      <el-progress v-else :percentage="responseProgress"></el-progress>
+    </div>
   </div>
 </template>
 
 <script>
 export default {
   name: 'DomTest',
+  data() {
+    return {
+      updateStatus: '', // 上传进度条状态
+      updateProgress: 0, // 上传进度条进度
+      xhr: null, //
+      timeout: 0, // 超时时间
+      responseStatus: '', // 上传进度条状态
+      responseProgress: 0, // 响应进度
+    };
+  },
   props: {
     type: String,
   },
@@ -103,6 +151,115 @@ export default {
       link.href = URL.createObjectURL(blob);
       link.click();
       URL.revokeObjectURL(link.href);
+    },
+    onClick12() {
+      this.$refs.input.value = null;
+      this.$refs.input.click();
+    },
+    onClick13() {
+      this.xhr && this.xhr.abort();
+    },
+    onChangeFile() {
+      const files = this.$refs.input.files;
+      if (files) {
+        this.updateFile(files[0]);
+      }
+    },
+    updateFile(file) {
+      this.updateStatus = '';
+      this.updateProgress = 0;
+      this.responseStatus = '';
+      this.responseProgress = 0;
+
+      let fromData = new FormData();
+      fromData.append('file', file);
+
+      const xhr = new XMLHttpRequest();
+      let result = null;
+      let handleEnd = () => {
+        if (result.isSuccess) {
+          if (xhr.status === 200) {
+            this.responseStatus = 'success';
+          } else {
+            this.$message.error(xhr.response);
+            this.responseStatus = 'exception';
+          }
+        } else {
+          this.responseStatus = 'exception';
+          this.$message.error(result.msg);
+        }
+        this.xhr = null;
+      };
+
+      xhr.open('POST', '/vuepress_test/html/xhr');
+      xhr.getResponseHeader('Content-Type', 'multipart/form-data');
+      xhr.timeout = this.timeout || 0;
+
+      /** 为 xhr 监听各种事件 */
+      /** xhr 事件监听 */
+      xhr.onerror = () => {
+        console.log('是否失败？ -- onerror');
+        result = {
+          isSuccess: false,
+          msg: '请求出错',
+        };
+        handleEnd();
+      };
+      xhr.onabort = () => {
+        console.log('是否取消 -- abort');
+        result = {
+          isSuccess: false,
+          msg: '请求取消',
+        };
+        handleEnd();
+      };
+      xhr.ontimeout = () => {
+        console.log('是否超时 -- timeout');
+        result = {
+          isSuccess: false,
+          msg: '请求超时',
+        };
+        handleEnd();
+      };
+      xhr.onload = () => {
+        result = {
+          isSuccess: true,
+          msg: '请求成功',
+        };
+        handleEnd();
+      };
+
+      /** 响应进度事件 */
+      xhr.onprogress = (event) => {
+        if (event.lengthComputable) {
+          // 已知响应大小
+          this.responseProgress = Math.ceil((event.loaded / event.total) * 100);
+        }
+      };
+
+      /** 上传进度事件 */
+      xhr.upload.onprogress = (event) => {
+        setTimeout(() => {
+          if (result && !result.isSuccess) return;
+          // 奇怪的是，如果将网络调试断开，那么这个进度事件也会触发并且 event.loaded === event.total
+          // 但是如果是取消了的话，就不会被触发
+          // 所以我们需要判断一下是否请求出错
+          // 因为这个事件优先于 xhr.onerror 事件，所以我们就需要延迟一下执行
+          this.updateProgress = Math.ceil((event.loaded / event.total) * 100);
+        }, 0);
+      };
+      xhr.upload.onloadend = () => {
+        // 无论成功与否都会触发，就可以在这里检测是否上传成功
+        setTimeout(() => {
+          this.updateStatus =
+            this.updateProgress === 100 ? 'success' : 'exception';
+        }, 0);
+      };
+
+      xhr.send(fromData);
+
+      // 赋值给 this
+      this.xhr = xhr;
     },
   },
 };

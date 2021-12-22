@@ -10,6 +10,7 @@ http
       req,
       res,
     };
+
     await baseMiddleware(ctx); // 基础处理
 
     const ctx2 = { ...ctx };
@@ -23,7 +24,11 @@ http
       return;
     }
 
-    await bodyMiddleware(ctx); // post - 请求体处理
+    try {
+      await bodyMiddleware(ctx); // post - 请求体处理
+    } catch (e) {
+      return;
+    }
 
     router(ctx);
   })
