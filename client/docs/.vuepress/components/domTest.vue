@@ -37,44 +37,46 @@
         下载自定义文件
       </el-button>
     </p>
-    <p v-if="type === 'xhrExample'">
-      <label>
-        <input
-          type="file"
-          style="display:none"
-          ref="input"
-          @change="onChangeFile"
-        />
-        <el-button size="mini" type="primary" @click="onClick12">
-          选取文件
+    <div v-if="type === 'xhrExample'">
+      <p>
+        <label>
+          <input
+            type="file"
+            style="display:none"
+            ref="input"
+            @change="onChangeFile"
+          />
+          <el-button size="mini" type="primary" @click="onClick12">
+            选取文件
+          </el-button>
+        </label>
+        <el-input-number
+          size="mini"
+          :step="500"
+          v-model="timeout"
+        ></el-input-number>
+        <el-button size="mini" type="primary" @click="onClick13" v-if="!!xhr">
+          取消上传
         </el-button>
-      </label>
-      <el-input-number
-        size="mini"
-        :step="500"
-        v-model="timeout"
-      ></el-input-number>
-      <el-button size="mini" type="primary" @click="onClick13" v-if="!!xhr">
-        取消上传
-      </el-button>
-    </p>
-    <div>
-      上传进度条：
-      <el-progress
-        v-if="updateStatus"
-        :percentage="updateProgress"
-        :status="updateStatus"
-      ></el-progress>
-      <el-progress v-else :percentage="updateProgress"></el-progress>
-    </div>
-    <div>
-      响应进度条：
-      <el-progress
-        v-if="responseStatus"
-        :percentage="responseProgress"
-        :status="responseStatus"
-      ></el-progress>
-      <el-progress v-else :percentage="responseProgress"></el-progress>
+      </p>
+      <div>
+        上传进度条：
+        <el-progress
+          v-if="updateStatus"
+          :percentage="updateProgress"
+          :status="updateStatus"
+        ></el-progress>
+        <el-progress v-else :percentage="updateProgress"></el-progress>
+      </div>
+      <div>
+        响应进度条：
+        <el-progress
+          v-if="responseStatus"
+          :percentage="responseProgress"
+          :status="responseStatus"
+        ></el-progress>
+        <el-progress v-else :percentage="responseProgress"></el-progress>
+      </div>
     </div>
   </div>
 </template>

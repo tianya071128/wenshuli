@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>基础流程</title>
+    <script src="./vue.js"></script>
+  </head>
+  <body></body>
+</html>
+
+<script>
+  /**
+   * vue 是分多平台，如 web 就区分 ssr、web等、还区分 weex
+   * 在这里主要看下 web 平台的不带编译器的，入口为 platforms/web/entry-runtime.js
+   *
+   * 首先会在 code/index.js中，会做如下工作，这些是不分平台的工作(也就是各环境都会经过这里)：
+   *   为 Vue.prototype 添加一些属性和方法 -- code/instance/index.js
+   *   为 Vue 添加静态属性和方法 -- code/index.js 的 initGlobalAPI 方法中
+   *
+   * 在 web 端不使用编译器(compiler)情况下，会通过 platforms/runtime/index.js 做一些 web 端渲染的工作
+   *  并且添加 model 和 show 全局指令 以及 添加 Transition、TransitionGroup 全局内置组件
+   *
+   * 至此，引用 Vue 就会做如上处理，之后等待使用 Vue 构造函数处理
+   */
+  Vue.mixin({
+    methods: {
+      test() {},
+    },
+  });
+
+  /**
+   * 初始实例流程：
+   *  主要在 code/instance/init.js 的 _init 方法中初始化
+   *  首先是合并配置项的问题：合并规则见 code/util/options.js 的 mergeOptions 方法注解
+   *    针对根组件的构造函数 options 提取，需要区分两种情况：
+   *      1 如果是 new Vue() 的话，就表示是 Vue 构造函数，就会从中提取出 components、directives、filters 等资源.如果通过 Vue.mixin 注入的全局混入资源都会在 Vue 构造函数中提取出来
+   *      2 如果是通过 Vue.extend() 创建出来的子类，然后 new 一个子类的实例。那么就会递归提取出 options
+   *    提取到构造函数的 options 后，在与创建实例时传入的 options 一起合并
+   *
+   */
+  // new Vue 后，会调用 code/instance/index.js 中 Vue 构造函数
+  new Vue({
+    data() {
+      return {
+        a: 1,
+        b: {
+          c: 2,
+        },
+        d: [1, 2],
+        e: [
+          {
+            f: 2,
+            g: 3,
+          },
+        ],
+      };
+    },
+  });
+</script>
