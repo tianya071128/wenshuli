@@ -43,23 +43,25 @@ export function isObject(obj: mixed): boolean %checks {
 }
 
 /**
- * Get the raw type string of a value, e.g., [object Object].
+ * Get the raw type string of a value, e.g., [object Object]. 获取值的原始类型字符串，例如 [object Object]
  */
 const _toString = Object.prototype.toString;
 
-export function toRawType(value: any): string {
+// 返回指定数据类型值
+export function toRawType(value) {
   return _toString.call(value).slice(8, -1);
 }
 
 /**
- * Strict object type check. Only returns true
- * for plain JavaScript objects.
+ * Strict object type check. Only returns true 严格的对象类型检查。只返回true
+ * for plain JavaScript objects.  对于普通JavaScript对象
+ * 检测是否为严格对象
  */
-export function isPlainObject(obj: any): boolean {
+export function isPlainObject(obj) {
   return _toString.call(obj) === '[object Object]';
 }
 
-export function isRegExp(v: any): boolean {
+export function isRegExp(v) {
   return _toString.call(v) === '[object RegExp]';
 }
 
@@ -100,18 +102,20 @@ export function toNumber(val: string): number | string {
 }
 
 /**
- * Make a map and return a function for checking if a key
- * is in that map.
+ * Make a map and return a function for checking if a key 制作一个映射并返回一个函数，用于检查是否存在一个键
+ * is in that map. 在这 map 上。
  */
 export function makeMap(
   str: string,
   expectsLowerCase?: boolean
 ): (key: string) => true | void {
+  // str 是以 , 分隔的字符串，这些项表示需要检测的范围
   const map = Object.create(null);
   const list: Array<string> = str.split(',');
   for (let i = 0; i < list.length; i++) {
     map[list[i]] = true;
   }
+  // 返回一个检测函数
   return expectsLowerCase ? (val) => map[val.toLowerCase()] : (val) => map[val];
 }
 
@@ -138,29 +142,32 @@ export function remove(arr: Array<any>, item: any): Array<any> | void {
 }
 
 /**
- * Check whether an object has the property.
+ * Check whether an object has the property. 检查对象是否具有该属性
  */
 const hasOwnProperty = Object.prototype.hasOwnProperty;
-export function hasOwn(obj: Object | Array<*>, key: string): boolean {
+// 检测 key 是否为 obj 的属性(不从原型链继承)
+export function hasOwn(obj, key) {
   return hasOwnProperty.call(obj, key);
 }
 
 /**
- * Create a cached version of a pure function.
+ * Create a cached version of a pure function. 创建纯函数的缓存版本
  */
-export function cached<F: Function>(fn: F): F {
+export function cached(fn) {
+  // 利用闭包，创建一个缓存对象
   const cache = Object.create(null);
-  return (function cachedFn(str: string) {
-    const hit = cache[str];
-    return hit || (cache[str] = fn(str));
-  }: any);
+  return function cachedFn(str) {
+    const hit = cache[str]; // 将结果值进行缓存
+    return hit || (cache[str] = fn(str)); // 如果存在缓存，那么直接将缓存值返回即可
+  };
 }
 
 /**
- * Camelize a hyphen-delimited string.
+ * Camelize a hyphen-delimited string. 对以连字符分隔的字符串进行Camelize
+ * 将 - 分隔字符串改成驼峰字符串，例如：demo-test => demoTest
  */
 const camelizeRE = /-(\w)/g;
-export const camelize = cached((str: string): string => {
+export const camelize = cached((str) => {
   return str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ''));
 });
 

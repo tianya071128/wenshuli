@@ -33,7 +33,8 @@ export type Config = {
 
 export default ({
   /**
-   * Option merge strategies (used in core/util/options)
+   * Option merge strategies (used in core/util/options) 期权合并策略
+   * 自定义合并策略的选项。
    */
   // $flow-disable-line
   optionMergeStrategies: Object.create(null),

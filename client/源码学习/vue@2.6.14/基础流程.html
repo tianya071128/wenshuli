@@ -25,6 +25,11 @@
    * 至此，引用 Vue 就会做如上处理，之后等待使用 Vue 构造函数处理
    */
   Vue.mixin({
+    data() {
+      return {
+        aa: 1,
+      };
+    },
     methods: {
       test() {},
     },
@@ -33,12 +38,7 @@
   /**
    * 初始实例流程：
    *  主要在 code/instance/init.js 的 _init 方法中初始化
-   *  首先是合并配置项的问题：合并规则见 code/util/options.js 的 mergeOptions 方法注解
-   *    针对根组件的构造函数 options 提取，需要区分两种情况：
-   *      1 如果是 new Vue() 的话，就表示是 Vue 构造函数，就会从中提取出 components、directives、filters 等资源.如果通过 Vue.mixin 注入的全局混入资源都会在 Vue 构造函数中提取出来
-   *      2 如果是通过 Vue.extend() 创建出来的子类，然后 new 一个子类的实例。那么就会递归提取出 options
-   *    提取到构造函数的 options 后，在与创建实例时传入的 options 一起合并
-   *
+   *  详见 _init 方法注解
    */
   // new Vue 后，会调用 code/instance/index.js 中 Vue 构造函数
   new Vue({
@@ -56,6 +56,16 @@
           },
         ],
       };
+    },
+    props: {
+      test1: Array,
+      test2: {
+        type: Number,
+      },
+      test3: {
+        type: String,
+        default: '1',
+      },
     },
   });
 </script>

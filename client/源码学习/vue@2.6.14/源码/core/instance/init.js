@@ -36,7 +36,7 @@ export function initMixin(Vue: Class<Component>) {
     vm._isVue = true;
     // merge options 合并选项
 
-    if (options && options._isComponent) {
+    if (options && options._isComponent /** 子组件的合并选项方式不同 */) {
       // optimize internal component instantiation 优化内部组件实例化
       // since dynamic options merging is pretty slow, and none of the 因为动态选项合并非常慢，而且
       // internal component options needs special treatment. 内部组件选项需要特殊处理
@@ -51,13 +51,15 @@ export function initMixin(Vue: Class<Component>) {
       );
     }
     /* istanbul ignore else */
+    // 设置渲染时的上下文，在开发环境尝试使用 Proxy 语法
     if (process.env.NODE_ENV !== 'production') {
       initProxy(vm);
     } else {
       vm._renderProxy = vm;
     }
-    // expose real self
+    // expose real self 暴露 vm 实例
     vm._self = vm;
+    // 在 beforeCreate 钩子之前，数据处理之前，初始化渲染方面的内容
     initLifecycle(vm);
     initEvents(vm);
     initRender(vm);

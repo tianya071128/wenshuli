@@ -20,7 +20,7 @@ export const isChrome = UA && /chrome\/\d+/.test(UA) && !isEdge;
 export const isPhantomJS = UA && /phantomjs/.test(UA);
 export const isFF = UA && UA.match(/firefox\/(\d+)/);
 
-// Firefox has a "watch" function on Object.prototype...
+// Firefox has a "watch" function on Object.prototype... Firefox在对象上有一个“监视”功能。原型
 export const nativeWatch = {}.watch;
 
 export let supportsPassive = false;
@@ -69,13 +69,16 @@ export const isServerRendering = () => {
 export const devtools = inBrowser && window.__VUE_DEVTOOLS_GLOBAL_HOOK__; // 通过是否在 window 上注入 __VUE_DEVTOOLS_GLOBAL_HOOK__ 对象
 
 /* istanbul ignore next */
-export function isNative(Ctor: any): boolean {
+// 判断指定值是否为原生函数，例如：Array、String 等
+export function isNative(Ctor) {
+  // 如果是原生值的话，那么 Ctor 构造函数就会存在 native code
   return typeof Ctor === 'function' && /native code/.test(Ctor.toString());
 }
 
+// 是否支持 Symbol 环境并且支持 Reflect
 export const hasSymbol =
-  typeof Symbol !== 'undefined' &&
-  isNative(Symbol) &&
+  typeof Symbol !== 'undefined' && // 支持 Symbol
+  isNative(Symbol) && // 并且 Symbol 是原生函数
   typeof Reflect !== 'undefined' &&
   isNative(Reflect.ownKeys);
 
