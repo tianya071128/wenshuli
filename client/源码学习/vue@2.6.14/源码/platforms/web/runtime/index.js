@@ -25,7 +25,7 @@ import platformComponents from './components/index';
 // install platform specific utils 安装特定于平台的工具方法
 Vue.config.mustUseProp = mustUseProp;
 Vue.config.isReservedTag = isReservedTag; // 判断是判断为合法标签
-Vue.config.isReservedAttr = isReservedAttr;
+Vue.config.isReservedAttr = isReservedAttr; // 判断是否为合法 attr
 Vue.config.getTagNamespace = getTagNamespace;
 Vue.config.isUnknownElement = isUnknownElement;
 

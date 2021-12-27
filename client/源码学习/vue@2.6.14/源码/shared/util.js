@@ -2,8 +2,9 @@
 
 export const emptyObject = Object.freeze({});
 
-// These helpers produce better VM code in JS engines due to their
-// explicitness and function inlining.
+// These helpers produce better VM code in JS engines due to their 这些帮助程序在JS引擎中生成更好的VM代码，因为它们的
+// explicitness and function inlining. 明确性与函数内联
+// 检测是否为 undefined 或 null
 export function isUndef(v: any): boolean %checks {
   return v === undefined || v === null;
 }
@@ -34,9 +35,9 @@ export function isPrimitive(value: any): boolean %checks {
 }
 
 /**
- * Quick object check - this is primarily used to tell
- * Objects from primitive values when we know the value
- * is a JSON-compliant type.
+ * Quick object check - this is primarily used to tell 快速对象检查-主要用于告知
+ * Objects from primitive values when we know the value 当我们知道原始值时，从原始值中删除对象
+ * is a JSON-compliant type. 是符合JSON的类型
  */
 export function isObject(obj: mixed): boolean %checks {
   return obj !== null && typeof obj === 'object';
@@ -73,6 +74,7 @@ export function isValidArrayIndex(val: any): boolean {
   return n >= 0 && Math.floor(n) === n && isFinite(val);
 }
 
+// 检测指定值是否支持 Promise 类型，如果返回对象具有 then、catch 方法
 export function isPromise(val: any): boolean {
   return (
     isDef(val) &&
@@ -125,7 +127,7 @@ export function makeMap(
 export const isBuiltInTag = makeMap('slot,component', true);
 
 /**
- * Check if an attribute is a reserved attribute.
+ * Check if an attribute is a reserved attribute. 检查属性是否为保留属性 key,ref,slot,slot-scope,is
  */
 export const isReservedAttribute = makeMap('key,ref,slot,slot-scope,is');
 
@@ -172,14 +174,16 @@ export const camelize = cached((str) => {
 });
 
 /**
- * Capitalize a string.
+ * Capitalize a string. 将字符串大写
+ * 字符串首字母大写
  */
 export const capitalize = cached((str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 });
 
 /**
- * Hyphenate a camelCase string.
+ * Hyphenate a camelCase string. 将camelCase字符串连字符
+ * 将驼峰命名转化为以 - 分隔的字符串
  */
 const hyphenateRE = /\B([A-Z])/g;
 export const hyphenate = cached((str: string): string => {
@@ -187,11 +191,11 @@ export const hyphenate = cached((str: string): string => {
 });
 
 /**
- * Simple bind polyfill for environments that do not support it,
- * e.g., PhantomJS 1.x. Technically, we don't need this anymore
- * since native bind is now performant enough in most browsers.
- * But removing it would mean breaking code that was able to run in
- * PhantomJS 1.x, so this must be kept for backward compatibility.
+ * Simple bind polyfill for environments that do not support it, 简单绑定polyfill，适用于不支持它的环境
+ * e.g., PhantomJS 1.x. Technically, we don't need this anymore 例如 PhantomJS 1.x。从技术上讲，我们不再需要这个了
+ * since native bind is now performant enough in most browsers. 因为在大多数浏览器中，本机绑定的性能已经足够了。
+ * But removing it would mean breaking code that was able to run in 但删除它意味着破坏能够在中运行的代码
+ * PhantomJS 1.x, so this must be kept for backward compatibility. PhantomJS 1.x, 因此，为了向后兼容，必须保留此项
  */
 
 /* istanbul ignore next */
@@ -213,6 +217,7 @@ function nativeBind(fn: Function, ctx: Object): Function {
   return fn.bind(ctx);
 }
 
+// bind，如果不支持， polyfill 一下
 export const bind = Function.prototype.bind ? nativeBind : polyfillBind;
 
 /**

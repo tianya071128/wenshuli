@@ -60,13 +60,33 @@ export function initMixin(Vue: Class<Component>) {
     // expose real self 暴露 vm 实例
     vm._self = vm;
     // 在 beforeCreate 钩子之前，数据处理之前，初始化渲染方面的内容
+    /**
+     * initLifecycle 处理了如下工作：
+     *  将该组件推入到父组件的 $children 中，
+     *  建立 $parent、$root 指针指向父组件和根组件
+     *  初始化 $children、$refs 属性，在后续会将其推入到集合中
+     *  创建一些以 _ 开头的内部属性
+     */
     initLifecycle(vm);
+    // 处理了如下工作：处理组件自定义事件 => 自定义事件在渲染成 VNode 过程中被存储在 _parentListeners 中的
     initEvents(vm);
+    // 初始化渲染方面工作：主要是子组件渲染方面以及添加了 $createElement _c 渲染 VNode 的方法 ----- 待续
     initRender(vm);
+
+    // 执行 beforeCreate 生命周期钩子
     callHook(vm, 'beforeCreate');
-    initInjections(vm); // resolve injections before data/props
+
+    // 以下为组件数据处理
+    /**
+     * 初始化 inject 数据 -- 依赖注入，接收祖先组件注入的依赖
+     * 策略：
+     *  1. 从祖先组件(或取 default 默认值)中提取出 inject 的值
+     *  2. 递归 inject 配置的 key，通过 defineReactive 方法(只读属性 key)注入到 vm 实例上
+     */
+    initInjections(vm); // resolve injections before data/props 在 data/props 之前解决 injections 问题
     initState(vm);
     initProvide(vm); // resolve provide after data/props
+
     callHook(vm, 'created');
 
     /* istanbul ignore if */

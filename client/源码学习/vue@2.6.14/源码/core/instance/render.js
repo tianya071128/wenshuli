@@ -16,11 +16,15 @@ import VNode, { createEmptyVNode } from '../vdom/vnode';
 
 import { isUpdatingChildComponent } from './lifecycle';
 
+/**
+ * 初始化渲染方面工作：
+ *
+ */
 export function initRender(vm: Component) {
-  vm._vnode = null; // the root of the child tree
-  vm._staticTrees = null; // v-once cached trees
+  vm._vnode = null; // the root of the child tree 子树的根
+  vm._staticTrees = null; // v-once cached trees v-once缓存树
   const options = vm.$options;
-  const parentVnode = (vm.$vnode = options._parentVnode); // the placeholder node in parent tree
+  const parentVnode = (vm.$vnode = options._parentVnode); // the placeholder node in parent tree 父树中的占位符节点
   const renderContext = parentVnode && parentVnode.context;
   vm.$slots = resolveSlots(options._renderChildren, renderContext);
   vm.$scopedSlots = emptyObject;

@@ -7,7 +7,12 @@
     <title>基础流程</title>
     <script src="./vue.js"></script>
   </head>
-  <body></body>
+  <body>
+    <div id="root">
+      <div>111</div>
+      <!-- <my-components @test="console.log('测试一下')"></my-components> -->
+    </div>
+  </body>
 </html>
 
 <script>
@@ -36,12 +41,13 @@
   });
 
   /**
-   * 初始实例流程：
+   * 初始根组件(即通过 new 创建的组件，区别于子组件)流程：
    *  主要在 code/instance/init.js 的 _init 方法中初始化
    *  详见 _init 方法注解
    */
   // new Vue 后，会调用 code/instance/index.js 中 Vue 构造函数
   new Vue({
+    el: '#root',
     data() {
       return {
         a: 1,

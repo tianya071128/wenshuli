@@ -1,95 +1,117 @@
 /* @flow */
 
-import {
-  warn,
-  invokeWithErrorHandling
-} from 'core/util/index'
-import {
-  cached,
-  isUndef,
-  isTrue,
-  isPlainObject
-} from 'shared/util'
+import { warn, invokeWithErrorHandling } from 'core/util/index';
+import { cached, isUndef, isTrue, isPlainObject } from 'shared/util';
 
+// 规范化事件名名称
 const normalizeEvent = cached((name: string): {
   name: string,
   once: boolean,
   capture: boolean,
   passive: boolean,
   handler?: Function,
-  params?: Array<any>
+  params?: Array<any>,
 } => {
-  const passive = name.charAt(0) === '&'
-  name = passive ? name.slice(1) : name
-  const once = name.charAt(0) === '~' // Prefixed last, checked first
-  name = once ? name.slice(1) : name
-  const capture = name.charAt(0) === '!'
-  name = capture ? name.slice(1) : name
+  // 对应 addEventListener 中的 passive 选项 -- 在渲染成 VNode 的过程中是以开头 & 标识
+  const passive = name.charAt(0) === '&'; // 如果事件名以 & 开头
+  name = passive ? name.slice(1) : name; // 截取掉 & 字符
+  // 只执行一次
+  const once = name.charAt(0) === '~'; // Prefixed last, checked first 最后加前缀，首先选中
+  name = once ? name.slice(1) : name;
+  // 使用事件捕获模式
+  const capture = name.charAt(0) === '!';
+  name = capture ? name.slice(1) : name;
+  // 返回
   return {
     name,
     once,
     capture,
-    passive
-  }
-})
+    passive,
+  };
+});
 
-export function createFnInvoker (fns: Function | Array<Function>, vm: ?Component): Function {
-  function invoker () {
-    const fns = invoker.fns
-    if (Array.isArray(fns)) {
-      const cloned = fns.slice()
+/**
+ * 封装函数调用程序 -- 在这里会作如下两个重要封装：
+ *  1. 封装函数调用，将其可以捕获其调用错误问题。
+ *  2. 将函数挂载到返回函数的 fns 属性上，这样可以很方便的添加、移除、替换等操作
+ */
+export function createFnInvoker(
+  fns: Function | Array<Function>,
+  vm: ?Component
+): Function {
+  // 真正的调用方法 -- 内部调用也简单，取出 invoker.fns 依次调用即可
+  function invoker() {
+    const fns = invoker.fns;
+    if (Array.isArray(fns) /** 如果是数组，遍历调用 */) {
+      const cloned = fns.slice();
       for (let i = 0; i < cloned.length; i++) {
-        invokeWithErrorHandling(cloned[i], null, arguments, vm, `v-on handler`)
+        invokeWithErrorHandling(cloned[i], null, arguments, vm, `v-on handler`);
       }
     } else {
       // return handler return value for single handlers
-      return invokeWithErrorHandling(fns, null, arguments, vm, `v-on handler`)
+      return invokeWithErrorHandling(fns, null, arguments, vm, `v-on handler`);
     }
   }
-  invoker.fns = fns
-  return invoker
+  // 将其程序添加到 fns 属性上，这样有新增程序时，直接将其添加到 fns 属性上就可以
+  // 例如替换掉程序的话，直接替换 fns 函数即可，这样我们只需要封装一次
+  invoker.fns = fns;
+  return invoker;
 }
 
-export function updateListeners (
-  on: Object,
-  oldOn: Object,
-  add: Function,
-  remove: Function,
-  createOnceHandler: Function,
-  vm: Component
+/**
+ * 通过比对更新处理程序列表，这里将只关注封装处理程序，将其新增、移除等具体逻辑通过回调让其外部决定
+ */
+export function updateListeners(
+  on: Object, // 新事件
+  oldOn: Object, // 旧事件
+  add: Function, // 添加方法
+  remove: Function, // 删除方法
+  createOnceHandler: Function, // 只执行一次事件添加方法
+  vm: Component // 组件实例
 ) {
-  let name, def, cur, old, event
+  let name, def, cur, old, event;
+  // 遍历事件
   for (name in on) {
-    def = cur = on[name]
-    old = oldOn[name]
-    event = normalizeEvent(name)
+    // 当前事件和旧事件
+    def = cur = on[name];
+    old = oldOn[name];
+    // 规范化后的事件名参数对象
+    event = normalizeEvent(name);
     /* istanbul ignore if */
+    // Weex 环境
     if (__WEEX__ && isPlainObject(def)) {
-      cur = def.handler
-      event.params = def.params
+      cur = def.handler;
+      event.params = def.params;
     }
-    if (isUndef(cur)) {
-      process.env.NODE_ENV !== 'production' && warn(
-        `Invalid handler for event "${event.name}": got ` + String(cur),
-        vm
-      )
-    } else if (isUndef(old)) {
+    if (isUndef(cur) /** 如果当前事件不存在，则发出错误警告 */) {
+      process.env.NODE_ENV !== 'production' &&
+        warn(
+          `Invalid handler for event "${event.name}": got ` + String(cur), // 事件的处理程序无效
+          vm
+        );
+    } else if (isUndef(old) /** 如果旧事件不存在， */) {
+      /** 如果 fns 调用列表不存在，说明是新增事件类型，那么就需要进一步封装这个处理程序 */
       if (isUndef(cur.fns)) {
-        cur = on[name] = createFnInvoker(cur, vm)
+        cur = on[name] = createFnInvoker(cur, vm); // 封装调用程序
       }
-      if (isTrue(event.once)) {
-        cur = on[name] = createOnceHandler(event.name, cur, event.capture)
+      if (isTrue(event.once) /** 如果是只调用一次的程序 */) {
+        // 调用传入的创建方法 -- 需要进一步封装调用的方法
+        cur = on[name] = createOnceHandler(event.name, cur, event.capture);
       }
-      add(event.name, cur, event.capture, event.passive, event.params)
-    } else if (cur !== old) {
-      old.fns = cur
-      on[name] = old
+      // 添加方法
+      add(event.name, cur, event.capture, event.passive, event.params);
+    } else if (cur !== old /** 如果新旧处理程序不同 */) {
+      old.fns = cur; // 直接改变 fns 的指针即可替换
+      on[name] = old;
     }
   }
+  // 遍历旧处理程序
   for (name in oldOn) {
+    // 如果旧处理程序存在,新的不存在
     if (isUndef(on[name])) {
-      event = normalizeEvent(name)
-      remove(event.name, oldOn[name], event.capture)
+      event = normalizeEvent(name);
+      // 进行移除回调
+      remove(event.name, oldOn[name], event.capture);
     }
   }
 }

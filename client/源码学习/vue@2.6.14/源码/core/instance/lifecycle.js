@@ -29,24 +29,35 @@ export function setActiveInstance(vm: Component) {
   };
 }
 
+/**
+ * 处理了如下工作：
+ *  将该组件推入到父组件的 $children 中，
+ *  建立 $parent、$root 指针指向父组件和根组件
+ *  初始化 $children、$refs 属性，在后续会将其推入到集合中
+ *  创建一些以 _ 开头的内部属性
+ */
 export function initLifecycle(vm: Component) {
-  const options = vm.$options;
+  const options = vm.$options; // 提取配置项
 
-  // locate first non-abstract parent
-  let parent = options.parent;
-  if (parent && !options.abstract) {
+  // locate first non-abstract parent 定位第一个非抽象父级
+  let parent = options.parent; // 父组件
+  if (
+    parent &&
+    !options.abstract /** 抽象父组件 - 在 vue 中表示 keep-alive、transition 内部组件 */
+  ) {
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent;
     }
-    parent.$children.push(vm);
+    parent.$children.push(vm); // 将其收集到父组件的 $children 中
   }
 
-  vm.$parent = parent;
-  vm.$root = parent ? parent.$root : vm;
+  vm.$parent = parent; // 父实例，如果当前实例有的话。
+  vm.$root = parent ? parent.$root : vm; // 当前组件树的根 Vue 实例。如果当前实例没有父实例，此实例将会是其自己。
 
-  vm.$children = [];
-  vm.$refs = {};
+  vm.$children = []; // 当前实例的直接子组件 -- 在子组件创建的时候才会推入到集合主公
+  vm.$refs = {}; // 一个对象，持有注册过 ref attribute 的所有 DOM 元素和组件实例。
 
+  // 以 _ 开头，是其内部属性
   vm._watcher = null;
   vm._inactive = null;
   vm._directInactive = false;
@@ -345,18 +356,24 @@ export function deactivateChildComponent(vm: Component, direct?: boolean) {
   }
 }
 
+/**
+ * 执行生命周期钩子：
+ *   1. 执行在 $options 中的钩子列表，通过 invokeWithErrorHandling 方法调用即可
+ *   2. 如果存在通过 $on 方式侦听的生命周期钩子的话，通过 $emit 方式调用即可
+ */
 export function callHook(vm: Component, hook: string) {
-  // #7573 disable dep collection when invoking lifecycle hooks
+  // #7573 disable dep collection when invoking lifecycle hooks 调用生命周期挂钩时禁用dep收集
   pushTarget();
-  const handlers = vm.$options[hook];
+  const handlers = vm.$options[hook]; // 提取出指定钩子调用集合
   const info = `${hook} hook`;
   if (handlers) {
     for (let i = 0, j = handlers.length; i < j; i++) {
+      // 通过 invokeWithErrorHandling 方法调用，主要会捕获调用过程的错误
       invokeWithErrorHandling(handlers[i], vm, null, vm, info);
     }
   }
-  if (vm._hasHookEvent) {
-    vm.$emit('hook:' + hook);
+  if (vm._hasHookEvent /** 如果存在通过 $on 方式侦听的生命周期钩子的话 */) {
+    vm.$emit('hook:' + hook); // 通过 $emit 方式调用
   }
-  popTarget();
+  popTarget(); // 恢复依赖收集
 }

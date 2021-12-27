@@ -1,5 +1,5 @@
 /* @flow */
-
+// 此文件为事件处理相关，并且处理自定义事件
 import {
   tip,
   toArray,
@@ -9,11 +9,18 @@ import {
 } from '../util/index';
 import { updateListeners } from '../vdom/helpers/index';
 
+/**
+ * 处理了如下工作：处理组件自定义事件，自定义事件在渲染成 VNode 过程中被存储在 _parentListeners 中的
+ */
 export function initEvents(vm: Component) {
+  // 初始化 _events：是用来存储组件内的传入的事件
   vm._events = Object.create(null);
+  // 标识是否存在 hook 的事件(例如通过 this.$once('hook:beforeDestroy', () => {}) 监听生命周期的事件
   vm._hasHookEvent = false;
-  // init parent attached events
+  // init parent attached events 初始化父附加事件
+  // 父组件传入的自定义事件都存放在 _parentListeners中
   const listeners = vm.$options._parentListeners;
+  // 如果父组件通过 @xxx 传入了事件的话，那么就初始化
   if (listeners) {
     updateComponentListeners(vm, listeners);
   }
@@ -21,39 +28,48 @@ export function initEvents(vm: Component) {
 
 let target: any;
 
+// 添加自定义事件 -- 通过 $on 即可
 function add(event, fn) {
   target.$on(event, fn);
 }
 
+// 移除自定义事件 -- 通过 $off 即可
 function remove(event, fn) {
   target.$off(event, fn);
 }
 
+// 创建只执行一次的自定义事件
+// 为什么不通过 $once 执行了？ -- 在 updateListeners 中需要通过 createOnceHandler 返回执行一次的程序回调，后面才会添加程序
 function createOnceHandler(event, fn) {
   const _target = target;
+  // 返回封装的程序
   return function onceHandler() {
-    const res = fn.apply(null, arguments);
+    const res = fn.apply(null, arguments); // 调用一次后
     if (res !== null) {
-      _target.$off(event, onceHandler);
+      // 如果返回值不为 null 的话
+      _target.$off(event, onceHandler); // 移除这个事件
     }
   };
 }
 
+// 更新其组件的自定义事件，在创建和更新阶段都会调用
 export function updateComponentListeners(
   vm: Component,
   listeners: Object,
   oldListeners: ?Object
 ) {
+  // 指向当前组件实例
   target = vm;
+  // 更新(或创建)自定义事件
   updateListeners(
-    listeners,
-    oldListeners || {},
-    add,
-    remove,
-    createOnceHandler,
+    listeners, // 事件
+    oldListeners || {}, // 旧事件
+    add, // 添加事件方法
+    remove, // 删除事件方法
+    createOnceHandler, // 创建只执行一次事件回调的方法
     vm
   );
-  target = undefined;
+  target = undefined; // 处理完成后就重置 target
 }
 
 // 为 Vue 原型添加 $on、$once、$off、$emit 方法，提供发布-订阅者模式
