@@ -58,12 +58,12 @@ export function initLifecycle(vm: Component) {
   vm.$refs = {}; // 一个对象，持有注册过 ref attribute 的所有 DOM 元素和组件实例。
 
   // 以 _ 开头，是其内部属性
-  vm._watcher = null;
+  vm._watcher = null; // 该组件的渲染函数对应的 wathcer
   vm._inactive = null;
   vm._directInactive = false;
   vm._isMounted = false;
   vm._isDestroyed = false;
-  vm._isBeingDestroyed = false;
+  vm._isBeingDestroyed = false; // 是否开始进行销毁组件操作
 }
 
 // 为 Vue 原型添加 _update、$forceUpdate、$destroy 方法，与组件渲染相关

@@ -61,7 +61,7 @@ export default ({
   performance: false,
 
   /**
-   * Error handler for watcher errors
+   * Error handler for watcher errors 监视程序错误的错误处理程序
    */
   errorHandler: null,
 

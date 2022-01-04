@@ -84,6 +84,7 @@ export function initMixin(Vue: Class<Component>) {
      *  2. 递归 inject 配置的 key，通过 defineReactive 方法(只读属性 key)注入到 vm 实例上
      */
     initInjections(vm); // resolve injections before data/props 在 data/props 之前解决 injections 问题
+    // 初始化 props、methods、data、computed、wather -- 具体策略见方法注解
     initState(vm);
     initProvide(vm); // resolve provide after data/props
 

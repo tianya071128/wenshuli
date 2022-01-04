@@ -9,7 +9,10 @@
   </head>
   <body>
     <div id="root">
-      <div>111</div>
+      <div>{{a}}</div>
+      <div>{{b.c}}</div>
+      <div>{{d[0]}}</div>
+      <div>{{f.a}}</div>
       <!-- <my-components @test="console.log('测试一下')"></my-components> -->
     </div>
   </body>
@@ -61,6 +64,12 @@
             g: 3,
           },
         ],
+        f: {
+          a: 1,
+          b: {
+            c: 2,
+          },
+        },
       };
     },
     props: {
@@ -72,6 +81,17 @@
         type: String,
         default: '1',
       },
+    },
+    watch: {
+      'f.b.c'(val, oldVal) {
+        console.log(val, oldVal);
+      },
+    },
+    created() {
+      setTimeout(() => {
+        this.$set(this.f, 'c', 3);
+      }, 0);
+      // this.f.b.c = 5;
     },
   });
 </script>

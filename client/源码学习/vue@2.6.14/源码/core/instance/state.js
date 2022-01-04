@@ -1,4 +1,5 @@
 /* @flow */
+// 此文件是初始化 选项/数据(data、props、computed、methods、watch) 相关
 
 import config from '../config';
 import Watcher from '../observer/watcher';
@@ -29,6 +30,7 @@ import {
   invokeWithErrorHandling,
 } from '../util/index';
 
+// 公共的属性配置定义
 const sharedPropertyDefinition = {
   enumerable: true,
   configurable: true,
@@ -48,6 +50,7 @@ export function proxy(target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition);
 }
 
+// 初始化 props、methods、data、computed、wather
 export function initState(vm: Component) {
   vm._watchers = []; // 组件的观察者集合
   const opts = vm.$options; // 提取出配置项
@@ -64,13 +67,33 @@ export function initState(vm: Component) {
    * 然后直接将其添加到 vm 实例上
    */
   if (opts.methods) initMethods(vm, opts.methods);
+  /**
+   * 初始化 data：
+   *  1. 从 data 选项中提取出 data
+   *  2. 与 methods、props 上定义的属性做重复 key 检测，
+   *  3. 调用 observe 响应式数据
+   */
   if (opts.data) {
     initData(vm);
   } else {
     // 如果没有定义 data 的话
     observe((vm._data = {}), true /* asRootData */);
   }
+  /**
+   * 初始化 computed 计算属性
+   *  1. 在服务端渲染(SSR)时，计算属性没有响应式特性。
+   *  2. 惰性求值(主要见 createComputedGetter 方法)：在创建 Wathcer 时，不会进行 getter 操作，只有在使用计算属性时，才会进行求值操作，并且会手动调用 watcher.evaluate() 进行依赖收集
+   *  3. 在一次更新阶段只会更新一次：会将求值结果存储到 wathcer.value 属性中，只需要进行一次即可。
+   *  4. 响应式：虽然会创建 Wathcer 类，但是是惰性的，只会在使用计算属性时才会收集依赖。
+   *            计算属性的 Wathcer 会将收集到的 Dep 转接到依赖这个计算属性的 Wathcer 观察对象中
+   *            这样计算属性依赖项 Deps 变更时只会将计算属性的 Wathcer 的 dirty 标识置为 true
+   *            而依赖计算属性的 Watcher 就会在计算属性的依赖项变更时重新求值收集依赖。在此过程中，如果接着使用了这个 Wathcer 的话，就会重新进行计算属性的求值操作
+   */
   if (opts.computed) initComputed(vm, opts.computed);
+  /**
+   * 初始化 watch：通过 $watch 创建 Watcher 观察者
+   *  在 Wathcher 构造函数中，会将 'a.b.c' 封装成对象读取函数，这样就会触发依赖收集的过程
+   */
   if (opts.watch && opts.watch !== nativeWatch) {
     initWatch(vm, opts.watch);
   }
@@ -149,7 +172,10 @@ function initProps(
 }
 
 /**
- * 初始化 data
+ * 初始化 data：
+ *  1. 从 data 选项中提取出 data
+ *  2. 与 methods、props 上定义的属性做重复 key 检测，
+ *  3. 调用 observe 响应式数据
  */
 function initData(vm: Component) {
   let data = vm.$options.data; // 提取 data 配置
@@ -197,36 +223,55 @@ function initData(vm: Component) {
   observe(data, true /* asRootData */);
 }
 
+// 获取 data 数据
 export function getData(data: Function, vm: Component): any {
-  // #7573 disable dep collection when invoking data getters
+  // #7573 disable dep collection when invoking data getters 调用数据获取程序时禁用dep收集
   pushTarget();
   try {
-    return data.call(vm, vm);
+    return data.call(vm, vm); // 提取出 data 数据
   } catch (e) {
+    // 如果存在错误，处理错误
     handleError(e, vm, `data()`);
-    return {};
+    return {}; // 此时返回一个空对象
   } finally {
     popTarget();
   }
 }
 
-const computedWatcherOptions = { lazy: true };
+// 计算属性 watcher 类的配置项
+const computedWatcherOptions = {
+  lazy: true /** 惰性取值，如果不使用这个计算属性的话，就不会对其进行观察 */,
+};
 
+/**
+ * 初始化 computed 计算属性
+ *  1. 在服务端渲染(SSR)时，计算属性没有响应式特性。
+ *  2. 惰性求值(主要见 createComputedGetter 方法)：在创建 Wathcer 时，不会进行 getter 操作，只有在使用计算属性时，才会进行求值操作，并且会手动调用 watcher.evaluate() 进行依赖收集
+ *  3. 在一次更新阶段只会更新一次：会将求值结果存储到 wathcer.value 属性中，只需要进行一次即可。
+ *  4. 响应式：虽然会创建 Wathcer 类，但是是惰性的，只会在使用计算属性时才会收集依赖。
+ *            计算属性的 Wathcer 会将收集到的 Dep 转接到依赖这个计算属性的 Wathcer 观察对象中
+ *            这样计算属性依赖项 Deps 变更时只会将计算属性的 Wathcer 的 dirty 标识置为 true
+ *            而依赖计算属性的 Watcher 就会在计算属性的依赖项变更时重新求值收集依赖。在此过程中，如果接着使用了这个 Wathcer 的话，就会重新进行计算属性的求值操作
+ */
 function initComputed(vm: Component, computed: Object) {
   // $flow-disable-line
-  const watchers = (vm._computedWatchers = Object.create(null));
-  // computed properties are just getters during SSR
-  const isSSR = isServerRendering();
+  const watchers = (vm._computedWatchers = Object.create(null)); // 将计算属性的 Watchers 放在 __computedWatchers 属性上
+  // computed properties are just getters during SSR 在SSR期间，计算属性只是getter
+  const isSSR = isServerRendering(); // 判断是否为服务端渲染
 
+  // 遍历处理
   for (const key in computed) {
-    const userDef = computed[key];
-    const getter = typeof userDef === 'function' ? userDef : userDef.get;
+    const userDef = computed[key]; // 计算属性项
+    // 提取 getter 方法
+    const getter = typeof userDef === 'function' ? userDef : userDef.get; // 如果定义为函数形式，那么就是 getter 方法，如果定义为对象形式，则为 get 属性中
+    // 需要提供 getter 方法
     if (process.env.NODE_ENV !== 'production' && getter == null) {
       warn(`Getter is missing for computed property "${key}".`, vm);
     }
 
+    // 不是服务端渲染
     if (!isSSR) {
-      // create internal watcher for the computed property.
+      // create internal watcher for the computed property. 为计算属性创建内部观察程序
       watchers[key] = new Watcher(
         vm,
         getter || noop,
@@ -235,22 +280,27 @@ function initComputed(vm: Component, computed: Object) {
       );
     }
 
-    // component-defined computed properties are already defined on the
-    // component prototype. We only need to define computed properties defined
-    // at instantiation here.
+    // component-defined computed properties are already defined on the 组件定义的计算特性已在上定义
+    // component prototype. We only need to define computed properties defined 组件原型。我们只需要定义已定义的计算属性
+    // at instantiation here. 在这里实例化
+
     if (!(key in vm)) {
+      // 如果该计算属性的 key，没有在 vm 实例上定义的话
       defineComputed(vm, key, userDef);
-    } else if (process.env.NODE_ENV !== 'production') {
+    } else if (
+      process.env.NODE_ENV !==
+      'production' /** 在开发环境下，对重复 key 进行提示 */
+    ) {
       if (key in vm.$data) {
-        warn(`The computed property "${key}" is already defined in data.`, vm);
+        warn(`The computed property "${key}" is already defined in data.`, vm); // 计算属性“${key}”已在数据中定义
       } else if (vm.$options.props && key in vm.$options.props) {
         warn(
-          `The computed property "${key}" is already defined as a prop.`,
+          `The computed property "${key}" is already defined as a prop.`, // 已将计算属性“${key}”定义为 prop
           vm
         );
       } else if (vm.$options.methods && key in vm.$options.methods) {
         warn(
-          `The computed property "${key}" is already defined as a method.`,
+          `The computed property "${key}" is already defined as a method.`, // 已将计算属性“${key}”定义为方法
           vm
         );
       }
@@ -258,54 +308,69 @@ function initComputed(vm: Component, computed: Object) {
   }
 }
 
+// 在 vm 实例上添加 computed
 export function defineComputed(
   target: any,
   key: string,
   userDef: Object | Function
 ) {
-  const shouldCache = !isServerRendering();
+  // 如果是在服务端渲染情况下，计算属性并没有响应式的特点，因为服务端渲染 SSR 是不需要响应式的
+  const shouldCache = !isServerRendering(); // 判断是否为服务端渲染
+  // 如果用户定义为函数的话
   if (typeof userDef === 'function') {
-    sharedPropertyDefinition.get = shouldCache
-      ? createComputedGetter(key)
-      : createGetterInvoker(userDef);
-    sharedPropertyDefinition.set = noop;
-  } else {
+    sharedPropertyDefinition.get = shouldCache // 如果是服务端渲染，则直接使用 createGetterInvoker 生成一个简单的 getter 取值函数
+      ? createComputedGetter(key) // 此时就需要对计算属性进行响应式的处理
+      : createGetterInvoker(userDef); // 生成一个简单的执行 userDef 方法的函数
+    sharedPropertyDefinition.set = noop; // 此时没有 setter 方法为空函数
+  } /** 如果定义为对象形式 */ else {
     sharedPropertyDefinition.get = userDef.get
-      ? shouldCache && userDef.cache !== false
-        ? createComputedGetter(key)
-        : createGetterInvoker(userDef.get)
+      ? shouldCache && userDef.cache !== false // userDef.cache !== false：从字面意思看是会进行缓存的，但是没有找到缓存的地方
+        ? createComputedGetter(key) // 此时就需要对计算属性进行响应式的处理
+        : createGetterInvoker(userDef.get) // 生成一个简单的执行 userDef.get 方法的函数
       : noop;
     sharedPropertyDefinition.set = userDef.set || noop;
   }
+  // 如果在开发环境 && 没有定义 setter 方法
   if (
     process.env.NODE_ENV !== 'production' &&
     sharedPropertyDefinition.set === noop
   ) {
+    // 那么就定义一个 setter 方法，修改提示报错
     sharedPropertyDefinition.set = function() {
       warn(
-        `Computed property "${key}" was assigned to but it has no setter.`,
+        `Computed property "${key}" was assigned to but it has no setter.`, // 计算属性“${key}”已分配给，但它没有setter
         this
       );
     };
   }
+  // 在 vm
   Object.defineProperty(target, key, sharedPropertyDefinition);
 }
 
+// 生成计算属性的 getter 方法
 function createComputedGetter(key) {
   return function computedGetter() {
+    // 提取出计算属性 key 对应的 watcher 类
     const watcher = this._computedWatchers && this._computedWatchers[key];
+    // 存在 watcher 观察者
     if (watcher) {
+      // dirty 标识：如果为 false，表示该计算属性在一次更新阶段已经观察过，就不需要手动在观察了
       if (watcher.dirty) {
-        watcher.evaluate();
+        watcher.evaluate(); // 触发计算属性收集依赖
       }
+      // 当计算属性观察完毕后，Dep.target 就会重置为上一个 Wathcer(如果存在)，我们就将计算属性的 wathcer 依赖的 Dep 移植到依赖计算属性的 wathcer 上。
+      // 例如在渲染函数 render 中如果依赖了一个计算属性 test，那么就会将 test 中的依赖项 Dep 全部转接到渲染函数的 Wathcer
+      // 这样在计算属性 test 依赖的属性改变时，渲染函数的 Wathcer 能够调用。
+      // 因为计算属性在依赖改变时不会重新求值进行依赖收集，只会在使用到计算属性的时候才会进行求值计算
       if (Dep.target) {
         watcher.depend();
       }
-      return watcher.value;
+      return watcher.value; // 返回该 Watcher 的取值结果
     }
   };
 }
 
+// 封装函数，简单的 fn 回调执行而已
 function createGetterInvoker(fn) {
   return function computedGetter() {
     return fn.call(this, this);
@@ -350,10 +415,17 @@ function initMethods(vm: Component, methods: Object) {
   }
 }
 
+/**
+ * 初始化 watch：通过 $watch 创建 Watcher 观察者
+ *  在 Wathcher 构造函数中，会将 'a.b.c' 封装成对象读取函数，这样就会触发依赖收集的过程
+ */
 function initWatch(vm: Component, watch: Object) {
+  // 遍历 watch 选项
   for (const key in watch) {
     const handler = watch[key];
+    // 如果回调是一个数组的话
     if (Array.isArray(handler)) {
+      // 那么就为每个回调添加一个 wathcer 类
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i]);
       }
@@ -363,17 +435,22 @@ function initWatch(vm: Component, watch: Object) {
   }
 }
 
+// 通过创建 wathcer 类来侦听数据变化
 function createWatcher(vm, expOrFn, handler, options) {
+  // 如果 handler 是一个对象
   if (isPlainObject(handler)) {
-    options = handler;
+    options = handler; // 提取出配置项
     handler = handler.handler;
   }
+  // 如果 handler 是一个字符串，那么从 vm 实例上提取出对应的回调
   if (typeof handler === 'string') {
     handler = vm[handler];
   }
+  // 通过 $watch 方法添加侦听
   return vm.$watch(expOrFn, handler, options);
 }
 
+// 为 vue 原型 $data、$props 属性， 添加 $set、$delete、$watch 方法
 export function stateMixin(Vue) {
   // flow somehow has problems with directly declared definition object 流在某种程度上与直接声明的定义对象存在问题
   // when using Object.defineProperty, so we have to procedurally build up 当使用对象时。定义属性，所以我们必须按程序建立
@@ -409,24 +486,28 @@ export function stateMixin(Vue) {
   Vue.prototype.$set = set;
   Vue.prototype.$delete = del;
 
+  // $watch -- 观察 Vue 实例上的一个表达式或者一个函数计算结果的变化。
   Vue.prototype.$watch = function(
     expOrFn: string | Function,
     cb: any,
     options?: Object
   ): Function {
     const vm: Component = this;
-    if (isPlainObject(cb)) {
-      return createWatcher(vm, expOrFn, cb, options);
+    if (isPlainObject(cb) /** 如果 cb 是对象形式 */) {
+      return createWatcher(vm, expOrFn, cb, options); // 借助 createWatcher 方法来规范化 options
     }
     options = options || {};
-    options.user = true;
-    const watcher = new Watcher(vm, expOrFn, cb, options);
+    options.user = true; // 用户自定义 wathcer 类
+    const watcher = new Watcher(vm, expOrFn, cb, options); // 创建一个 Wathcer 类
+    // 如果是立即执行一次的话
     if (options.immediate) {
       const info = `callback for immediate watcher "${watcher.expression}"`;
-      pushTarget();
+      pushTarget(); // 停止依赖收集
+      // 调用 cb 回调
       invokeWithErrorHandling(cb, vm, [watcher.value], vm, info);
       popTarget();
     }
+    // 返回一个取消侦听的函数
     return function unwatchFn() {
       watcher.teardown();
     };

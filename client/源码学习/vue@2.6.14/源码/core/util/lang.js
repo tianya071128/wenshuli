@@ -16,7 +16,8 @@ export function isReserved(str: string): boolean {
 }
 
 /**
- * Define a property.
+ * Define a property. 定义属性
+ * 通过 Object.defineProperty 添加一个属性
  */
 export function def(obj: Object, key: string, val: any, enumerable?: boolean) {
   Object.defineProperty(obj, key, {
@@ -28,19 +29,22 @@ export function def(obj: Object, key: string, val: any, enumerable?: boolean) {
 }
 
 /**
- * Parse simple path.
+ * Parse simple path. 解析简单路径
+ * 如果 watcher 表达式是 a.b.c 字符串类型，则封装成对象读取的函数，用于触发依赖收集
  */
 const bailRE = new RegExp(`[^${unicodeRegExp.source}.$_\\d]`);
 export function parsePath(path: string): any {
+  // path 不符合条件
   if (bailRE.test(path)) {
     return;
   }
-  const segments = path.split('.');
-  return function(obj) {
+  const segments = path.split('.'); // 以 . 分隔
+  // 返回封装的函数
+  return function(obj /** 一般而言是 vm 实例 */) {
     for (let i = 0; i < segments.length; i++) {
-      if (!obj) return;
-      obj = obj[segments[i]];
+      if (!obj) return; // 如果 obj 不存在，则直接退出函数执行
+      obj = obj[segments[i]]; // 否则访问一下对象，这样就会触发依赖收集了
     }
-    return obj;
+    return obj; // 返回最后的取值
   };
 }

@@ -132,9 +132,10 @@ export const isBuiltInTag = makeMap('slot,component', true);
 export const isReservedAttribute = makeMap('key,ref,slot,slot-scope,is');
 
 /**
- * Remove an item from an array.
+ * Remove an item from an array. 从数组中删除项
  */
 export function remove(arr: Array<any>, item: any): Array<any> | void {
+  // 遍历数组，找到 item 项所在索引，删除即可
   if (arr.length) {
     const index = arr.indexOf(item);
     if (index > -1) {
