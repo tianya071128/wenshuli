@@ -72,7 +72,7 @@ export default ({
   warnHandler: null,
 
   /**
-   * Ignore certain custom elements
+   * Ignore certain custom elements 忽略某些自定义元素
    */
   ignoredElements: [],
 
@@ -96,8 +96,8 @@ export default ({
   isReservedAttr: no,
 
   /**
-   * Check if a tag is an unknown element.
-   * Platform-dependent.
+   * Check if a tag is an unknown element. 检查标记是否为未知元素
+   * Platform-dependent. 平台相关
    */
   isUnknownElement: no,
 

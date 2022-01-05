@@ -441,7 +441,7 @@ export function mergeOptions(
   }
 
   // 规范化 props inject directives 选项，最终形成一个标准的格式
-  // 只需要规范 child 子options，因为 parent 已经规范好了的
+  // 只需要规范 child 子 options，因为 parent 已经规范好了的
   normalizeProps(child, vm);
   normalizeInject(child, vm);
   normalizeDirectives(child); // 规范化指令

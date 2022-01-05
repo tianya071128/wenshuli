@@ -50,20 +50,24 @@ export function getTagNamespace(tag: string): ?string {
 }
 
 const unknownElementCache = Object.create(null);
+// 检测 tag 是否为未知元素，如果是返回 true。不是将所有的合法标签列举出来，而是创建 tag 类型元素，在进行判断
 export function isUnknownElement(tag: string): boolean {
   /* istanbul ignore if */
+  // 不是浏览器环境，则直接返回 true
   if (!inBrowser) {
     return true;
   }
+  // 检测指定 tag 是否为 html 或 svg 标签，如果是直接返回 false
   if (isReservedTag(tag)) {
     return false;
   }
   tag = tag.toLowerCase();
   /* istanbul ignore if */
+  // 如果存在缓存，则取缓存值
   if (unknownElementCache[tag] != null) {
     return unknownElementCache[tag];
   }
-  const el = document.createElement(tag);
+  const el = document.createElement(tag); // 通过创建 tag 元素测试
   if (tag.indexOf('-') > -1) {
     // http://stackoverflow.com/a/28210364/1070244
     return (unknownElementCache[tag] =

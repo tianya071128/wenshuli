@@ -27,13 +27,14 @@ Vue.config.mustUseProp = mustUseProp;
 Vue.config.isReservedTag = isReservedTag; // 判断是判断为合法标签
 Vue.config.isReservedAttr = isReservedAttr; // 判断是否为合法 attr
 Vue.config.getTagNamespace = getTagNamespace;
-Vue.config.isUnknownElement = isUnknownElement;
+Vue.config.isUnknownElement = isUnknownElement; // 判断是否为未知元素，如果是未知元素，则返回 true
 
 // install platform runtime directives & components 安装平台运行时指令和组件
 extend(Vue.options.directives, platformDirectives); // 添加 model 和 show 全局指令
 extend(Vue.options.components, platformComponents); // 添加 Transition、TransitionGroup 全局内置组件
 
 // install platform patch function 安装平台补丁功能
+// 根据 Vnode 生成 DOM
 Vue.prototype.__patch__ = inBrowser ? patch : noop; // 如果不是浏览器环境，则为 noop
 
 // public mount method web端公共渲染 VNode 成 DOM 方法
@@ -41,8 +42,8 @@ Vue.prototype.$mount = function(
   el?: string | Element,
   hydrating?: boolean
 ): Component {
-  el = el && inBrowser ? query(el) : undefined;
-  return mountComponent(this, el, hydrating);
+  el = el && inBrowser ? query(el) : undefined; // 挂载 DOM
+  return mountComponent(this /** 组件实例 */, el /** 挂载点 */, hydrating);
 };
 
 // devtools global hook devtools 全局钩子 -- 提供给 devtools 使用

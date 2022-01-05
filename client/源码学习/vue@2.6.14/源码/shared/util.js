@@ -9,10 +9,12 @@ export function isUndef(v: any): boolean %checks {
   return v === undefined || v === null;
 }
 
+// 检测指定数据不为 null 或 undefined
 export function isDef(v: any): boolean %checks {
   return v !== undefined && v !== null;
 }
 
+// 检测指定值是否为 true
 export function isTrue(v: any): boolean %checks {
   return v === true;
 }
@@ -62,6 +64,7 @@ export function isPlainObject(obj) {
   return _toString.call(obj) === '[object Object]';
 }
 
+// 检测是否为正则表达式
 export function isRegExp(v) {
   return _toString.call(v) === '[object RegExp]';
 }

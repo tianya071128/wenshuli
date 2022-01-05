@@ -4,9 +4,17 @@ import { hasOwn } from 'shared/util';
 import { warn, hasSymbol } from '../util/index';
 import { defineReactive, toggleObserving } from '../observer/index';
 
+/**
+ * 初始化 provide 数据 -- 祖先组件向其所有子孙后代注入一个依赖
+ * 策略：
+ *  1. 直接从 vm.$options.provide 中提取出来即可，与 data 类似，如果是函数调用则提取函数，如果是对象则直接返回
+ *  2. 直接赋值到  vm._provided 上，因为这个是祖先组件注入的依赖，子组件获取这个依赖时，会递归查找祖先组件的 _provided 属性获取依赖，详见 resolveInject 函数
+ */
 export function initProvide(vm: Component) {
+  // 提取出 provide -- 在选项合并中，一般会合并成一个函数
   const provide = vm.$options.provide;
   if (provide) {
+    // 然后直接调用这个函数或直接是 provide 配置对象
     vm._provided = typeof provide === 'function' ? provide.call(vm) : provide;
   }
 }

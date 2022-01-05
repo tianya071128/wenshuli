@@ -86,17 +86,33 @@ export function initMixin(Vue: Class<Component>) {
     initInjections(vm); // resolve injections before data/props 在 data/props 之前解决 injections 问题
     // 初始化 props、methods、data、computed、wather -- 具体策略见方法注解
     initState(vm);
-    initProvide(vm); // resolve provide after data/props
 
+    /**
+     * 初始化 provide 数据 -- 祖先组件向其所有子孙后代注入一个依赖
+     * 策略：
+     *  1. 直接从 vm.$options.provide 中提取出来即可，与 data 类似，如果是函数调用则提取函数，如果是对象则直接返回
+     *  2. 直接赋值到  vm._provided 上，因为这个是祖先组件注入的依赖，子组件获取这个依赖时，会递归查找祖先组件的 _provided 属性获取依赖，详见 resolveInject 函数
+     */
+    initProvide(vm); // resolve provide after data/props 解决数据/道具后提供的问题
+
+    // 执行 created 生命周期钩子
     callHook(vm, 'created');
 
     /* istanbul ignore if */
+    // 性能追踪结束
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
-      vm._name = formatComponentName(vm, false);
+      vm._name = formatComponentName(vm, false); // 获取组件名 name
       mark(endTag);
       measure(`vue ${vm._name} init`, startTag, endTag);
     }
 
+    /**
+     * 渲染过程：
+     *  当初始化组件完成(合并选项，初始化数据，见 _init 方法)，接下来就是渲染流程，主要是由 $mount 方法启动
+     *  $mount 是区分平台的，weex 和 web 主要是由 mountComponent(core/instance/lifecycle) 驱动，只是会在参数方面会做一些额外处理。
+     *  而在 web 端，还分为是否需要编译器，在需要编译器的情况下，还需要将 template 模板进行编译成 render 函数
+     *  暂时忽略编译器的内容，直接从 web 端不携带编译器的情况，入口在 platforms/web/runtime/index.js
+     */
     if (vm.$options.el) {
       vm.$mount(vm.$options.el);
     }
