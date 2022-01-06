@@ -98,6 +98,7 @@ export function renderMixin(Vue: Class<Component>) {
   };
 
   // 生成 VNode 方法
+  // 在组件的依赖项变化或插槽变化的时候就会重新调用这个方法生成新的 vnode
   Vue.prototype._render = function(): VNode {
     const vm: Component = this;
     /**

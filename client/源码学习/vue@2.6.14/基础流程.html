@@ -9,14 +9,13 @@
   </head>
   <body>
     <div id="root">
-      <div v-pre>
-        {{a}}
-        <my-components></my-components>
-      </div>
-      <div>{{b.c}}</div>
+      <div class="test">{{b.c}}</div>
       <div>{{d[0]}}</div>
       <div>{{f.a}}</div>
-      <my-components @test="console.log('测试一下')"></my-components>
+      <!-- <my-components
+        @test="console.log('测试一下')"
+        class="abs"
+      ></my-components> -->
     </div>
   </body>
 </html>
@@ -58,6 +57,13 @@
    *  而在 web 端，还分为是否需要编译器，在需要编译器的情况下，还需要将 template 模板进行编译成 render 函数
    *  暂时忽略编译器的内容，直接从 web 端不携带编译器的情况，入口在 platforms/web/runtime/index.js
    *  具体见 mountComponent(core/instance/lifecycle) 渲染组件方法注解，可以查看 platforms/web/runtime/index.js 中调用这个方法信息
+   */
+  /**
+   * 更新过程：
+   *  当组件的依赖项变更后，就会执行 mountComponent 方法中观察的 updateComponent 方法，简单讲
+   *  就是重新执行 vm._render() 方法生成新的 vnode
+   *  接着执行 vm._update() 对比新旧 vnode，进入 diff 阶段
+   *  具体见 mountComponent(core/instance/lifecycle) 方法的 updateComponent 方法
    */
   // new Vue 后，会调用 code/instance/index.js 中 Vue 构造函数
   new Vue({
@@ -111,7 +117,15 @@
           console.log('测试');
         },
         render(h) {
-          return h('div', '123');
+          return h(
+            'div',
+            {
+              class: {
+                test123: '123',
+              },
+            },
+            '123'
+          );
         },
       },
     },

@@ -24,7 +24,7 @@ export function isFalse(v: any): boolean %checks {
 }
 
 /**
- * Check if value is primitive.
+ * Check if value is primitive. 检查值是否为原始值(string、number、symbol、boolean)
  */
 export function isPrimitive(value: any): boolean %checks {
   return (

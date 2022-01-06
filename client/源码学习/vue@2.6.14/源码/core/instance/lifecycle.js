@@ -70,7 +70,11 @@ export function initLifecycle(vm: Component) {
 
 // 为 Vue 原型添加 _update、$forceUpdate、$destroy 方法，与组件渲染相关
 export function lifecycleMixin(Vue: Class<Component>) {
-  // 根据 Vnode 渲染 DOM，如果存在旧 Vnode，则进入 diff 阶段
+  /** 根据 Vnode 渲染 DOM，如果存在旧 Vnode，则进入 diff 阶段
+   * 最主要的就是 __patch__，__patch__ 方法依据不同平台注入，web 端的在 /platforms/web/runtime/index.js
+   * 但是最终会执行 \core\vdom\patch.js 中的最后的 patch 方法，根据 vnode 渲染成 DOM。
+   *  详见 path 方法注解
+   */
   Vue.prototype._update = function(vnode: VNode, hydrating?: boolean) {
     const vm: Component = this;
     const prevEl = vm.$el; // 上一个生成的 DOM
@@ -82,25 +86,29 @@ export function lifecycleMixin(Vue: Class<Component>) {
     // __patch__ 方法依据不同平台注入，web 端的在 /platforms/web/runtime/index.js
     if (!prevVnode /** 如果不存在上一个 Vnode，表示为初始化阶段 */) {
       // initial render 初始渲染
+      // 将渲染成的 DOM 挂载到 $el 上
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */);
     } else {
-      // updates
+      // updates 更新阶段，到这一步，与初始阶段步骤相同，接下来的对比工具将 __path__ 方法
       vm.$el = vm.__patch__(prevVnode, vnode);
     }
+    // 将正在渲染的组件引用回到上一个
     restoreActiveInstance();
-    // update __vue__ reference
+    // update __vue__ reference 更新 __vue__ 引用
     if (prevEl) {
-      prevEl.__vue__ = null;
+      prevEl.__vue__ = null; // 将上一个 __vue__ 引用置为 null
     }
+    // 保持当前 __vue__ 引用
     if (vm.$el) {
       vm.$el.__vue__ = vm;
     }
-    // if parent is an HOC, update its $el as well
+    // if parent is an HOC, update its $el as well 如果父项是HOC，则也更新其$el
+    // vm.$vnode：组件表示的 vnode -- vm.$parentvm.$parent：父组件实例 -- _vnode：整个组件的 vnode
     if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
       vm.$parent.$el = vm.$el;
     }
-    // updated hook is called by the scheduler to ensure that children are
-    // updated in a parent's updated hook.
+    // updated hook is called by the scheduler to ensure that children are 调度程序调用更新的钩子以确保
+    // updated in a parent's updated hook. 在父对象的更新挂钩中更新
   };
 
   Vue.prototype.$forceUpdate = function() {
@@ -161,6 +169,11 @@ export function lifecycleMixin(Vue: Class<Component>) {
  *      -- vm._update() 定义在该文件上方，对新旧 Vnode 对比
  *  生成 Watcher 实例解析 updateComponent 表达式，这样的话在依赖项变更时就会重新执行 updateComponent 方法生成新的 Vnode 和 进行补丁
  *  在创建 Wathcer 实例时，初始阶段就会进行解析表达式，这样就会初始挂载一次，后续就是更新阶段了
+ *
+ * 更新阶段：
+ *  updateComponent 就会被执行
+ *      -- vm._render() 方法执行步骤与初始阶段也相同
+ *      -- vm.update() 如果遇到存在旧 vnode，就会通过 __path__ 进入 diff 阶段，进行更新
  */
 export function mountComponent(
   vm: Component, // 组件实例

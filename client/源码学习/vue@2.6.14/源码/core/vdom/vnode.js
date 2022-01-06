@@ -7,7 +7,7 @@ export default class VNode {
   text: string | void; // 当前节点的文本
   elm: Node | void; // 当前虚拟节点对应的真实dom节点
   ns: string | void; // 当前节点的名字空间
-  context: Component | void; // rendered in this component's scope
+  context: Component | void; // rendered in this component's scope 在该组件的作用域中呈现
   key: string | number | void;
   componentOptions: VNodeComponentOptions | void;
   componentInstance: Component | void; // component instance
@@ -27,7 +27,7 @@ export default class VNode {
   fnContext: Component | void; // real context vm for functional nodes
   fnOptions: ?ComponentOptions; // for SSR caching
   devtoolsMeta: ?Object; // used to store functional render context for devtools
-  fnScopeId: ?string; // functional scope id support
+  fnScopeId: ?string; // functional scope id support 函数式组件的作用域id支持
 
   constructor(
     tag?: string,
@@ -45,10 +45,10 @@ export default class VNode {
     this.text = text; // 当前节点的文本
     this.elm = elm; // 当前虚拟节点对应的真实dom节点
     this.ns = undefined; // 当前节点的名字空间 -- 命名空间可查看 https://developer.mozilla.org/zh-CN/docs/Web/API/Document/createElementNS#example
-    this.context = context;
+    this.context = context; // 当前 vnode 的渲染组件实例 -- 需要注意的是插槽
     this.fnContext = undefined;
     this.fnOptions = undefined;
-    this.fnScopeId = undefined;
+    this.fnScopeId = undefined; // 函数式组件的作用域id支持
     this.key = data && data.key;
     this.componentOptions = componentOptions;
     this.componentInstance = undefined;

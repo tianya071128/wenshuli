@@ -2,12 +2,15 @@
 
 import { namespaceMap } from 'web/util/index';
 
+// 创建一个 DOM 元素
 export function createElement(tagName: string, vnode: VNode): Element {
-  const elm = document.createElement(tagName);
+  const elm = document.createElement(tagName); // 创建元素
+  // 如果不是 select 元素，则返回
   if (tagName !== 'select') {
     return elm;
   }
   // false or null will remove the attribute but undefined will not false或null将删除该属性，但undefined不会删除该属性
+  // 处理下 select 的 multiple 属性，需要使用 setAttribute 方式添加元素
   if (
     vnode.data &&
     vnode.data.attrs &&
@@ -18,6 +21,7 @@ export function createElement(tagName: string, vnode: VNode): Element {
   return elm;
 }
 
+// 创建一个具有命名空间的元素
 export function createElementNS(namespace: string, tagName: string): Element {
   return document.createElementNS(namespaceMap[namespace], tagName);
 }
@@ -41,6 +45,7 @@ export function insertBefore(
   parentNode.insertBefore(newNode, referenceNode);
 }
 
+// 删除指定子节点
 export function removeChild(node: Node, child: Node) {
   node.removeChild(child);
 }
@@ -69,6 +74,7 @@ export function setTextContent(node: Node, text: string) {
   node.textContent = text;
 }
 
+// 为指定 node 添加一个自定义属性，用于 css 作用域
 export function setStyleScope(node: Element, scopeId: string) {
   node.setAttribute(scopeId, '');
 }
