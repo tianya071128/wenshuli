@@ -54,7 +54,7 @@ export default class VNode {
     this.componentInstance = undefined;
     this.parent = undefined;
     this.raw = false;
-    this.isStatic = false;
+    this.isStatic = false; // 静态节点标志
     this.isRootInsert = true;
     this.isComment = false; // 空注释占位符 - 注释节点
     this.isCloned = false;

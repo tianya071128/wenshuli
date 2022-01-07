@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>03.生命周期</title>
+    <script src="./vue.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+<script>
+  /**
+   * vue 的生命周期本质上是在特定时机执行的钩子(回调)，这些钩子贯穿了 vue 组件的全周期，我们也可添加自定义钩子，何时执行这些钩子就是由自身控制(如 vue-router 的路由守卫)
+   * vue 的生命周期：'beforeCreate', 'created', 'beforeMount', 'mounted', 'beforeUpdate', 'updated', 'beforeDestroy', 'destroyed', 'activated', 'deactivated', 'errorCaptured', 'serverPrefetch',
+   *      beforeCreate：实例初始化，数据配置前执行
+   *        -- 在 code/instance/init.js 的 _init 方法中执行
+   *      created：数据配置完成后执行
+   *        -- 在 code/instance/init.js 的 _init 方法中执行
+   *
+   *
+   * 整体执行流程：
+   *  初始阶段：
+   *      父组件 beforeCreate -- 父组件 created -- 父组件 beforeMount -- 子组件 beforeCreate -- 子组件 created -- 子组件 beforeMount -- 子组件 mounted -- 父组件 mounted
+   *  更新阶段：
+   *      父组件 beforeUpdate -- 子组件 beforeUpdate -- 子组件 updated -- 父组件 updated
+   *  销毁阶段：
+   *
+   */
+</script>

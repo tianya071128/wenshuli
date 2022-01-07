@@ -28,14 +28,14 @@ export default class Watcher {
   vm: Component; // 组件实例
   expression: string; // 解析表达式的字符串表示 - 用于报错提示
   cb: Function; // 解析后执行回调
-  id: number; // wathcer id
+  id: number; // Wathcer id
   deep: boolean; // 是否深度侦听
-  user: boolean; // 开发者定义的 wathcer -- 可能是通过 watch 选项或者 $watch api
-  lazy: boolean; // 惰性 wathcer -- 在计算属性中会使用
+  user: boolean; // 开发者定义的 Wathcer -- 可能是通过 watch 选项或者 $watch api
+  lazy: boolean; // 惰性 Wathcer -- 在计算属性中会使用
   sync: boolean;
   dirty: boolean;
   active: boolean; // 是否为激活状态
-  deps: Array<Dep>; // 当前 wathcer 依赖项
+  deps: Array<Dep>; // 当前 Wathcer 依赖项
   newDeps: Array<Dep>; // 更新后 watcher 依赖项 - 用于比较更新前后的依赖项后清除无用依赖项
   depIds: SimpleSet; // 依赖项 id
   newDepIds: SimpleSet; // 更新后 watcher 依赖项 id
@@ -60,10 +60,10 @@ export default class Watcher {
     // 如果存在 options
     if (options) {
       this.deep = !!options.deep; // 深度监听
-      this.user = !!options.user; // 开发者定义的 wathcer -- 可能是通过 watch 选项或者 $watch api
-      this.lazy = !!options.lazy; // 惰性 wathcer -- 在计算属性中会使用
-      this.sync = !!options.sync; //
-      this.before = options.before; // 解析表达式之前的钩子函数
+      this.user = !!options.user; // 开发者定义的 Wathcer -- 可能是通过 watch 选项或者 $watch api
+      this.lazy = !!options.lazy; // 惰性 Wathcer -- 在计算属性中会使用
+      this.sync = !!options.sync; // 依赖项变更时同步执行(一般不会)
+      this.before = options.before; // 解析表达式之前的钩子函数 -- 执行时机在 scheduler.js 中，更新 Watcher 时先执行
     } else {
       // 否则取默认值
       this.deep = this.user = this.lazy = this.sync = false;
@@ -71,8 +71,8 @@ export default class Watcher {
     this.cb = cb; // 解析后执行回调
     this.id = ++uid; // uid for batching 用于批处理的uid
     this.active = true; // 是否为激活状态
-    this.dirty = this.lazy; // for lazy watchers 懒散的观察者
-    this.deps = []; // 当前 wathcer 依赖项
+    this.dirty = this.lazy; // for lazy watchers 懒散的观察者 -- 计算属性初始标识没有计算过
+    this.deps = []; // 当前 Wathcer 依赖项
     this.newDeps = []; // 更新后 watcher 依赖项 - 用于比较更新前后的依赖项后清除无用依赖项
     this.depIds = new Set(); // 依赖项 id
     this.newDepIds = new Set(); // 更新后 watcher 依赖项 id
@@ -105,18 +105,18 @@ export default class Watcher {
    * Evaluate the getter, and re-collect dependencies. 评估getter，并重新收集依赖项
    */
   get() {
-    pushTarget(this); // 将该 watcher 推入到 Dep.target 中，在此过程中，表示是 wathcer 在观察依赖
+    pushTarget(this); // 将该 watcher 推入到 Dep.target 中，在此过程中，表示是 Wathcer 在观察依赖
     let value;
     const vm = this.vm;
     try {
       value = this.getter.call(vm, vm); // 直接执行 getter 方法就会收集依赖
     } catch (e) {
       // 如果执行过程中出现问题
-      if (this.user /** 是用户自定义的 wathcer */) {
+      if (this.user /** 是用户自定义的 Wathcer */) {
         // 使用 handleError 统一处理
         handleError(e, vm, `getter for watcher "${this.expression}"`);
       } else {
-        throw e; // 如果不是用户定义的 wathcer，直接抛出错误阻断执行
+        throw e; // 如果不是用户定义的 Wathcer，直接抛出错误阻断执行
       }
     } finally {
       // "touch" every property so they are all tracked as “触摸”每一处财产，以便它们都能被跟踪
@@ -144,7 +144,7 @@ export default class Watcher {
       this.newDeps.push(dep);
       // 如果这个 Dep 不存在更新前的依赖项集合中时
       if (!this.depIds.has(id)) {
-        dep.addSub(this); // 那么就需要通知 dep 添加一下该 wathcer
+        dep.addSub(this); // 那么就需要通知 dep 添加一下该 Wathcer
       }
     }
   }
@@ -159,7 +159,7 @@ export default class Watcher {
       const dep = this.deps[i];
       // 如果在更新后的依赖集合中不存在此 Dep
       if (!this.newDepIds.has(dep.id)) {
-        dep.removeSub(this); // 那么就在 Dep 收集的 wathcer 集合中删除该 wathcer
+        dep.removeSub(this); // 那么就在 Dep 收集的 Wathcer 集合中删除该 Wathcer
       }
     }
     // 将 depIds 和 mewDepIds 等数据交换，更新前后交换
@@ -176,36 +176,42 @@ export default class Watcher {
   /**
    * Subscriber interface. 用户接口
    * Will be called when a dependency changes. 将在依赖项更改时调用
+   * 依赖项变更了
    */
   update() {
     /* istanbul ignore else */
-    if (this.lazy /** 如果是惰性的 */) {
-      this.dirty = true; // 将 dirty 标识置为 true，观察操作在计算属性的 getter 方法中会调用 evaluate 方法手动调用 get() 触发依赖更新
-    } else if (this.sync) {
-      this.run();
+    if (this.lazy /** 如果是惰性的(通常为计算属性) */) {
+      this.dirty = true; // 将 dirty 标识置为 true，也就通知了计算属性需要重新计算。观察操作在计算属性的 getter 方法中会调用 evaluate 方法手动调用 get() 触发依赖更新
+    } else if (this.sync /** 同步执行，一般不会如此 */) {
+      this.run(); // 执行
     } else {
+      // 否则由调度中心统一调度
       queueWatcher(this);
     }
   }
 
   /**
-   * Scheduler job interface.
-   * Will be called by the scheduler.
+   * Scheduler job interface. 调度程序作业接口
+   * Will be called by the scheduler. 将由调度程序调用
+   * 更新
    */
   run() {
+    // 只有该 Watcher 在活动状态才执行
     if (this.active) {
-      const value = this.get();
+      const value = this.get(); // 调用解析表达式，重新收集依赖
+      // 如果监听的数据变化了的话(这个是针对 watch 选项来讲)，执行 cb 回调
       if (
-        value !== this.value ||
-        // Deep watchers and watchers on Object/Arrays should fire even
-        // when the value is the same, because the value may
-        // have mutated.
-        isObject(value) ||
-        this.deep
+        value !== this.value || // 值变更了
+        // Deep watchers and watchers on Object/Arrays should fire even 深度监视程序和对象/阵列上的监视程序应均匀激发
+        // when the value is the same, because the value may 当值相同时，因为该值可能
+        // have mutated. 变异了
+        isObject(value) || // 或者 value 是一个对象
+        this.deep // 深度监听
       ) {
-        // set new value
+        // set new value 设置新值
         const oldValue = this.value;
         this.value = value;
+        // 如果是用户定义的话，通过 invokeWithErrorHandling 执行 cb 回调
         if (this.user) {
           const info = `callback for watcher "${this.expression}"`;
           invokeWithErrorHandling(
@@ -233,18 +239,18 @@ export default class Watcher {
 
   /**
    * Depend on all deps collected by this watcher. 依赖于此观察者收集的所有DEP
-   * 将 lazy 惰性观察者(一般为计算属性)的依赖项移植到依赖计算属性的 wathcer 上
+   * 将 lazy 惰性观察者(一般为计算属性)的依赖项移植到依赖计算属性的 Wathcer 上
    */
   depend() {
     let i = this.deps.length;
     while (i--) {
-      this.deps[i].depend(); // 触发依赖收集 - 此时收集的是依赖计算属性的 wathcer，因为计算属性的 wathcer 已经推出 Dep.target 引用
+      this.deps[i].depend(); // 触发依赖收集 - 此时收集的是依赖计算属性的 Wathcer，因为计算属性的 Wathcer 已经推出 Dep.target 引用
     }
   }
 
   /**
    * Remove self from all dependencies' subscriber list. 从所有依赖项的订户列表中删除self
-   * 删除该 wathcer，不再观察
+   * 删除该 Wathcer，不再观察
    */
   teardown() {
     // 是否为激活状态

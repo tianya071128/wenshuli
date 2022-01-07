@@ -60,7 +60,7 @@ export function initLifecycle(vm: Component) {
   vm.$refs = {}; // 一个对象，持有注册过 ref attribute 的所有 DOM 元素和组件实例。
 
   // 以 _ 开头，是其内部属性
-  vm._watcher = null; // 该组件的渲染函数对应的 wathcer
+  vm._watcher = null; // 该组件的渲染函数对应的 Wathcer
   vm._inactive = null;
   vm._directInactive = false;
   vm._isMounted = false; // 表示是否渲染过的标识
@@ -255,7 +255,7 @@ export function mountComponent(
           vm._isMounted /** 是否已经挂载过 */ &&
           !vm._isDestroyed /** 是否没有被渲染 */
         ) {
-          // 执行 beforeUpdate 钩子
+          // 执行 beforeUpdate 钩子 -- 因为在执行 Watcher 队列时，会先执行父组件的 before 钩子，所以父组件先执行 beforeUpdate 生命周期
           callHook(vm, 'beforeUpdate');
         }
       },
@@ -266,6 +266,7 @@ export function mountComponent(
 
   // manually mounted instance, call mounted on self 手动装入实例，调用自行装入
   // mounted is called for render-created child components in its inserted hook 在插入的钩子中为渲染创建的子组件调用mounted
+  // 如果是 vm.$vnode 为空的话，表示是根组件，如果是子组件的话，$vnode 引用的是表示组建的 vnode
   if (vm.$vnode == null) {
     vm._isMounted = true; // 是否渲染标识置为 true
     // 执行 mounted 钩子

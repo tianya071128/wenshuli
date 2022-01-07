@@ -118,8 +118,8 @@ export default ({
   mustUseProp: no,
 
   /**
-   * Perform updates asynchronously. Intended to be used by Vue Test Utils
-   * This will significantly reduce performance if set to false.
+   * Perform updates asynchronously. Intended to be used by Vue Test Utils 异步执行更新。拟由Vue测试UTIL使用
+   * This will significantly reduce performance if set to false. 如果设置为false，这将显著降低性能
    */
   async: true,
 

@@ -70,6 +70,7 @@ export function tagName(node: Element): string {
   return node.tagName;
 }
 
+// 为 node 设置文本 -- textContent：表示一个节点及其后代的文本内容。
 export function setTextContent(node: Node, text: string) {
   node.textContent = text;
 }

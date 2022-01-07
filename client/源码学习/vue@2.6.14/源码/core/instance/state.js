@@ -83,7 +83,7 @@ export function initState(vm: Component) {
    * 初始化 computed 计算属性
    *  1. 在服务端渲染(SSR)时，计算属性没有响应式特性。
    *  2. 惰性求值(主要见 createComputedGetter 方法)：在创建 Wathcer 时，不会进行 getter 操作，只有在使用计算属性时，才会进行求值操作，并且会手动调用 watcher.evaluate() 进行依赖收集
-   *  3. 在一次更新阶段只会更新一次：会将求值结果存储到 wathcer.value 属性中，只需要进行一次即可。
+   *  3. 在一次更新阶段只会更新一次：会将求值结果存储到 Wathcer.value 属性中，只需要进行一次即可。
    *  4. 响应式：虽然会创建 Wathcer 类，但是是惰性的，只会在使用计算属性时才会收集依赖。
    *            计算属性的 Wathcer 会将收集到的 Dep 转接到依赖这个计算属性的 Wathcer 观察对象中
    *            这样计算属性依赖项 Deps 变更时只会将计算属性的 Wathcer 的 dirty 标识置为 true
@@ -247,7 +247,7 @@ const computedWatcherOptions = {
  * 初始化 computed 计算属性
  *  1. 在服务端渲染(SSR)时，计算属性没有响应式特性。
  *  2. 惰性求值(主要见 createComputedGetter 方法)：在创建 Wathcer 时，不会进行 getter 操作，只有在使用计算属性时，才会进行求值操作，并且会手动调用 watcher.evaluate() 进行依赖收集
- *  3. 在一次更新阶段只会更新一次：会将求值结果存储到 wathcer.value 属性中，只需要进行一次即可。
+ *  3. 在一次更新阶段只会更新一次：会将求值结果存储到 Wathcer.value 属性中，只需要进行一次即可。
  *  4. 响应式：虽然会创建 Wathcer 类，但是是惰性的，只会在使用计算属性时才会收集依赖。
  *            计算属性的 Wathcer 会将收集到的 Dep 转接到依赖这个计算属性的 Wathcer 观察对象中
  *            这样计算属性依赖项 Deps 变更时只会将计算属性的 Wathcer 的 dirty 标识置为 true
@@ -358,7 +358,7 @@ function createComputedGetter(key) {
       if (watcher.dirty) {
         watcher.evaluate(); // 触发计算属性收集依赖
       }
-      // 当计算属性观察完毕后，Dep.target 就会重置为上一个 Wathcer(如果存在)，我们就将计算属性的 wathcer 依赖的 Dep 移植到依赖计算属性的 wathcer 上。
+      // 当计算属性观察完毕后，Dep.target 就会重置为上一个 Wathcer(如果存在)，我们就将计算属性的 Wathcer 依赖的 Dep 移植到依赖计算属性的 Wathcer 上。
       // 例如在渲染函数 render 中如果依赖了一个计算属性 test，那么就会将 test 中的依赖项 Dep 全部转接到渲染函数的 Wathcer
       // 这样在计算属性 test 依赖的属性改变时，渲染函数的 Wathcer 能够调用。
       // 因为计算属性在依赖改变时不会重新求值进行依赖收集，只会在使用到计算属性的时候才会进行求值计算
@@ -425,7 +425,7 @@ function initWatch(vm: Component, watch: Object) {
     const handler = watch[key];
     // 如果回调是一个数组的话
     if (Array.isArray(handler)) {
-      // 那么就为每个回调添加一个 wathcer 类
+      // 那么就为每个回调添加一个 Wathcer 类
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i]);
       }
@@ -435,7 +435,7 @@ function initWatch(vm: Component, watch: Object) {
   }
 }
 
-// 通过创建 wathcer 类来侦听数据变化
+// 通过创建 Wathcer 类来侦听数据变化
 function createWatcher(vm, expOrFn, handler, options) {
   // 如果 handler 是一个对象
   if (isPlainObject(handler)) {
@@ -497,7 +497,7 @@ export function stateMixin(Vue) {
       return createWatcher(vm, expOrFn, cb, options); // 借助 createWatcher 方法来规范化 options
     }
     options = options || {};
-    options.user = true; // 用户自定义 wathcer 类
+    options.user = true; // 用户自定义 Wathcer 类
     const watcher = new Watcher(vm, expOrFn, cb, options); // 创建一个 Wathcer 类
     // 如果是立即执行一次的话
     if (options.immediate) {

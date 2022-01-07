@@ -147,8 +147,8 @@ export function observe(value: any, asRootData: ?boolean): Observer | void {
  * 逻辑如下：
  *  通过 Object.defineProperty 在 obj 上重写 key 属性(不会改变 obj 引用)，主要是拦截 getter/setter 操作，对其属性读写操作一般符合默认读写行为
  *    getter 拦截读取操作：通过闭包引用的 dep 类来收集依赖了这个 key 的 watcher 类，
- *                        比较难以理解的是 “还需要将 wathcer 收集到属性值 val 的 Dep 类中”
- *    setter 拦截写入操作：首先完成写入操作，然后通过 dep.notify() 让 wathcer 类更新
+ *                        比较难以理解的是 “还需要将 Wathcer 收集到属性值 val 的 Dep 类中”
+ *    setter 拦截写入操作：首先完成写入操作，然后通过 dep.notify() 让 Wathcer 类更新
  */
 export function defineReactive(
   obj: Object,
@@ -227,7 +227,7 @@ export function defineReactive(
       }
       // 修改 childOb 引用
       childOb = !shallow && observe(newVal);
-      // 触发 wathcer 类更新
+      // 触发 Wathcer 类更新
       dep.notify();
     },
   });
