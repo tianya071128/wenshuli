@@ -487,24 +487,36 @@ export function mergeOptions(
 }
 
 /**
- * Resolve an asset.
- * This function is used because child instances need access
- * to assets defined in its ancestor chain.
+ * Resolve an asset. 处置资产
+ * This function is used because child instances need access 使用此函数是因为子实例需要访问
+ * to assets defined in its ancestor chain. 到在其祖先链中定义的资产
+ * 提取指定的资产(组件、指令、过滤器)
+ *  策略：
+ *    首先尝试从局部注册(局部注册的就在 vm.$options[type] 对象本身上查找)
+ *    然后在通过原型链继承，从 mixin、extend、全局注册 上查找，因为在合并选项时，这些资源注册的都会通过原型链继承，见 mergeAssets 合并方法
  */
-export function resolveAsset(options, type, id, warnMissing) {
+export function resolveAsset(
+  options, // 组件的配置项
+  type, // 提取类型
+  id, // 提取 id
+  warnMissing // 是否需要在没有找到资产情况下抱错提示
+) {
   /* istanbul ignore if */
+  // id 必须为字符串
   if (typeof id !== 'string') {
     return;
   }
-  const assets = options[type];
-  // check local registration variations first
-  if (hasOwn(assets, id)) return assets[id];
-  const camelizedId = camelize(id);
-  if (hasOwn(assets, camelizedId)) return assets[camelizedId];
-  const PascalCaseId = capitalize(camelizedId);
-  if (hasOwn(assets, PascalCaseId)) return assets[PascalCaseId];
-  // fallback to prototype chain
+  const assets = options[type]; // 先尝试从组件配置的资源中提取
+  // check local registration variations first 首先检查本地注册变更
+  if (hasOwn(assets, id)) return assets[id]; // 检测是否局部注册是否存在，存在则返回
+  const camelizedId = camelize(id); // 将 id 字符串尝试从 - 分隔字符串改成驼峰字符串
+  if (hasOwn(assets, camelizedId)) return assets[camelizedId]; // 再次尝试局部注册的
+  const PascalCaseId = capitalize(camelizedId); // 从 camelizedId 基础上字符串首字母大写
+  if (hasOwn(assets, PascalCaseId)) return assets[PascalCaseId]; // 再次尝试
+  // fallback to prototype chain 回退到原型链
+  // 回退到原型链上尝试 -- 此时通过 mixin、extend、全局注册的都是会通过继承的方式在 vm.$options 上
   const res = assets[id] || assets[camelizedId] || assets[PascalCaseId];
+  // 没有找到的话，提示一下
   if (process.env.NODE_ENV !== 'production' && warnMissing && !res) {
     warn('Failed to resolve ' + type.slice(0, -1) + ': ' + id, options);
   }

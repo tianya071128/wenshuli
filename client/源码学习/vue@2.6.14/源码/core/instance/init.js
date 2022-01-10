@@ -148,18 +148,19 @@ export function initInternalComponent(
  *  如果是通过 Vue.extend() 创建出来的子类，然后 new 一个子类的实例。那么就会递归提取出 options
  */
 export function resolveConstructorOptions(Ctor: Class<Component>) {
-  let options = Ctor.options; // 提取出 options
+  let options = Ctor.options; // 提取出子类 options
   // 如果是 Vue.extend() 构造出来的子类，那么就找到超类，递归获取到 options
   if (Ctor.super) {
-    const superOptions = resolveConstructorOptions(Ctor.super);
-    const cachedSuperOptions = Ctor.superOptions;
+    const superOptions = resolveConstructorOptions(Ctor.super); // 超类的 options
+    const cachedSuperOptions = Ctor.superOptions; // 缓存的超类 options
+    // 在 Vue.extend() 中会进行 options 超类和子类合并，但是有可能后续选项变更了，此时处理的就是这种情况
     if (superOptions !== cachedSuperOptions) {
-      // super option changed,
-      // need to resolve new options.
-      Ctor.superOptions = superOptions;
-      // check if there are any late-modified/attached options (#4976)
+      // super option changed, 超类的选项已更改
+      // need to resolve new options. 需要解决新的选择
+      Ctor.superOptions = superOptions; // 重新建立引用
+      // check if there are any late-modified/attached options (#4976) 检查是否有任何后期修改/附加选项
       const modifiedOptions = resolveModifiedOptions(Ctor);
-      // update base extend options
+      // update base extend options 更新基本扩展选项
       if (modifiedOptions) {
         extend(Ctor.extendOptions, modifiedOptions);
       }

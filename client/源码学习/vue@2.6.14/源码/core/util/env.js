@@ -15,7 +15,7 @@ export const isEdge = UA && UA.indexOf('edge/') > 0;
 export const isAndroid =
   (UA && UA.indexOf('android') > 0) || weexPlatform === 'android';
 export const isIOS =
-  (UA && /iphone|ipad|ipod|ios/.test(UA)) || weexPlatform === 'ios';
+  (UA && /iphone|ipad|ipod|ios/.test(UA)) || weexPlatform === 'ios'; // 是否为 ios 环境
 export const isChrome = UA && /chrome\/\d+/.test(UA) && !isEdge;
 export const isPhantomJS = UA && /phantomjs/.test(UA);
 export const isFF = UA && UA.match(/firefox\/(\d+)/);

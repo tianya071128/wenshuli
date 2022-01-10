@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>03.生命周期</title>
+    <script src="./vue.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+<script>
+  const myComponent = {
+    render(h) {
+      return h(
+        'div',
+        {
+          class: {
+            test123: '123',
+          },
+        },
+        '这是一个子组件'
+      );
+    },
+  };
+
+  /**
+   * 从生成表示子组件 Vnode 开始分析：
+   *
+   * 表示子组件 Vnode 的生成过程：例如下面 render 函数中 h('my-component')
+   *  在组件渲染过程中，调用 mountComponent(core/instance/lifecycle.js) 方法 -> 调用 vm._render(core/instance/render.js) 方法
+   *   -> 调用 vm.$options.render(即组件定义的 render 选项或编译器(或者 vue-loader 等)生成的 render) -> 传入的 h 函数定义在 core/instance/render.js 文件中 initRender 方法中
+   *   -> 生成表示子组件的 Vnode 的方法是 vm.$createElement 方法，内部调用 createElement 方法
+   *   -> createElement 方法定义在 core/vdom/create-element.js 中，方法内部会根据 tag 来判断是否为子组件的生成，此时调用 createComponent 方法
+   *   -> 最终调用在 createComponent 方法中，定义在 core/vdom/create-component.js，详见注解
+   *
+   */
+  new Vue({
+    el: '#root',
+    data() {
+      return {
+        a: 1,
+      };
+    },
+    components: {
+      myComponent,
+    },
+    render(h) {
+      return h('div', [h('div', '这个一个 div 元素'), h('my-component')]);
+    },
+  });
+</script>

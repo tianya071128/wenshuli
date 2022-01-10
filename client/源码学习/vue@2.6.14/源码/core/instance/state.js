@@ -163,6 +163,8 @@ function initProps(
     // static props are already proxied on the component's prototype 静态道具已经在组件的原型上代理
     // during Vue.extend(). We only need to proxy props defined at 在 Vue.extend() 期间。我们只需要代理在上定义的道具
     // instantiation here. 此处实例化
+    // 对于子组件来说，会通过 Vue.extend() 方法已经将 props 的 key 代理到 vm 上，针对同一构造函数建立的实例就不需要重复代理了
+    // 具体见 Vue.extend() 方法实现
     if (!(key in vm)) {
       // 将 prop 的 key 代理到 vm 实例上，这样的话，通过 this[propKey] 访问的话，就相当于访问 _props
       proxy(vm, `_props`, key);
@@ -284,6 +286,8 @@ function initComputed(vm: Component, computed: Object) {
     // component prototype. We only need to define computed properties defined 组件原型。我们只需要定义已定义的计算属性
     // at instantiation here. 在这里实例化
 
+    // 对于子组件来说，会通过 Vue.extend() 方法已经将 props 的 key 代理到 vm 上，针对同一构造函数建立的实例就不需要重复代理了
+    // 具体见 Vue.extend() 方法实现
     if (!(key in vm)) {
       // 如果该计算属性的 key，没有在 vm 实例上定义的话
       defineComputed(vm, key, userDef);

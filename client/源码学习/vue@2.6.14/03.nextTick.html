@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>03.nextTick</title>
+    <script src="./vue.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+<script>
+  /**
+   * nextTick -- 源码定义在 core\util\next-tick.js 中
+   *  方法原理：
+   *      1. 将 “传入的回调” 或者 “promise 的成功态” 封装一下，生成新回调，推入到回调队列中
+   *      2. 然后通过 timerFunc 方法将 flushCallbacks(“执行回调队列的方法”) 添加进任务队列中，timerFunc 依次尝试使用 Promise -> MutationObserver -> setImmediate -> setTimeout 添加任务队列。前两个为微任务队列
+   *      3. 添加至任务队列(微任务或宏任务)后，在触发这个任务时，执行 flushCallbacks 方法，遍历回调队列，重置一些标识即可。
+   *
+   * nextTick -- 在下次 DOM 更新循环结束之后执行延迟回调。在修改数据之后立即使用这个方法，获取更新后的 DOM。
+   *  为什么可以在 DOM 更新之后执行回调？
+   *    例如：
+   *        // 修改数据
+   *        vm.msg = 'Hello'
+   *        // DOM 还没有更新
+   *        Vue.nextTick(function () {
+   *          // DOM 更新了
+   *        })
+   *    因为在修改数据后，组件的渲染函数 Watcher 的依赖项变化后就会重新渲染组件，或者其他依赖于数据的 Watcher 类，
+   *    就会通过 nextTick 添加 Watcher 队列来执行 Watcher，这样 nextTick 中的回调队列就会存在一个回调准备执行
+   *    而自己定义的 Vue.nextTick 方法也会随之添加进 nextTick 中的回调队列中，但是会添加至回调队列末尾
+   *    执行 nextTick 回调队列时，就会先执行 Watcher 更新的回调，再执行自己添加的回调
+   */
+</script>
