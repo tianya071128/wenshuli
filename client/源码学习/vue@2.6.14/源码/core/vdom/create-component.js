@@ -94,6 +94,14 @@ const hooksToMerge = Object.keys(componentVNodeHooks);
 
 /**
  * 生成表示组件的 Vnode -- 其中可能是普通子组件、函数式组件、异步组件等类型组件
+ *  对于普通子组件：
+ *    1. 根据 Ctor 配置项通过 Vue.extend() 生成一个子类，在这里就可以完成组件配置项的合并等工作、
+ *    2. 处理 v-model 语法糖：
+ *        在 vue-loader 或编译器时，才可以使用 v-model，在编译的过程中，会将 v-model="test" 编译成 data.model = { value: test, callback: function() { xxx } }
+ *         此时处理组件 options 时，就需要根据组件 options.model 配置来重新生成 data
+ *         2.1. 处理 data.model.value 值，根据 options.model.prop 值来添加到 data.attrs 中
+ *         2.2. 处理 data.model.callback 值，根据 options.model.event 值来添加到 data.on 中
+ *
  */
 export function createComponent(
   Ctor: Class<Component> | Function | Object | void, // 组件配置项
