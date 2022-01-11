@@ -13,7 +13,16 @@ import { extend, mergeOptions, formatComponentName } from '../util/index';
 let uid = 0;
 
 export function initMixin(Vue: Class<Component>) {
-  // 组件初始化方法
+  /**
+   * 组件初始化方法：
+   *  根组件初始化：
+   *    1. 通过 mergeOptions 合并组件配置项(从构造函数、组件配置项、mixin等合并)
+   *    2. 初始化组件数据，例如初始化一些属性($parent、$root、$children、$refs 等)、初始化 data、props、watch 等数据
+   *    3. 如果是根组件并且配置了 el 选项，则调用 vm.$mount 渲染成 DOM 并且插入 DOM 树中
+   *  而子组件初始化存在一些不同：子组件渲染过程一般不会在这里调用 $mount 挂载，此时回到 core\vdom\create-component.js 的 createComponentInstanceForVnode 方法中
+   *    1. 合并选项在生成表示组件 Vnode 过程中，会调用 Vue.extend 方法，此时就会合并选项处理存放在 Vue.extend 返回的子类构造器的 options 属性上，此时直接提取出来即可
+   *    2. 一般而言不能在子组件的配置项上配置 el 选项，在这里不会调用 $mount 方法进行渲染，而是在后续才会调用
+   */
   Vue.prototype._init = function(options?: Object) {
     const vm: Component = this;
     // a uid // 为组件增加 uid
@@ -40,7 +49,11 @@ export function initMixin(Vue: Class<Component>) {
       // optimize internal component instantiation 优化内部组件实例化
       // since dynamic options merging is pretty slow, and none of the 因为动态选项合并非常慢，而且
       // internal component options needs special treatment. 内部组件选项需要特殊处理
-      // 子组件的合并方法 -- 有所不同
+      /**
+       * 子组件的配置项处理：直接赋值给 vm.$options
+       *  1. 从子类构造函数的 options 提取出已经合并的选项，在 Vue.extend 生成子类构造器时会进行选项合并处理
+       *  2. 从表示组件的 vnode.componentOptions 中提取出父组件注入给子组件的相关数据
+       */
       initInternalComponent(vm, options);
     } else {
       // 根组件的合并配置项方法
@@ -114,27 +127,46 @@ export function initMixin(Vue: Class<Component>) {
      *  暂时忽略编译器的内容，直接从 web 端不携带编译器的情况，入口在 platforms/web/runtime/index.js
      */
     if (vm.$options.el) {
+      // 在这里，如果子组件也配置了 el 选项，控制台会发出警告(在Vue.extend() 方法中调用 mergeOptions 方法合并 el 选项时)
+      // 但是还是会走一步进行 $mount 挂载，但是在后续又会将生成的 DOM(在 vnode.elm 访问) 插入到应该存在的位置
       vm.$mount(vm.$options.el);
     }
   };
 }
 
+/**
+ * 子组件的配置项处理：
+ *  1. 从子类构造函数的 options 提取出已经合并的选项，在 Vue.extend 生成子类构造器时会进行选项合并处理
+ *  2. 从表示组件的 vnode.componentOptions 中提取出父组件注入给子组件的相关数据
+ */
 export function initInternalComponent(
   vm: Component,
   options: InternalComponentOptions
 ) {
+  // 从构造器中提取 options 选项
   const opts = (vm.$options = Object.create(vm.constructor.options));
-  // doing this because it's faster than dynamic enumeration.
-  const parentVnode = options._parentVnode;
-  opts.parent = options.parent;
+  // doing this because it's faster than dynamic enumeration. 这样做是因为它比动态枚举更快
+  const parentVnode = options._parentVnode; // 表示组件的 Vnode
+  opts.parent = options.parent; // 父组件实例引用
   opts._parentVnode = parentVnode;
 
+  // 提取出组件 vnode 的额外配置项
+  /**
+   * componentOptions: { // 这些信息会作为组件表示的 vnode 额外配置项，会在后续初始化子组件时有大用
+   *   Ctor: ƒ VueComponent(options), // 组件构造器
+   *   children: undefined, // 组件插槽
+   *   listeners: undefined, // 组件的事件侦听器
+   *   propsData: undefined, // 父组件传入的 props 数据
+   *   tag: "my-component"
+   * },
+   */
   const vnodeComponentOptions = parentVnode.componentOptions;
-  opts.propsData = vnodeComponentOptions.propsData;
-  opts._parentListeners = vnodeComponentOptions.listeners;
-  opts._renderChildren = vnodeComponentOptions.children;
-  opts._componentTag = vnodeComponentOptions.tag;
+  opts.propsData = vnodeComponentOptions.propsData; // 父组件注入的 props
+  opts._parentListeners = vnodeComponentOptions.listeners; // 父组件侦听的事件
+  opts._renderChildren = vnodeComponentOptions.children; // 插槽
+  opts._componentTag = vnodeComponentOptions.tag; // tag 标签
 
+  // 。。。
   if (options.render) {
     opts.render = options.render;
     opts.staticRenderFns = options.staticRenderFns;

@@ -19,6 +19,8 @@ import {
 } from '../util/index';
 
 export let activeInstance: any = null; // 正在渲染的组件引用
+// 正在更新子组件 Vnode 标识，这样的话，此时改变子组件 $attrs、$listeners、props 时就不会发出错误警告
+// 其他情况下就需要不允许更新这些属性
 export let isUpdatingChildComponent: boolean = false;
 
 // 设置正在渲染组件的引用，并返回一个可以返回上一个状态的函数
@@ -63,7 +65,7 @@ export function initLifecycle(vm: Component) {
   vm._watcher = null; // 该组件的渲染函数对应的 Wathcer
   vm._inactive = null;
   vm._directInactive = false;
-  vm._isMounted = false; // 表示是否渲染过的标识
+  vm._isMounted = false; // 表示是否初次渲染过的标识
   vm._isDestroyed = false;
   vm._isBeingDestroyed = false; // 是否开始进行销毁组件操作
 }
@@ -266,7 +268,7 @@ export function mountComponent(
 
   // manually mounted instance, call mounted on self 手动装入实例，调用自行装入
   // mounted is called for render-created child components in its inserted hook 在插入的钩子中为渲染创建的子组件调用mounted
-  // 如果是 vm.$vnode 为空的话，表示是根组件，如果是子组件的话，$vnode 引用的是表示组建的 vnode
+  // 如果是 vm.$vnode 为空的话，表示是根组件，如果是子组件的话，$vnode 引用的是表示组件类型的 vnode
   if (vm.$vnode == null) {
     vm._isMounted = true; // 是否渲染标识置为 true
     // 执行 mounted 钩子
@@ -275,23 +277,30 @@ export function mountComponent(
   return vm;
 }
 
+/**
+ * 更新子组件 Vnode，当父组件注入子组件的 props、attrs、event、插槽等改变时，就会触发这个方法
+ *  1. 插槽：
+ *      因为插槽没有进行响应式，所以我们最后会判断插槽是否改变了，改变就手动调用 vm.$forceUpdate() 方法执行子组件的更新
+ *  2. attrs：
+ *      直接重新赋值 vm.$attrs，因为 $attrs 属性是响应式的，所以会触发子组件重新渲染
+ */
 export function updateChildComponent(
-  vm: Component,
-  propsData: ?Object,
-  listeners: ?Object,
-  parentVnode: MountedComponentVNode,
-  renderChildren: ?Array<VNode>
+  vm: Component, // 组件实例
+  propsData: ?Object, // 更新注入的 props
+  listeners: ?Object, // 更新注入的 listeners 事件
+  parentVnode: MountedComponentVNode, // 新的组件类型 Vnode
+  renderChildren: ?Array<VNode> // 。。
 ) {
   if (process.env.NODE_ENV !== 'production') {
-    isUpdatingChildComponent = true;
+    isUpdatingChildComponent = true; // 标识正在更新子组件
   }
 
-  // determine whether component has slot children
-  // we need to do this before overwriting $options._renderChildren.
+  // determine whether component has slot children 确定组件是否具有插槽子级
+  // we need to do this before overwriting $options._renderChildren. 我们需要在覆盖$options之前执行此操作 $options._renderChildren。
 
-  // check if there are dynamic scopedSlots (hand-written or compiled but with
-  // dynamic slot names). Static scoped slots compiled from template has the
-  // "$stable" marker.
+  // check if there are dynamic scopedSlots (hand-written or compiled but with 检查是否存在动态scopedSlots（手写或编译，但使用
+  // dynamic slot names). Static scoped slots compiled from template has the 动态插槽名称）。从模板编译的静态作用域插槽具有
+  // "$stable" marker. “$stable”标记
   const newScopedSlots = parentVnode.data.scopedSlots;
   const oldScopedSlots = vm.$scopedSlots;
   const hasDynamicScopedSlot = !!(
@@ -301,52 +310,69 @@ export function updateChildComponent(
     (!newScopedSlots && vm.$scopedSlots.$key)
   );
 
-  // Any static slot children from the parent may have changed during parent's
-  // update. Dynamic scoped slots may also have changed. In such cases, a forced
-  // update is necessary to ensure correctness.
+  // Any static slot children from the parent may have changed during parent's 来自父级的任何静态插槽子级在父级的
+  // update. Dynamic scoped slots may also have changed. In such cases, a forced 使现代化动态作用域插槽也可能已更改。在这种情况下，必须采取强制措施
+  // update is necessary to ensure correctness. 必须进行更新以确保正确性
   const needsForceUpdate = !!(
     renderChildren || // has new static slots
     vm.$options._renderChildren || // has old static slots
     hasDynamicScopedSlot
   );
 
+  // 让 vm.$options._parentVnode、vm.$vnode 这两个引用至新的组件类型 Vnode
   vm.$options._parentVnode = parentVnode;
-  vm.$vnode = parentVnode; // update vm's placeholder node without re-render
+  vm.$vnode = parentVnode; // update vm's placeholder node without re-render 更新vm的占位符节点而不重新渲染
 
   if (vm._vnode) {
-    // update child tree's parent
+    // update child tree's parent 更新子树的父树
     vm._vnode.parent = parentVnode;
   }
   vm.$options._renderChildren = renderChildren;
 
-  // update $attrs and $listeners hash
-  // these are also reactive so they may trigger child update if the child
-  // used them during render
+  // update $attrs and $listeners hash 更新 $attrs 和 $listeners 哈希
+  // these are also reactive so they may trigger child update if the child 这些也是反应性的，因此如果子系统发生故障，它们可能会触发子系统更新
+  // used them during render 在渲染期间使用它们
+  /**
+   * $attrs、$listeners：这两个我们直接从组件类型 Vnode.data.attrs 和 vnode.componentOptions.listeners 中提取出新的值
+   * 为什么可以触发更新？
+   *  因为这两个属性也是响应式的，在 core\instance\render.js 文件中的 initRender 中会添加这两个属性为响应式的
+   */
   vm.$attrs = parentVnode.data.attrs || emptyObject;
   vm.$listeners = listeners || emptyObject;
 
-  // update props
+  // update props 更新 props
+  /**
+   * 因为 props 是每个 prop 注入到 vm 实例上的，所以我们需要遍历处理 -- props 也是使用频率比较高的
+   *  从新的 propsData 中提取出新的 prop 注入到 vm._props 中，因为 vm._props 也是响应式的，在 core\instance\state.js 的 initProps 方法响应式的
+   *  所以当 prop 改变是，就会触发子组件更新
+   */
   if (propsData && vm.$options.props) {
-    toggleObserving(false);
-    const props = vm._props;
+    toggleObserving(false); // 不要进行响应式，因为此时 props 不需要深度响应式
+    const props = vm._props; // 最终 props 的值，都保存在 vm._props
+    // 在组件初始化时，props 会将 props 的 key 缓存到 _propKeys 属性上
     const propKeys = vm.$options._propKeys || [];
+    // 遍历 propKey
     for (let i = 0; i < propKeys.length; i++) {
       const key = propKeys[i];
       const propOptions: any = vm.$options.props; // wtf flow?
+      // 从父组件注入的 prop 或 配置的默认值 中提取出 prop 值，然后添加到 props 中
       props[key] = validateProp(key, propOptions, propsData, vm);
     }
     toggleObserving(true);
-    // keep a copy of raw propsData
+    // keep a copy of raw propsData 保留一份原始的propsData
     vm.$options.propsData = propsData;
   }
 
-  // update listeners
+  // update listeners 更新事件
+  // 上面事件 $listeners 属性重新赋值(如果改变的话)会触发子组件 Watcher 类的更新，但这个更新是异步操作
+  // 所以在这里进行更新事件的另外加工封装
   listeners = listeners || emptyObject;
   const oldListeners = vm.$options._parentListeners;
   vm.$options._parentListeners = listeners;
+  // 新旧事件的更新
   updateComponentListeners(vm, listeners, oldListeners);
 
-  // resolve slots + force update if has children
+  // resolve slots + force update if has children 解决插槽+强制更新（如果有子项）
   if (needsForceUpdate) {
     vm.$slots = resolveSlots(renderChildren, parentVnode.context);
     vm.$forceUpdate();

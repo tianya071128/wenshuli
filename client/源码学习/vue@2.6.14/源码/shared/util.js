@@ -1,5 +1,5 @@
 /* @flow */
-
+// 空的冻结对象
 export const emptyObject = Object.freeze({});
 
 // These helpers produce better VM code in JS engines due to their 这些帮助程序在JS引擎中生成更好的VM代码，因为它们的

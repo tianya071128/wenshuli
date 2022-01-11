@@ -9,10 +9,16 @@
   </head>
   <body>
     <div id="root"></div>
+    <div id="root2"></div>
   </body>
 </html>
 <script>
   const myComponent = {
+    data() {
+      return {
+        test: 1,
+      };
+    },
     render(h) {
       return h(
         'div',
@@ -21,13 +27,13 @@
             test123: '123',
           },
         },
-        '这是一个子组件'
+        `这是一个子组件,${this.test}`
       );
     },
   };
 
   /**
-   * 从生成表示子组件 Vnode 开始分析：
+   * 创建组件类型 vnode阶段：
    *
    * 表示子组件 Vnode 的生成过程：例如下面 render 函数中 h('my-component')
    *  在组件渲染过程中，调用 mountComponent(core/instance/lifecycle.js) 方法 -> 调用 vm._render(core/instance/render.js) 方法
@@ -36,6 +42,36 @@
    *   -> createElement 方法定义在 core/vdom/create-element.js 中，方法内部会根据 tag 来判断是否为子组件的生成，此时调用 createComponent 方法
    *   -> 最终调用在 createComponent 方法中，定义在 core/vdom/create-component.js，详见注解
    *
+   */
+
+  /**
+   * 初始化子组件阶段：根据 Vnode 初始渲染 DOM
+   *
+   * 生成了 Vnode 后，在父组件 Vnode 渲染过程中，碰到组件类型 Vnode 初次渲染，就会进行子组件的渲染，后续流程就是初始化子组件
+   *  -> 启动栈见子组件的初始渲染过程，主要是通过 core\vdom\patch.js 的 createElm 方法中调用 createComponent 方法启动，详见注解 -- 不管是父组件初次渲染还是更新阶段需要新创建元素等，都需要经过 createElm 来创建元素或组件
+   *  -> 然后通过 vnode.data.hook.init(core\vdom\create-component.js 的 componentVNodeHooks 对象上) 启动 vnode 初始化
+   *  -> 在 init 钩子上调用 createComponentInstanceForVnode 方法通过 new vnode.componentOptions.Ctor() 实例化
+   *  -> 这个实例化过程与实例化根组件有一些不同，详见 code/instance/init.js 的 _init 方法
+   *      -> 子组件初始化存在一些不同：子组件渲染过程一般不会在这里调用 $mount 挂载，此时回到 core\vdom\create-component.js 的 createComponentInstanceForVnode 方法中
+   *          1. 合并选项在生成表示组件 Vnode 过程中，会调用 Vue.extend 方法，此时就会合并选项处理存放在 Vue.extend 返回的子类构造器的 options 属性上，此时直接提取出来即可
+   *          2. 一般而言不能在子组件的配置项上配置 el 选项，在这里不会调用 $mount 方法进行渲染，而是在后续才会调用
+   *  -> 通过 _init 初始化实例，初始化了组件数据相关，接着在 init 钩子上调用 $mount 方法生成 DOM 并挂在 Vnode.elm 上，此时还不是挂载在 DOM 树上
+   *  -> 调用完成 init(core\vdom\create-component.js 的 componentVNodeHooks 对象上) 钩子后，继续回到 createComponent 方法中
+   *  -> 在 createComponent 方法中，继续处理一些组件类型 vnode 的工作，然后插入到 DOM 树上
+   *      -> 插入位置，因为这个子组件是在渲染父组件时递归渲染，所以可以找出其父节点 DOM，直接追加到父节点最后即可
+   */
+
+  /**
+   * 子组件更新阶段：
+   *  1. 子组件内部依赖项变化：
+   *      -> 与根组件重渲染机制一样，当组件的依赖项变更后，就会执行 mountComponent(core/instance/lifecycle.js) 方法中观察的 updateComponent 方法
+   *            -> 重新执行 vm._render() 方法生成新的 vnode
+   *            -> 接着执行 vm._update() 对比新旧 vnode，进入 diff 阶段
+   *      -> 在 vm._update() 中，调用 __patch__(最终定义在 core\vdom\patch.js) 方法进入 “新旧 vnode” 的 “diff阶段”
+   *      -> 在这里，与根组件的更新一样处理，详见 patchVnode 方法，这个方式主要是对可以复用的 Vnode 进行补丁处理
+   *  2. 父组件改变向子组件注入的 props、attrs、event、插槽等数据时：
+   *      -> 此时，父组件更新阶段，在 patch 组件类型 Vnode 时，因为只是一些数据改变，也就可以认为新旧组件类型 Vnode 可以复用，就会用组件类型 Vnode 通过 patchVnode 方法进行补丁
+   *      -> 在 patchVnode(core\vdom\patch.js) 方法中启动组件类型 Vnode 的补丁操作，详见其方法
    */
   new Vue({
     el: '#root',

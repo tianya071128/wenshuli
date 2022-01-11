@@ -30,14 +30,14 @@ export default class VNode {
   fnScopeId: ?string; // functional scope id support 函数式组件的作用域id支持
 
   constructor(
-    tag?: string,
-    data?: VNodeData,
-    children?: ?Array<VNode>,
-    text?: string,
-    elm?: Node,
-    context?: Component,
-    componentOptions?: VNodeComponentOptions,
-    asyncFactory?: Function
+    tag?: string, // 节点名
+    data?: VNodeData, // 数据对象
+    children?: ?Array<VNode>, // 子节点
+    text?: string, // 文本
+    elm?: Node, // vnode 渲染后的 DOM
+    context?: Component, // 渲染这个 vnode 的实例上下文
+    componentOptions?: VNodeComponentOptions, // 子组件的配置项
+    asyncFactory?: Function // 异步组件
   ) {
     this.tag = tag;
     this.data = data; /*当前节点对应的对象，包含了具体的一些数据信息，是一个VNodeData类型，可以参考VNodeData类型中的数据信息*/

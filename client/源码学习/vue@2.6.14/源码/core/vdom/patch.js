@@ -178,7 +178,14 @@ export function createPatchFunction(backend) {
     // 根组件？
     vnode.isRootInsert = !nested; // for transition enter check 对于转换，输入check
     // 如果是渲染子组件的话，就会走下面逻辑
-    if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
+    if (
+      createComponent(
+        vnode,
+        insertedVnodeQueue, // 子组件渲染队列
+        parentElm, // 父节点
+        refElm // 当前节点的下一个 DOM 节点
+      )
+    ) {
       return;
     }
 
@@ -240,6 +247,7 @@ export function createPatchFunction(backend) {
         createChildren(vnode, children, insertedVnodeQueue);
         // 如果存在 data 数据的话，执行 data 数据中的 create 钩子，初始化 class、style、attr 等数据
         if (isDef(data)) {
+          // 在这里会执行表示组件 vnode 的 create 钩子，如果存在的话
           invokeCreateHooks(vnode, insertedVnodeQueue);
         }
         // 将该节点插入到指定位置中
@@ -260,20 +268,34 @@ export function createPatchFunction(backend) {
     }
   }
 
-  function createComponent(vnode, insertedVnodeQueue, parentElm, refElm) {
-    let i = vnode.data;
+  // 初始化子组件的 vnode -- 是子组件 vnode 渲染的启动地方
+  function createComponent(
+    vnode, //
+    insertedVnodeQueue, // 组件渲染队列
+    parentElm, // 父节点 DOM - 和 parentElm 共同决定这个 vnode 的插入位置
+    refElm // 节点的下一个 DOM 节点
+  ) {
+    let i = vnode.data; // 提取出数据对象
     if (isDef(i)) {
+      // 缓存组件的情况
       const isReactivated = isDef(vnode.componentInstance) && i.keepAlive;
+
+      // 如果存在表示组件 vnode 的 init 的钩子，则进行调用进入子组件的渲染过程
+      // init 钩子定义在 core\vdom\create-component.js 的 componentVNodeHooks 对象上
       if (isDef((i = i.hook)) && isDef((i = i.init))) {
+        // 调用完 init 钩子后继续往后执行
         i(vnode, false /* hydrating */);
       }
-      // after calling the init hook, if the vnode is a child component
-      // it should've created a child instance and mounted it. the child
-      // component also has set the placeholder vnode's elm.
-      // in that case we can just return the element and be done.
+      // after calling the init hook, if the vnode is a child component 调用init hook之后，如果vnode是子组件
+      // it should've created a child instance and mounted it. the child 它应该创建一个子实例并挂载它。孩子
+      // component also has set the placeholder vnode's elm. 组件还设置了占位符vnode的elm。
+      // in that case we can just return the element and be done. 在这种情况下，我们只需返回元素就可以了
       if (isDef(vnode.componentInstance)) {
+        /** 如果是子组件的话，那么应该已经创建了实例 */
         initComponent(vnode, insertedVnodeQueue);
+        // 将子组件插入到 DOM 树中
         insert(parentElm, vnode.elm, refElm);
+        // 如果是缓存组件，。。。
         if (isTrue(isReactivated)) {
           reactivateComponent(vnode, insertedVnodeQueue, parentElm, refElm);
         }
@@ -282,15 +304,20 @@ export function createPatchFunction(backend) {
     }
   }
 
+  // 除了建立 insertedVnodeQueue 队列，还做了其他工作，但是有点难以理解
   function initComponent(vnode, insertedVnodeQueue) {
+    // 如果 pendingInsert 不能 undefined，表示这个组件类型 vnode 表示的 DOM 还没有挂载到 DOM 树上
     if (isDef(vnode.data.pendingInsert)) {
+      // 此时需要将这个组件类型 vnode 添加进 insertedVnodeQueue 队列中，以待后续 invokeInsertHook 方法执行组件类型 vnode.insert 钩子
+      // 为什么借助 apply 方法？利用 apply 特性，将 vnode.data.pendingInsert 数组每项作为单独的元素参数，拼接成一维数组
       insertedVnodeQueue.push.apply(
         insertedVnodeQueue,
         vnode.data.pendingInsert
       );
+      // 重置标识
       vnode.data.pendingInsert = null;
     }
-    vnode.elm = vnode.componentInstance.$el;
+    vnode.elm = vnode.componentInstance.$el; // 取出渲染的 DOM
     if (isPatchable(vnode)) {
       invokeCreateHooks(vnode, insertedVnodeQueue);
       setScope(vnode);
@@ -701,7 +728,14 @@ export function createPatchFunction(backend) {
   }
 
   /**
-   * 对比新旧 vnode 进行现有节点补丁
+   * 对比新旧 vnode 进行现有节点补丁，在这里只关注新旧 Vnode 的对比
+   * 在进入这个方法之前，我们就确定了这两个 Vnode 是大致相同的，我们就需要对这个 Vnode 进行补丁
+   * 1. 对于元素或文本或注释 Vnode 来讲：
+   *    -> 1.1 需要调用 cbs.update 进行数据对象data(class、style、attrs等)进行更新
+   *    -> 1.2 进入子节点(如果存在的话)的对比更新，这又分为几种情况，详见代码
+   *    -> 1.3 如果是文本节点，还需要对文本进行更新操作
+   * 2. 对于组件类型 Vnode 来讲：
+   *    -> 2.1 首先调用 vnode.data.hook.prepatch 钩子，将组件 Vnode 的补丁交给这个钩子处理
    */
   function patchVnode(
     oldVnode, // 旧的 vnode
@@ -753,6 +787,7 @@ export function createPatchFunction(backend) {
     let i;
     const data = vnode.data;
     if (isDef(data) && isDef((i = data.hook)) && isDef((i = i.prepatch))) {
+      // 组件类型 Vnode 的补丁操作
       i(oldVnode, vnode);
     }
 
@@ -811,9 +846,21 @@ export function createPatchFunction(backend) {
     }
   }
 
-  function invokeInsertHook(vnode, queue, initial) {
-    // delay insert hooks for component root nodes, invoke them after the
-    // element is really inserted
+  /**
+   * 最终实现的是将子组件的 insert 钩子延迟到元素真正插入的时刻
+   * 1. 当为组件初始化时，组件渲染时 initial 标识为 true，此时就会将该组件类型 vnode 暂存进队列中
+   * 2. 当为组件重渲染时，更新组件的 initial 标识为 false，此时直接调用 insert 钩子。
+   *      但是在更新阶段，存在组件新创建的情况下，同样会将这个新组件及其子孙组件都添加至队列中，等待更新组件更新完毕，元素都插入到 DOM 树中开始执行
+   *
+   * 总结就是，只有组件已经真正插入到 DOM 树后才会执行
+   */
+  function invokeInsertHook(
+    vnode, // vnode 表示
+    queue, // 队列
+    initial // true：子组件初始渲染
+  ) {
+    // delay insert hooks for component root nodes, invoke them after the 延迟为组件根节点插入钩子，在
+    // element is really inserted 元素是真正插入的
     if (isTrue(initial) && isDef(vnode.parent)) {
       vnode.parent.data.pendingInsert = queue;
     } else {
@@ -830,7 +877,7 @@ export function createPatchFunction(backend) {
   // deep updates (#7063).
   const isRenderedModule = makeMap('attrs,class,staticClass,staticStyle,key');
 
-  // Note: this is a browser-only function so we can assume elms are DOM nodes.
+  // Note: this is a browser-only function so we can assume elms are DOM nodes. 注意：这是一个仅用于浏览器的函数，因此我们可以假设ELM是DOM节点
   function hydrate(elm, vnode, insertedVnodeQueue, inVPre) {
     let i;
     const { tag, data, children } = vnode;
@@ -955,6 +1002,13 @@ export function createPatchFunction(backend) {
   /**
    * 1. 初始 new Vue({}) 组件时，最终会通过 createElm 方法创建 DOM 元素，并在内部遍历 children 子节点创建 DOM 元素并挂载到相应位置
    * 2. 更新阶段，调用 patchVnode 方法进行更新，在内部会去进行 node 层面的更新，进行 data 数据对象 update 钩子更新以及子节点的更新(能够复用的重走 patchVnode 方法)，更新阶段即可
+   *
+   * 这里列举几种常见的场景：
+   *  1. 根组件初次渲染：进入第二个 createElm() 进入初始渲染成 DOM 过程
+   *  2. 子组件初次渲染：进入第一个 createElm() 进入初始渲染成 DOM 过程
+   *       - 在这里就是渲染组件的 vnode，并将生成的 DOM 挂载到 vnode.elm 上
+   *       - 正式挂载到 DOM 树上是在
+   *  3. 根组件和子组件的更新阶段：都是走 patchVnode 方法进行 diff 阶段
    */
   return function patch(
     oldVnode, // 旧的 Vnode -- 如果是一个 DOM，表示初始化阶段，并为一个挂载点 -- 也可能为 undefined 表示子组件初始渲染或根组件初始化没有提供挂载点
@@ -1034,6 +1088,7 @@ export function createPatchFunction(backend) {
         const parentElm = nodeOps.parentNode(oldElm); // 找到父节点
 
         // create new node 创建新节点
+        /** 根组件初始渲染，则会进入这里 */
         createElm(
           vnode, // vnode
           insertedVnodeQueue, // 排队队列？
@@ -1084,6 +1139,7 @@ export function createPatchFunction(backend) {
       }
     }
 
+    // 如果组件已经插入到 DOM 树中，执行子组件类型 vnode 的 insert 钩子
     invokeInsertHook(vnode, insertedVnodeQueue, isInitialPatch);
     return vnode.elm;
   };

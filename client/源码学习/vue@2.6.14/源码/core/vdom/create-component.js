@@ -1,4 +1,5 @@
 /* @flow */
+// 这个文件是创建组件 vnode 的过程，并且包含了 vnode 渲染过程全周期钩子，通过这些钩子来启动 vnode 的渲染，挂载，销毁操作
 
 import VNode from './vnode';
 import { resolveConstructorOptions } from 'core/instance/init';
@@ -26,51 +27,66 @@ import {
   renderRecyclableComponentTemplate,
 } from 'weex/runtime/recycle-list/render-component-template';
 
-// inline hooks to be invoked on component VNodes during patch
+// inline hooks to be invoked on component VNodes during patch 在修补期间在组件VNode上调用的内联钩子
 const componentVNodeHooks = {
+  // 组件 vnode 的初始钩子，在这里启动组件 vnode 的渲染过程
+  // 调用位置在 core\vdom\patch.js 的 createComponent 方法中
   init(vnode: VNodeWithData, hydrating: boolean): ?boolean {
     if (
-      vnode.componentInstance &&
-      !vnode.componentInstance._isDestroyed &&
-      vnode.data.keepAlive
+      vnode.componentInstance && // 这个 vnode 已经被实例化了
+      !vnode.componentInstance._isDestroyed && // 这个 vnode 的实例没有被销毁
+      vnode.data.keepAlive // 是 keepAlive 缓存的
     ) {
-      // kept-alive components, treat as a patch
+      // kept-alive components, treat as a patch 保持活性的组件，作为补丁处理
       const mountedNode: any = vnode; // work around flow
       componentVNodeHooks.prepatch(mountedNode, mountedNode);
     } else {
+      // 不是缓存组件，初始化组件 -- 通过
       const child = (vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
-        activeInstance
+        activeInstance // 正在渲染的组件实例引用
       ));
+      // 通过 _init 初始化实例，初始化组件数据相关，接着在调用 $mount 方法生成 DOM 并挂在 Vnode.elm 上，
+      // 此时一般情况下(子组件的初始化过程)还不是挂载在 DOM 树上，会在后续才挂载在 DOM 树中
+      // 而在 $mount 方法中，子组件也会存在一些不同，最主要见 patch 方法 -- core\vdom\patch.js
       child.$mount(hydrating ? vnode.elm : undefined, hydrating);
     }
   },
-
+  // 组件类型 Vnode 的补丁操作，在这里可以表示父组件注入子组件的 props、attrs、event、插槽等数据发生变化
+  // 此时组件类型 Vnode 发生一些变化，但是组件实例还是可以共用的，详见 updateChildComponent 方法
+  // 调用位置在 core\vdom\patch.js 的 patchVnode 方法中
   prepatch(oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
-    const options = vnode.componentOptions;
-    const child = (vnode.componentInstance = oldVnode.componentInstance);
+    const options = vnode.componentOptions; // 新的组件配置信息(这些配置信息表示父组件注入子组件的信息)
+    const child = (vnode.componentInstance = oldVnode.componentInstance); // 复用组件实例
+    // 通过这个方法来实现子组件的更新，具体见方法注解
     updateChildComponent(
-      child,
-      options.propsData, // updated props
-      options.listeners, // updated listeners
-      vnode, // new parent vnode
-      options.children // new children
+      child, // 组件实例
+      options.propsData, // updated props 更新注入的 props
+      options.listeners, // updated listeners 更新 listeners 事件
+      vnode, // new parent vnode 新的组件类型 Vnode
+      options.children // new children 新的子节点(插槽？)
     );
   },
 
+  /**
+   * 插入到 DOM 树后执行，会在渲染过程中将初始的子组件收集起来，等待根组件真正插入到 DOM 树后统一执行这个钩子，详见 core\vdom\patch.js 的 invokeCreateHooks 方法
+   * 在这里，初次渲染的组件执行 mounted 钩子，主要是处理缓存组件相关
+   */
   insert(vnode: MountedComponentVNode) {
     const { context, componentInstance } = vnode;
+    // 如果这个组件还没有挂载过
     if (!componentInstance._isMounted) {
-      componentInstance._isMounted = true;
-      callHook(componentInstance, 'mounted');
+      componentInstance._isMounted = true; // 标识为已挂载状态
+      callHook(componentInstance, 'mounted'); // 执行 mounted 钩子
     }
+    // 此时是缓存组件的情况
     if (vnode.data.keepAlive) {
       if (context._isMounted) {
         // vue-router#1212
-        // During updates, a kept-alive component's child components may
-        // change, so directly walking the tree here may call activated hooks
-        // on incorrect children. Instead we push them into a queue which will
-        // be processed after the whole patch process ended.
+        // During updates, a kept-alive component's child components may 在更新期间，保持活动状态组件的子组件可能会
+        // change, so directly walking the tree here may call activated hooks  改变，所以直接在树上行走可能会调用激活的钩子
+        // on incorrect children. Instead we push them into a queue which will 关于不正确的孩子。相反，我们将他们推到一个队列中
+        // be processed after the whole patch process ended. 在整个修补程序过程结束后进行处理。
         queueActivatedComponent(componentInstance);
       } else {
         activateChildComponent(componentInstance, true /* direct */);
@@ -101,14 +117,32 @@ const hooksToMerge = Object.keys(componentVNodeHooks);
  *         此时处理组件 options 时，就需要根据组件 options.model 配置来重新生成 data
  *         2.1. 处理 data.model.value 值，根据 options.model.prop 值来添加到 data.attrs 中
  *         2.2. 处理 data.model.callback 值，根据 options.model.event 值来添加到 data.on 中
- *
+ *    3. 根据组件配置项 props，从数据对象的 props 和 attrs 中提取出 propsData，后续在初始化 props 时使用(见 core\instance\state.js 的 initProps 方法)
+ *    4. 初始化组件的 hooks，添加到 data.hook 中 -- init、prepatch、insert、destroy 的钩子 -- 这几个贯穿了 vnode 的生命周期
+ *    5. 根据这些信息生成 Vnode 实例，最终 Vnode 大致如下：
+ *    {
+ *      componentInstance：undefined, // 这个组件实例，后续初始化后会添加到这个属性上
+ *      componentOptions: { // 这些信息会作为组件表示的 vnode 额外配置项，会在后续初始化子组件时有大用
+ *        Ctor: ƒ VueComponent(options), // 组件构造器
+ *        children: undefined, // 组件插槽
+ *        listeners: undefined, // 组件的事件侦听器
+ *        propsData: undefined, // 父组件传入的 props 数据
+ *        tag: "my-component"
+ *      },
+ *      context: vm, // 渲染这个组件的上下文实例，表示这个组件的父组件
+ *      data: {
+ *        hook: {...}, // 组件 vnode 的钩子
+ *        ..., // 参考: https://cn.vuejs.org/v2/guide/render-function.html#%E6%B7%B1%E5%85%A5%E6%95%B0%E6%8D%AE%E5%AF%B9%E8%B1%A1
+ *      },
+ *      ...
+ *    }
  */
 export function createComponent(
   Ctor: Class<Component> | Function | Object | void, // 组件配置项
-  data: ?VNodeData, // 数据对象
+  data: ?VNodeData, // 数据对象 -- 参考: https://cn.vuejs.org/v2/guide/render-function.html#%E6%B7%B1%E5%85%A5%E6%95%B0%E6%8D%AE%E5%AF%B9%E8%B1%A1
   context: Component, // 渲染的上下文组件实例
   children: ?Array<VNode>, // 子节点(一般作为插槽)
-  tag?: string
+  tag?: string // 组件名
 ): VNode | Array<VNode> | void {
   // 组件配置项为 undefined，直接返回
   if (isUndef(Ctor)) {
@@ -166,24 +200,30 @@ export function createComponent(
     transformModel(Ctor.options, data);
   }
 
-  // extract props
+  // extract props 提取 props
+  // 遍历组件配置 props 项，从 data(数据对象) 的 props 尝试提取，后尝试从 attrs 中提取
   const propsData = extractPropsFromVNodeData(data, Ctor, tag);
 
-  // functional component
+  // functional component 函数式组件
   if (isTrue(Ctor.options.functional)) {
     return createFunctionalComponent(Ctor, propsData, data, context, children);
   }
 
-  // extract listeners, since these needs to be treated as
-  // child component listeners instead of DOM listeners
-  const listeners = data.on;
-  // replace with listeners with .native modifier
-  // so it gets processed during parent component patch.
-  data.on = data.nativeOn;
+  // 在创建组件 vnode 中，data.on 定义的是通过 $emit 触发的事件侦听器，所以提取出来到 listeners，后续作为组件配置供初始化 _enent 使用(见 core\instance\events.js 的 initEvents 方法)
+  // data.nativeOn 就表示需要用于监听组件根元素的 DOM 事件
+  // 需要分析事件侦听监听器和 DOM 事件之间存在一定的区别
 
+  // extract listeners, since these needs to be treated as 提取侦听器，因为这些侦听器需要作为
+  // child component listeners instead of DOM listeners 子组件侦听器而不是DOM侦听器
+  const listeners = data.on; // data.on：事件监听器
+  // replace with listeners with .native modifier 替换为具有的侦听器。原生修饰语
+  // so it gets processed during parent component patch. 因此，它在父组件补丁期间得到处理
+  data.on = data.nativeOn; // data.nativeOn：仅用于组件，用于监听原生事件，而不是组件内部使用
+
+  // 抽象组件
   if (isTrue(Ctor.options.abstract)) {
-    // abstract components do not keep anything
-    // other than props & listeners & slot
+    // abstract components do not keep anything 抽象组件不保留任何内容
+    // other than props & listeners & slot 除了 props & listeners & slot
 
     // work around flow
     const slot = data.slot;
@@ -193,26 +233,28 @@ export function createComponent(
     }
   }
 
-  // install component management hooks onto the placeholder node
+  // install component management hooks onto the placeholder node 在占位符节点上安装组件管理挂钩
+  // 初始化组件的 hooks，添加到 data.hook 中 -- init、prepatch、insert、destroy 的钩子
   installComponentHooks(data);
 
-  // return a placeholder vnode
+  // return a placeholder vnode 返回占位符vnode
   const name = Ctor.options.name || tag;
   const vnode = new VNode(
-    `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
-    data,
+    `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`, // 根据 name cid 来组装成一个 tag
+    data, // 处理过的数据对象
     undefined,
     undefined,
     undefined,
-    context,
+    context, // 渲染子组件的上下文组件(父组件实例)
+    // 这个作为子组件的额外配置项 - 因为 data 对象是与其他类型 vnode 共用的，所以一些额外的信息放在这里 - 后续会在子组件初始化时使用
     {
-      Ctor,
-      propsData,
-      listeners,
-      tag,
-      children,
+      Ctor, // 构造函数
+      propsData, // propsData 对象
+      listeners, // 组件事件侦听器
+      tag, // template 中使用的组件名 - 例如： <my-component />
+      children, // 子组件，作为插槽
     },
-    asyncFactory
+    asyncFactory // 异步组件相关
   );
 
   // Weex specific: invoke recycle-list optimized @render function for
@@ -226,45 +268,58 @@ export function createComponent(
   return vnode;
 }
 
+// 根据 vnode 来初始化组件实例(主要是 new vnode.componentOptions.Ctor 实例化)
 export function createComponentInstanceForVnode(
-  // we know it's MountedComponentVNode but flow doesn't
-  vnode: any,
-  // activeInstance in lifecycle state
-  parent: any
+  // we know it's MountedComponentVNode but flow doesn't 我们知道它是MountedComponentVNode，但flow不知道
+  vnode: any, // 需要初始化的 vnode
+  // activeInstance in lifecycle state 处于生命周期状态的activeInstance
+  parent: any // 正在渲染的组件实例引用
 ): Component {
+  // 初始化组件实例的配置项
   const options: InternalComponentOptions = {
-    _isComponent: true,
-    _parentVnode: vnode,
-    parent,
+    _isComponent: true, // 表示这是一个组件
+    _parentVnode: vnode, // 表示组件的 vnode
+    parent, // 父组件实例引用
   };
-  // check inline-template render functions
+  // check inline-template render functions 检查内联模板渲染函数
+  // 如果是 template 内联模板，会经过编译器进行遍历的
   const inlineTemplate = vnode.data.inlineTemplate;
   if (isDef(inlineTemplate)) {
-    options.render = inlineTemplate.render;
+    options.render = inlineTemplate.render; // render 函数
     options.staticRenderFns = inlineTemplate.staticRenderFns;
   }
+  // 在这里 new 后，主要还是要 _init 初始方法，接下来就是初始过程
   return new vnode.componentOptions.Ctor(options);
 }
 
+// 初始化组件的 hooks，添加到 data.hook 中 -- init、prepatch、insert、destroy 的钩子
+// 这几个钩子贯穿了 vnode 的生命周期 -- 注意不是组建的生命周期
 function installComponentHooks(data: VNodeData) {
-  const hooks = data.hook || (data.hook = {});
+  const hooks = data.hook || (data.hook = {}); // 提取出 data.hook
+  // hooksToMerge：是具有 init、prepatch、insert、destroy 方法的对象
   for (let i = 0; i < hooksToMerge.length; i++) {
-    const key = hooksToMerge[i];
-    const existing = hooks[key];
+    const key = hooksToMerge[i]; // 提取出初始钩子
+    const existing = hooks[key]; // 现有的 -- 如果已经在 data.hook 中定义了这个钩子
     const toMerge = componentVNodeHooks[key];
-    if (existing !== toMerge && !(existing && existing._merged)) {
+    // 针对一个钩子并没有合并过
+    if (
+      existing !== toMerge && // 现有的钩子 不等于 初始的钩子
+      !(existing && existing._merged) // 对于这个钩子并没有合并过
+    ) {
+      // 此时如果用户自定义了同名钩子，那么就将两个钩子封装成一个函数都进行调用
       hooks[key] = existing ? mergeHook(toMerge, existing) : toMerge;
     }
   }
 }
 
+// 合并组件 vnode 的生命周期钩子
 function mergeHook(f1: any, f2: any): Function {
   const merged = (a, b) => {
     // flow complains about extra args which is why we use any
     f1(a, b);
     f2(a, b);
   };
-  merged._merged = true;
+  merged._merged = true; // 标识已经合并过
   return merged;
 }
 
