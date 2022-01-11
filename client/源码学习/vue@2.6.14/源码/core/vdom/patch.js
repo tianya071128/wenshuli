@@ -39,8 +39,8 @@ function sameVnode(a, b) {
     a.key === b.key && // key 一定需要相同
     a.asyncFactory === b.asyncFactory && // 。。。
     ((a.tag === b.tag && // tag 相同
-    a.isComment === b.isComment && // isComment 空注释占位符
-    isDef(a.data) === isDef(b.data) && // 两个的 vnode 数据对象(data)都不为 undefined(或null)
+      a.isComment === b.isComment && // isComment 空注释占位符
+      isDef(a.data) === isDef(b.data) && // 两个的 vnode 数据对象(data)都不为 undefined(或null)
       sameInputType(a, b)) || // a,b 如果是 input 元素并且需要 type 相同或相似
       (isTrue(a.isAsyncPlaceholder) && isUndef(b.asyncFactory.error))) // 。。。
   );
@@ -109,13 +109,16 @@ export function createPatchFunction(backend) {
     );
   }
 
+  // 封装一个删除 DOM 节点的函数, 只有当 listeners 记录的 remove 钩子执行完毕后才会执行删除 DOM 节点的操作
   function createRmCb(childElm, listeners) {
+    // 创建一个删除 DOM 节点的函数
     function remove() {
+      // 只有 listeners 标识为 0 时,才需要执行删除 DOM 节点的操作
       if (--remove.listeners === 0) {
         removeNode(childElm);
       }
     }
-    remove.listeners = listeners;
+    remove.listeners = listeners; // 这个记录的是 remove 钩子的数量, 只有当这个钩子执行完成后才需要执行移除 DOM 的操作
     return remove;
   }
 
@@ -208,9 +211,9 @@ export function createPatchFunction(backend) {
         if (isUnknownElement(vnode, creatingElmInVPre)) {
           warn(
             'Unknown custom element: <' + // 未知的自定义元素：<
-            tag +
-            '> - did you ' + // >-是吗
-            'register the component correctly? For recursive components, ' + // 正确注册组件？对于递归组件
+              tag +
+              '> - did you ' + // >-是吗
+              'register the component correctly? For recursive components, ' + // 正确注册组件？对于递归组件
               'make sure to provide the "name" option.', // 确保提供“名称”选项
             vnode.context
           );
@@ -486,13 +489,20 @@ export function createPatchFunction(backend) {
     }
   }
 
+  /**
+   * 如果是组件类型 Vnode, 则执行 destroy 钩子, 进入组件的销毁
+   * 对 Vnode(不管是组件类型、元素类型、文本类型) 的数据对象(class、sytle、事件等模块)执行 destroy 钩子, 这里在 web 端只有 ref、directives 模块才存在这个钩子, 其他模块不需要进行处理, 因为只要将 DOM 移除即可
+   */
   function invokeDestroyHook(vnode) {
     let i, j;
     const data = vnode.data;
     if (isDef(data)) {
+      // 如果是组件类型 Vnode, 则执行 destroy 钩子, 进入组件的销毁
       if (isDef((i = data.hook)) && isDef((i = i.destroy))) i(vnode);
+      // 对 Vnode(不管是组件类型、元素类型、文本类型) 的数据对象(class、sytle、事件等模块)执行 destroy 钩子, 这里在 web 端只有 ref、directives 模块才存在这个钩子, 其他模块不需要进行处理, 因为只要将 DOM 移除即可
       for (i = 0; i < cbs.destroy.length; ++i) cbs.destroy[i](vnode);
     }
+    // 如果存在子节点, 则进行子节点的递归处理
     if (isDef((i = vnode.children))) {
       for (j = 0; j < vnode.children.length; ++j) {
         invokeDestroyHook(vnode.children[j]);
@@ -500,16 +510,39 @@ export function createPatchFunction(backend) {
     }
   }
 
-  // 从 vnode 节点数组中删除节点，startIdx, endIdx 范围
+  /**
+   * 从 vnode 节点数组中删除节点，startIdx, endIdx 范围,这些 Vnode 可能是元素(或文本、注释)类型 Vnode、组件类型 Vnode
+   *  1. 元素(或文本、注释)类型 Vnode
+   *    1.1 如果存在 transition 过渡的话,需要在过渡之后才移除 DOM
+   *    1.2 执行数据对象的 destroy(只有 ref、directives 模块存在) 钩子, 后续工作
+   *    1.3 递归子节点, 处理子节点
+   *  2. 组件类型 Vnode:
+   *    2.1 与元素类型一致, 如果存在 transition 过渡的话,需要在过渡之后才移除 DOM
+   *    2.2 执行 vnode.hook.destroy 钩子, 在 vnode.hook.destroy 钩子中
+   *        2.2.1 不是缓存组件, 调用 $destroy() 方法进行组件销毁, 在 $destroy() 方法 中
+   *          1) 执行 beforeDestroy 生命周期
+   *          2) 从父组件的 $children 集合中删除自己, 保持 $children 集合正确
+   *          3) 删除组件的 Watcher, 这样的话即使响应式数据改变, 该 Watcher 也不再会进行更新
+   *          4) vm._data.__ob__.vmCount--???
+   *          5) 通过 vm.__patch__(vm._vnode, null)[最终会调用 patch] 方法, 执行组件元素的卸载
+   *              -> 注意点1: 当是 Vnode 的销毁, 在 removeVnodes 方法中也会执行元素的卸载, 但是如果手动调用 $destroy 方法的话, 就需要借助 vm.__patch__ 去卸载了
+   *              -> 注意点2: 调用这个方法, 也可以让组件元素执行一遍 ref、directives 模块的 destroy 钩子，处理善后工作
+   *          6) 执行 destroyed 钩子
+   *          7) 通过 vm.$off() 关闭所有的实例侦听器
+   *          8) 一些引用清空
+   *        2.2.2 缓存组件, ...
+   */
   function removeVnodes(vnodes, startIdx, endIdx) {
     // 遍历 vnodes 范围
     for (; startIdx <= endIdx; ++startIdx) {
-      const ch = vnodes[startIdx]; // 去除当前需要删除的 vnode
+      const ch = vnodes[startIdx]; // 当前需要删除的 vnode
       if (isDef(ch)) {
-        if (isDef(ch.tag)) {
+        if (isDef(ch.tag) /** 元素或组件类型 Vnode */) {
+          // 执行 remove 钩子 和 移除 DOM 的操作
           removeAndInvokeRemoveHook(ch);
+          // 执行子组件的 vnode.hook.destroy 钩子 和 数据对象模块的 destroy 钩子 和 递归子节点 invokeDestroyHook 方法处理
           invokeDestroyHook(ch);
-        } else {
+        } /** 文本节点 */ else {
           // Text node 文本节点
           // 文本节点直接删除
           removeNode(ch.elm);
@@ -518,35 +551,47 @@ export function createPatchFunction(backend) {
     }
   }
 
+  // 主要做了两个操作:
+  //  1. 执行模块的 remove 钩子, 在 web 端, 一般只有 transition 才存在
+  //  2. 在移除 DOM 之前, 我们先要处理下 transition 过渡问题 -- 移除 DOM 的操作, 根据 vnode.elm 就可以进行删除了
   function removeAndInvokeRemoveHook(vnode, rm) {
-    if (isDef(rm) || isDef(vnode.data)) {
+    if (
+      isDef(rm) ||
+      isDef(vnode.data) // vnode 中存在 data 数据对象
+    ) {
       let i;
-      const listeners = cbs.remove.length + 1;
+      const listeners = cbs.remove.length + 1; // 为什么要 +1? -- 后续了解 transition
       if (isDef(rm)) {
-        // we have a recursively passed down rm callback
-        // increase the listeners count
+        // we have a recursively passed down rm callback 我们有一个递归传递的rm回调
+        // increase the listeners count 增加 listeners 数量
         rm.listeners += listeners;
       } else {
-        // directly removing
+        // directly removing 直接移除
+        // 创建一个移除 DOM 节点的方法, 在这个方法内部, 只有当 listeners 记录的 remove 钩子执行完毕后才会执行删除 DOM 节点的操作
         rm = createRmCb(vnode.elm, listeners);
       }
-      // recursively invoke hooks on child component root node
+      // recursively invoke hooks on child component root node 递归调用子组件根节点上的钩子
       if (
-        isDef((i = vnode.componentInstance)) &&
-        isDef((i = i._vnode)) &&
+        isDef((i = vnode.componentInstance)) && // vnode 是一个组件类型的 Vnode
+        isDef((i = i._vnode)) && // _vnode 引用组件内容生成的 vnode
         isDef(i.data)
       ) {
+        // 如果是子组件, 那么递归调用这个方法
         removeAndInvokeRemoveHook(i, rm);
       }
+      // 在 web 端中 remove 钩子只有 transition 才有, 只有过渡动画需要在元素卸载时执行一些操作
+      // 其他的在后续处理
       for (i = 0; i < cbs.remove.length; ++i) {
         cbs.remove[i](vnode, rm);
       }
       if (isDef((i = vnode.data.hook)) && isDef((i = i.remove))) {
+        // 如果这个 Vnode 存在 remove 钩子,那么执行这个钩子并将 rm 作为回调传入
         i(vnode, rm);
       } else {
         rm();
       }
     } else {
+      // 否则直接进行 DOM 节点的操作
       removeNode(vnode.elm);
     }
   }
@@ -735,7 +780,9 @@ export function createPatchFunction(backend) {
    *    -> 1.2 进入子节点(如果存在的话)的对比更新，这又分为几种情况，详见代码
    *    -> 1.3 如果是文本节点，还需要对文本进行更新操作
    * 2. 对于组件类型 Vnode 来讲：
-   *    -> 2.1 首先调用 vnode.data.hook.prepatch 钩子，将组件 Vnode 的补丁交给这个钩子处理
+   *    -> 2.1 首先调用 vnode.data.hook.prepatch 钩子，将组件 Vnode 的补丁交给这个钩子处理, 处理插槽、props、attrs、event 等响应式数据后, 根据这些数据是否改变以及子组件是否依赖了这些数据共同决定是否重新渲染子组件
+   *    -> 2.2 执行 class、style、给根元素注册原生事件(使用 .native 修饰符)等模块的 update 钩子 -- 这些模块不需要响应式, 所以只需要对其子组件的根元素进行操作即可
+   *    -> 2.3 注意: 子组件是没有子节点(vnode.children), 子节点是做为插槽使用的
    */
   function patchVnode(
     oldVnode, // 旧的 vnode
@@ -798,7 +845,7 @@ export function createPatchFunction(backend) {
     if (isDef(data) && isPatchable(vnode)) {
       // 执行 vnode 的 cbs 的 update 钩子
       for (i = 0; i < cbs.update.length; ++i) cbs.update[i](oldVnode, vnode);
-      // 执行组件vnode 的 update 钩子
+      // 执行组件 vnode 的 update 钩子
       if (isDef((i = data.hook)) && isDef((i = i.update))) i(oldVnode, vnode);
     }
     if (isUndef(vnode.text) /** vnode 不是一个文本节点 */) {
@@ -1017,6 +1064,7 @@ export function createPatchFunction(backend) {
     removeOnly // 在 <transition group> 中传入 true，最终作用在 updateChildren 方法体现
   ) {
     // 如果新的 Vnode 不存在，旧的 oldVnode 存在，那么此时需要销毁旧的 Vnode
+    // 在 vm.$destroy 中会走这一步进行组件元素的销毁
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode);
       return;
@@ -1070,9 +1118,9 @@ export function createPatchFunction(backend) {
             } else if (process.env.NODE_ENV !== 'production') {
               warn(
                 'The client-side rendered virtual DOM tree is not matching ' + // 客户端呈现的虚拟DOM树不匹配
-                'server-rendered content. This is likely caused by incorrect ' + // 服务器呈现的内容。这可能是由不正确的
-                'HTML markup, for example nesting block-level elements inside ' + // HTML标记，例如内部嵌套块级元素
-                '<p>, or missing <tbody>. Bailing hydration and performing ' + // <p>，或缺少<tbody>。白令水化与表演
+                  'server-rendered content. This is likely caused by incorrect ' + // 服务器呈现的内容。这可能是由不正确的
+                  'HTML markup, for example nesting block-level elements inside ' + // HTML标记，例如内部嵌套块级元素
+                  '<p>, or missing <tbody>. Bailing hydration and performing ' + // <p>，或缺少<tbody>。白令水化与表演
                   'full client-side render.' // 完整客户端渲染。
               );
             }

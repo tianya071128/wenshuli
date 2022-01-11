@@ -52,9 +52,10 @@ const componentVNodeHooks = {
       child.$mount(hydrating ? vnode.elm : undefined, hydrating);
     }
   },
-  // 组件类型 Vnode 的补丁操作，在这里可以表示父组件注入子组件的 props、attrs、event、插槽等数据发生变化
-  // 此时组件类型 Vnode 发生一些变化，但是组件实例还是可以共用的，详见 updateChildComponent 方法
-  // 调用位置在 core\vdom\patch.js 的 patchVnode 方法中
+  /**
+   * 组件类型 Vnode 的补丁操作，在这里可以表示父组件注入子组件的 props、attrs、event、插槽等数据发生变化, 此时组件类型 Vnode 发生一些变化，但是组件实例还是可以共用的，详见 updateChildComponent 方法
+   * 调用位置在 core\vdom\patch.js 的 patchVnode 方法中
+   */
   prepatch(oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
     const options = vnode.componentOptions; // 新的组件配置信息(这些配置信息表示父组件注入子组件的信息)
     const child = (vnode.componentInstance = oldVnode.componentInstance); // 复用组件实例
@@ -69,8 +70,9 @@ const componentVNodeHooks = {
   },
 
   /**
-   * 插入到 DOM 树后执行，会在渲染过程中将初始的子组件收集起来，等待根组件真正插入到 DOM 树后统一执行这个钩子，详见 core\vdom\patch.js 的 invokeCreateHooks 方法
+   * 插入到 DOM 树后执行，会在渲染过程中将初始的子组件收集起来，等待根组件真正插入到 DOM 树后统一执行这个钩子
    * 在这里，初次渲染的组件执行 mounted 钩子，主要是处理缓存组件相关
+   * 调用位置在 core\vdom\patch.js 的 invokeCreateHooks 方法
    */
   insert(vnode: MountedComponentVNode) {
     const { context, componentInstance } = vnode;
@@ -94,12 +96,17 @@ const componentVNodeHooks = {
     }
   },
 
+  /**
+   * 组件销毁时执行,
+   * 调用位置在 core\vdom\patch.js 的 invokeDestroyHook 方法
+   */
   destroy(vnode: MountedComponentVNode) {
-    const { componentInstance } = vnode;
-    if (!componentInstance._isDestroyed) {
-      if (!vnode.data.keepAlive) {
-        componentInstance.$destroy();
+    const { componentInstance } = vnode; // 组件实例
+    if (!componentInstance._isDestroyed /** 组件还没有被销毁 */) {
+      if (!vnode.data.keepAlive /** 不是缓存组件 */) {
+        componentInstance.$destroy(); // 调用 $destroy() 方法进行组件的销毁
       } else {
+        // 缓存组件
         deactivateChildComponent(componentInstance, true /* direct */);
       }
     }
@@ -109,7 +116,7 @@ const componentVNodeHooks = {
 const hooksToMerge = Object.keys(componentVNodeHooks);
 
 /**
- * 生成表示组件的 Vnode -- 其中可能是普通子组件、函数式组件、异步组件等类型组件
+ * 生成组件类型的 Vnode -- 其中可能是普通子组件、函数式组件、异步组件等类型组件
  *  对于普通子组件：
  *    1. 根据 Ctor 配置项通过 Vue.extend() 生成一个子类，在这里就可以完成组件配置项的合并等工作、
  *    2. 处理 v-model 语法糖：

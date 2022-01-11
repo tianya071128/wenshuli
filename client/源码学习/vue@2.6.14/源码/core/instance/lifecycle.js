@@ -66,8 +66,8 @@ export function initLifecycle(vm: Component) {
   vm._inactive = null;
   vm._directInactive = false;
   vm._isMounted = false; // 表示是否初次渲染过的标识
-  vm._isDestroyed = false;
-  vm._isBeingDestroyed = false; // 是否开始进行销毁组件操作
+  vm._isDestroyed = false; // 组件被销毁标识
+  vm._isBeingDestroyed = false; // 开始销毁组件标识
 }
 
 // 为 Vue 原型添加 _update、$forceUpdate、$destroy 方法，与组件渲染相关
@@ -77,7 +77,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
    * 但是最终会执行 \core\vdom\patch.js 中的最后的 patch 方法，根据 vnode 渲染成 DOM。
    *  详见 path 方法注解
    */
-  Vue.prototype._update = function(vnode: VNode, hydrating?: boolean) {
+  Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this;
     const prevEl = vm.$el; // 上一个生成的 DOM
     const prevVnode = vm._vnode; // 上一个 Vnode
@@ -113,26 +113,43 @@ export function lifecycleMixin(Vue: Class<Component>) {
     // updated in a parent's updated hook. 在父对象的更新挂钩中更新
   };
 
-  Vue.prototype.$forceUpdate = function() {
+  Vue.prototype.$forceUpdate = function () {
     const vm: Component = this;
     if (vm._watcher) {
       vm._watcher.update();
     }
   };
 
-  Vue.prototype.$destroy = function() {
+  /**
+   * 组件销毁最终都会执行这个方法
+   *  1. 执行 beforeDestroy 生命周期
+   *  2. 从父组件的 $children 集合中删除自己, 保持 $children 集合正确
+   *  3. 删除组件的 Watcher, 这样的话即使响应式数据改变, 该 Watcher 也不再会进行更新
+   *  4. vm._data.__ob__.vmCount--???
+   *  5. 通过 vm.__patch__(vm._vnode, null)[最终会调用 patch] 方法, 执行组件元素的卸载
+   *      -> 注意点1: 当是 Vnode 的销毁, 在 removeVnodes 方法中也会执行元素的卸载, 但是如果手动调用 $destroy 方法的话, 就需要借助 vm.__patch__ 去卸载了
+   *      -> 注意点2: 调用这个方法, 也可以让组件元素执行一遍 ref、directives 模块的 destroy 钩子，处理善后工作
+   *  6. 执行 destroyed 钩子
+   *  7. 通过 vm.$off() 关闭所有的实例侦听器
+   *  8. 一些引用清空
+   */
+  Vue.prototype.$destroy = function () {
     const vm: Component = this;
+    // 如果已经开始销毁组件, 不要重复销毁
     if (vm._isBeingDestroyed) {
       return;
     }
+    // 执行 beforeDestroy 生命周期
     callHook(vm, 'beforeDestroy');
     vm._isBeingDestroyed = true;
-    // remove self from parent
+    // remove self from parent 从父对象中删除自己
+    // 从父组件的 $children 集合中删除自己, 保持 $children 集合正确
     const parent = vm.$parent;
     if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
       remove(parent.$children, vm);
     }
-    // teardown watchers
+    // teardown watchers 拆卸观察者
+    // 删除组件的 Watcher, 这样的话即使响应式数据改变, 该 Watcher 也不再会进行更新
     if (vm._watcher) {
       vm._watcher.teardown();
     }
@@ -140,24 +157,27 @@ export function lifecycleMixin(Vue: Class<Component>) {
     while (i--) {
       vm._watchers[i].teardown();
     }
-    // remove reference from data ob
-    // frozen object may not have observer.
+
+    // remove reference from data ob 从数据对象中删除引用
+    // frozen object may not have observer. 冻结对象可能没有观察者。
     if (vm._data.__ob__) {
+      // ??? 有何用? -- 在源码上,只有在 Set 和 Del 上存在作用
       vm._data.__ob__.vmCount--;
     }
-    // call the last hook...
-    vm._isDestroyed = true;
-    // invoke destroy hooks on current rendered tree
+    // call the last hook... 调用最后一个钩子
+    vm._isDestroyed = true; // 销毁完成标识
+    // invoke destroy hooks on current rendered tree 在当前渲染树上调用销毁挂钩
+    // 通过 __patch__(最终会调用 patch) 方法, 执行组件元素的卸载
     vm.__patch__(vm._vnode, null);
     // fire destroyed hook
-    callHook(vm, 'destroyed');
-    // turn off all instance listeners.
-    vm.$off();
-    // remove __vue__ reference
+    callHook(vm, 'destroyed'); // 执行 destroyed 钩子
+    // turn off all instance listeners. 关闭所有实例侦听器
+    vm.$off(); // 关闭所有的实例侦听器
+    // remove __vue__ reference 删除 __vue__ 参考
     if (vm.$el) {
       vm.$el.__vue__ = null;
     }
-    // release circular reference (#6759)
+    // release circular reference (#6759) 发布循环引用
     if (vm.$vnode) {
       vm.$vnode.parent = null;
     }
@@ -197,7 +217,7 @@ export function mountComponent(
       ) {
         warn(
           'You are using the runtime-only build of Vue where the template ' + // 您使用的是仅运行时版本的Vue，其中模板
-          'compiler is not available. Either pre-compile the templates into ' + // 编译器不可用。或者将模板预编译为
+            'compiler is not available. Either pre-compile the templates into ' + // 编译器不可用。或者将模板预编译为
             'render functions, or use the compiler-included build.', // 渲染函数，或使用包含在生成中的编译器
           vm
         );
@@ -282,7 +302,14 @@ export function mountComponent(
  *  1. 插槽：
  *      因为插槽没有进行响应式，所以我们最后会判断插槽是否改变了，改变就手动调用 vm.$forceUpdate() 方法执行子组件的更新
  *  2. attrs：
- *      直接重新赋值 vm.$attrs，因为 $attrs 属性是响应式的，所以会触发子组件重新渲染
+ *      直接重新赋值 vm.$attrs，因为 $attrs 属性是响应式的，所以 $attrs 属性改变的话子组件就会触发更新(如果子组件依赖了 $attrs 属性的话)
+ *  3. listeners:
+ *      与 attrs 类似, 直接重新赋值 vm.$listeners。但是有一点不同的是，事件还需要进行进一步封装，通过 updateComponentListeners 方法进行新旧事件的更新
+ *  4. props:
+ *      因为 props 是每个 prop 注入到 vm 实例上的，所以需要遍历处理 prop.
+ *      从新的 propsData 中提取出新的值赋值到 vm._props 上, 如果子组件依赖了某个 prop,并且这个 prop 也改变了的话,就会触发子组件重新更新
+ *  5. 其他的 class、style、注册原生事件(使用 .native 修饰符)等数据对象, 因为这些不需要响应式, 所以当这些改变时没有必要让子组件重新渲染, 只需要更新下这些数据即可
+ *      更新操作在 patchVnode(core\vdom\patch.js) 中会调用这些模块的 update 钩子进行更新
  */
 export function updateChildComponent(
   vm: Component, // 组件实例
@@ -335,7 +362,8 @@ export function updateChildComponent(
   /**
    * $attrs、$listeners：这两个我们直接从组件类型 Vnode.data.attrs 和 vnode.componentOptions.listeners 中提取出新的值
    * 为什么可以触发更新？
-   *  因为这两个属性也是响应式的，在 core\instance\render.js 文件中的 initRender 中会添加这两个属性为响应式的
+   *  因为这两个属性是响应式的，在 core\instance\render.js 文件中的 initRender 中会添加这两个属性为响应式的
+   *  当渲染函数依赖了这两个属性时,就会进行子组件的更新
    */
   vm.$attrs = parentVnode.data.attrs || emptyObject;
   vm.$listeners = listeners || emptyObject;
@@ -344,7 +372,7 @@ export function updateChildComponent(
   /**
    * 因为 props 是每个 prop 注入到 vm 实例上的，所以我们需要遍历处理 -- props 也是使用频率比较高的
    *  从新的 propsData 中提取出新的 prop 注入到 vm._props 中，因为 vm._props 也是响应式的，在 core\instance\state.js 的 initProps 方法响应式的
-   *  所以当 prop 改变是，就会触发子组件更新
+   *  所以当 prop 改变时，就会触发依赖改变
    */
   if (propsData && vm.$options.props) {
     toggleObserving(false); // 不要进行响应式，因为此时 props 不需要深度响应式
