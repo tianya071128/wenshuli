@@ -2,23 +2,31 @@
 // 这个文件是用来处理 web 端 class 的
 import { isDef, isObject } from 'shared/util';
 
-// 处理 vnode 中 class 处理，最终处理成字符串表示的
+/**
+ * 处理 vnode 中 class 处理，最终处理成字符串表示的
+ */
 export function genClassForVnode(vnode: VNodeWithData): string {
   let data = vnode.data; // 提取出 data 对象
   let parentNode = vnode;
   let childNode = vnode;
-  // 什么时候这个 vnode 是一个组件 vnode 呢？可能是这个组件的模板就是一个组件，例如: <template><App></App></template>
-  // 有点难理解，待定
+  /**
+   * 处理组件类型 Vnode，如果这个组件类型 Vnode 已经实例化了，说明是更新阶段，而更新阶段的话，可能不会触发子组件的更新，只需要将变更的 class 重新赋值到组件根元素即可
+   * 在这里处理的就是将组件定义时的 class 和组件根元素定义的 class 进行合并处理
+   * 为什么还需要递归处理？ -- 因为存在组件根元素又是一个组件的情况，此时就需要递归
+   *    - 例如：<component1 class="class1"> -- 组件 component1 模板为 <component2 class="class2" /> -- 组件 component2 模板为 <div class="class3"></div>
+   *         这样的话，就需要将这三个 class 都添加到 div 元素 DOM 上
+   */
   while (isDef(childNode.componentInstance)) {
-    childNode = childNode.componentInstance._vnode;
+    // 如果这是一个组件类型 Vnode，并且已经实例化过，
+    childNode = childNode.componentInstance._vnode; // 组件内容 Vnode
     if (childNode && childNode.data) {
-      data = mergeClassData(childNode.data, data);
+      data = mergeClassData(childNode.data, data); // 合并 class
     }
   }
-  // 将组件 vnode 的 class 转移到组件的根元素上
-  // 例如 <my-componets class="xxx" /> 这个 class 就需要转移到组件的根元素上
-  // 为什么需要递归呢？ -- 因为可能会存在类似 高阶组件(HOC) 的组件，则组件定义就是一个组件
-  // <template><App></App></template> -- 像这样的话
+  /**
+   * 处理根元素类型 Vnode -- 如果 parentNode.parent 存在的话，表示这个元素 Vnode 是一个组件的根元素
+   * 与上述一样，我们还需要考虑组件根元素又是一个组件的情况，此时就需要递归
+   */
   while (isDef((parentNode = parentNode.parent))) {
     if (parentNode && parentNode.data) {
       // 如果存在的话，那么就将两个合并起来
@@ -30,6 +38,7 @@ export function genClassForVnode(vnode: VNodeWithData): string {
   return renderClass(data.staticClass, data.class);
 }
 
+// 进行 class 选项的合并 - 这里并不解析 class 为 字符串
 function mergeClassData(
   child: VNodeData,
   parent: VNodeData
@@ -38,8 +47,8 @@ function mergeClassData(
   class: any,
 } {
   return {
-    staticClass: concat(child.staticClass, parent.staticClass),
-    class: isDef(child.class) ? [child.class, parent.class] : parent.class,
+    staticClass: concat(child.staticClass, parent.staticClass), // 对于静态 class，直接字符串拼接
+    class: isDef(child.class) ? [child.class, parent.class] : parent.class, // 对于动态 class，直接合并成数组，后续会处理数组情况
   };
 }
 

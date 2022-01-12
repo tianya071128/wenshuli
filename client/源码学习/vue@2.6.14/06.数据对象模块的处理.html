@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>05.子组件的全周期</title>
+    <script src="./vue.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+<script>
+  const myComponent = {
+    data() {
+      return {
+        test: 1,
+      };
+    },
+    render(h) {
+      return h(
+        'div',
+        {
+          class: {
+            test123: '123',
+          },
+        },
+        `这是一个子组件,${this.test}`
+      );
+    },
+  };
+
+  /**
+   * 数据对象 -- 即与模板中 attribute 对应的数据对象，用来描述这个元素或组件的特性，包含 class、attrs、events、style、dom-props、transition、directives、ref
+   *  - class、attrs、events、style、dom-props、transition 这几个是直接影响 DOM 的，所以与平台相关，web 端定义在 platforms\web\runtime\modules
+   *  - directives、ref 这两个是与平台无关
+   */
+
+  /**
+   * 数据对象模块处理原理：。。。
+   * 这些模块在不同平台在调用 createPatchFunction(core\vdom\patch.js) 方法中生成 __patch__(web 端见 platforms\web\runtime\patch.js) 方法时，注入依赖平台的模块处理方法
+   * 这些模块通过添加 ['create', 'activate', 'update', 'remove', 'destroy'] 这些钩子，在 Vnode 渲染的不同时机会传入新旧 Vnode 进行数据对象的处理
+   */
+
+  /**
+   * 模块钩子的调用时机：['create', 'activate', 'update', 'remove', 'destroy']
+   *  - 注意1：这些钩子的调用位置一般都在 core\vdom\patch.js 中，因为只有这个文件才有权访问
+   *  - 注意2：这些钩子一般对于组件类型 Vnode 和 元素类型 Vnode 都需要调用，对于元素类型直接针对这个 DOM 元素操作，而对于组件类型 Vnode，则将一些模块(如 class、style)添加到组件根元素上，其他一些模块也需要做组件层面的处理(如 ref、directives)
+   *  - 'create' 钩子：在该 Vnode 渲染完，但还没有挂载的时候，调用位置见：invokeCreateHooks 方法
+   *      -- 所有模块都具有这个钩子
+   *  - 'activate'钩子：只针对组件类型 Vnode，当该 Vnode 激活时调用，组件已被挂载，调用位置见：reactivateComponent 方法
+   *      -- 只有 transition 模块具有这个钩子
+   *  - 'update' 钩子：当 Vnode 可以复用时调用，调用位置见：patchVnode 方法
+   *      -- 除了 transition 模块都具有这个钩子
+   *  - 'remove' 钩子：准备移除 DOM 时的钩子，调用位置见：removeAndInvokeRemoveHook 方法
+   *      -- 只有 transition 模块具有这个钩子
+   *  - 'destroy' 钩子：在 'remove' 钩子之后执行，此时 Vnode 已被销毁，调用位置见：invokeDestroyHook 方法
+   *      -- 只有 ref、directives 模块具有
+   */
+
+  /**
+   * class 模块：初始化或更新 DOM 的 class，具有 'create' 和 'update' 钩子 -- platforms\web\runtime\modules\class.js
+   *  1. 提取出新 Vnode 的 class，并拼接成字符串形式
+   *     1.1 对于组件类型 Vnode，处理组件类型 Vnode，如果这个组件类型 Vnode 已经实例化了，说明是更新阶段，而更新阶段的话，可能不会触发子组件的更新，只需要将变更的 class 重新赋值到组件根元素即可
+   *          -> 在这里处理的就是将组件定义时的 class 和组件根元素定义的 class 进行合并处理
+   *          -> 因为存在组件根元素又是一个组件的情况，所以就需要递归
+   *          ->    - 例如：<component1 class="class1"> -- 组件 component1 模板为 <component2 class="class2" /> -- 组件 component2 模板为 <div class="class3"></div>
+   *          ->         这样的话，就需要将这三个 class 都添加到 div 元素 DOM 上
+   *     1.2 对于元素类型 Vnode，需要额外处理根元素类型 Vnode(如果 parentNode.parent 存在的话，表示这个元素 Vnode 是一个组件的根元素)
+   *          -> 对于组件根元素 Vnode 来讲，我们需要获取到组件定义时的 class 进行合并
+   *          -> 与上述一样，我们还需要考虑组件根元素又是一个组件的情况，此时就需要递归
+   *  2. 与上一次合并的结果(缓存在 vnode.elm._prevClass)进行简单比较，如果发生改变，则直接覆盖 vnode.elm.class 的值
+   *      不需要对每项 class 进行比对处理，直接对整个 class 字符串进行更新
+   */
+
+  /**
+   * style 模块：初始化或更新 DOM 的 style，具有 'create' 和 'update' 钩子 -- platforms\web\runtime\modules\style.js
+   *
+   */
+  new Vue({
+    el: '#root',
+    data() {
+      return {
+        a: 1,
+        flag: true,
+      };
+    },
+    components: {
+      myComponent,
+    },
+    render(h) {
+      const { a, flag } = this;
+      return h('div', [
+        h(
+          'div',
+          {
+            class: {
+              foo: true,
+              bar: false,
+            },
+          },
+          '这个一个 div 元素'
+        ),
+        flag
+          ? h(
+              'my-component',
+              {
+                class: {
+                  foo: true,
+                  bar: false,
+                },
+                // 与 `v-bind:style` 的 API 相同，
+                // 接受一个字符串、对象，或对象组成的数组
+                style: {
+                  color: 'red',
+                  fontSize: '14px',
+                },
+                // 普通的 HTML attribute
+                attrs: {
+                  id: 'foo',
+                },
+                nativeOn: {
+                  click: () => {},
+                },
+              },
+              [h('div', '这个会当做一个插槽吗?')]
+            )
+          : null,
+      ]);
+    },
+  });
+</script>
