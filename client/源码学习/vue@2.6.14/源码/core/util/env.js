@@ -18,12 +18,12 @@ export const isIOS =
   (UA && /iphone|ipad|ipod|ios/.test(UA)) || weexPlatform === 'ios'; // 是否为 ios 环境
 export const isChrome = UA && /chrome\/\d+/.test(UA) && !isEdge;
 export const isPhantomJS = UA && /phantomjs/.test(UA);
-export const isFF = UA && UA.match(/firefox\/(\d+)/);
+export const isFF = UA && UA.match(/firefox\/(\d+)/); // 是否为 firefox 浏览器
 
 // Firefox has a "watch" function on Object.prototype... Firefox在对象上有一个“监视”功能。原型
 export const nativeWatch = {}.watch;
 
-export let supportsPassive = false;
+export let supportsPassive = false; // 是否支持 addEventListener 第三个参数对象配置
 if (inBrowser) {
   try {
     const opts = {};

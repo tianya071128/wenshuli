@@ -32,6 +32,11 @@
           attrs: {
             id: this.flag ? 'foo3' : 'foo4',
           },
+          on: {
+            '~click': () => {
+              console.log('是否只执行一次?');
+            },
+          },
         },
         `这是一个子组件,${this.test}`
       );
@@ -103,15 +108,36 @@
    *  1. 从新旧的 Vnode 中提取出 attrs 属性，在编译阶段这个属性就会编译成对象
    *  2. 直接遍历新旧 attrs，处理需要清除的属性，修改(或新增)需要的属性
    *
-   *  注意：这里与 class、style 不同，这里不会考虑提取出当前 Vnode 的父子组件的 class、style 进行合并处理，可能会出现这样的问题(概念应该比较低)
+   *  注意：这里与 class、style 不同，这里不会考虑提取出当前 Vnode 的父子组件的 class、style 进行合并处理，可能会出现这样的问题(概率应该比较低)
    *    例如：使用组件 <my-component id="flag ? 'foo1' : 'foo2'" />，组件模板 <div :id="flag ? 'foo3' : 'foo4'"></div> -- flag 都为 true
    *     - 在组件初始化时 id 属性值是 foo1
    *     - 如果组件中 flag 变为 false，那么 id 属性值变为 foo3 -- 此时并不会与父组件的 id 值进行比较
    *
-   *  注意点2：在组件类型 Vnode 中，如果定义的 attrs 会组件的 props，那么在创建组件类型 Vnode 时(在 core\vdom\create-component.js 的 createComponent 中)，
-   *       从 attrs 提取出了 prop，将会将 attrs 对应的 prop 需要从 attrs 中删除
-   *       也就是说，不管是组件类型 Vnode，还是元素 Vnode，vnode.data.attrs 中的值就是需要作用到真实 DOM 元素上的
+   *  注意点2：不管是组件类型 Vnode，还是元素 Vnode，vnode.data.attrs 中的值就是需要作用到真实 DOM 元素上的
+   *       - 因为在组件类型 Vnode 中，如果定义的 attrs 会组件的 props，那么在创建组件类型 Vnode 时(在 core\vdom\create-component.js 的 createComponent 中)，
+   *       - 从 attrs 提取出了 prop，将会将 attrs 对应的 prop 需要从 attrs 中删除
+   *
    */
+
+  /**
+   * evnets 模块: 初始化或更新 DOM 的事件, 具有 'create' 和 'update' 钩子 -- platforms\web\runtime\modules\evnets.js
+   *  1. 提取出新旧 Vnode.data.on 的事件集合 -- 对于组件类型 Vnode, 会在生成 Vnode 的方法中((在 core\vdom\create-component.js 的 createComponent 中)), 将作为父组件传入的事件赋值到 vnode.data.componentOption.listeners 中, 而 vnode.data.on 存放的就是作用于组件根元素的原生事件, 与元素 Vnode 一致
+   *  2. 通过 updateListeners 方法比较新旧事件集合, 添加、改变、删除事件
+   *     - 封装事件逻辑: 真实添加、移除方法在上方定义
+   *      1. 如果新事件存在, 而旧事件不存在, 并且这个新事件没有经过内部封装处理, 此时通过 createFnInvoker 方法封装一层
+   *          -> 封装的逻辑: 返回一个新函数, 这个函数的 fns 属性引用着真实调用事件, 返回的新函数内部逻辑就是取出 fns 属性引用的事件进行调用
+   *          -> 通过操作这个 fns 引用, 可以很方便的实现事件的替换
+   *      2. 当新旧事件都存在并且不相同时, 我们只需要改变封装函数 fns 引用即可
+   *
+   *     - 添加只执行一次的事件, 这实现的有点意思
+   *      1. 一开始还疑惑, 当重渲染的话, 事件引用都变了不会重新执行嘛
+   *      2. 实现原理: 当重新渲染时, 即使新旧方法引用不同, 在 updateListeners 更新事件方法内部, 只会去更改封装 fns 的引用, 此时已经通过 remove 方法删除 DOM 上的事件了, 也就不会重新触发了
+   */
+
+  /**
+   * dom-props 模块: DOM property(例如 innerHTML), 直接使用 elm[key] 方式进行操作, 具有 'create' 和 'update' 钩子 -- platforms\web\runtime\modules\dom-props.js
+   */
+
   new Vue({
     el: '#root',
     data() {
@@ -153,6 +179,14 @@
             attrs: {
               id: flag ? 'foo1' : 'foo2',
             },
+            // 事件监听器在 `on` 内，
+            // 但不再支持如 `v-on:keyup.enter` 这样的修饰器。
+            // 需要在处理函数中手动检查 keyCode。
+            on: {
+              dbClick: () => {},
+            },
+            // 仅用于组件，用于监听原生事件，而不是组件内部使用
+            // `vm.$emit` 触发的事件。
             nativeOn: {
               click: () => {},
             },

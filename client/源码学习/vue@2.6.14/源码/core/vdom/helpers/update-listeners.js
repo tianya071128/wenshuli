@@ -4,31 +4,35 @@ import { warn, invokeWithErrorHandling } from 'core/util/index';
 import { cached, isUndef, isTrue, isPlainObject } from 'shared/util';
 
 // 规范化事件名名称
-const normalizeEvent = cached((name: string): {
-  name: string,
-  once: boolean,
-  capture: boolean,
-  passive: boolean,
-  handler?: Function,
-  params?: Array<any>,
-} => {
-  // 对应 addEventListener 中的 passive 选项 -- 在渲染成 VNode 的过程中是以开头 & 标识
-  const passive = name.charAt(0) === '&'; // 如果事件名以 & 开头
-  name = passive ? name.slice(1) : name; // 截取掉 & 字符
-  // 只执行一次
-  const once = name.charAt(0) === '~'; // Prefixed last, checked first 最后加前缀，首先选中
-  name = once ? name.slice(1) : name;
-  // 使用事件捕获模式
-  const capture = name.charAt(0) === '!';
-  name = capture ? name.slice(1) : name;
-  // 返回
-  return {
-    name,
-    once,
-    capture,
-    passive,
-  };
-});
+const normalizeEvent = cached(
+  (
+    name: string
+  ): {
+    name: string,
+    once: boolean,
+    capture: boolean,
+    passive: boolean,
+    handler?: Function,
+    params?: Array<any>,
+  } => {
+    // 对应 addEventListener 中的 passive 选项 -- 在渲染成 VNode 的过程中是以开头 & 标识
+    const passive = name.charAt(0) === '&'; // 如果事件名以 & 开头
+    name = passive ? name.slice(1) : name; // 截取掉 & 字符
+    // 只执行一次
+    const once = name.charAt(0) === '~'; // Prefixed last, checked first 最后加前缀，首先选中
+    name = once ? name.slice(1) : name;
+    // 使用事件捕获模式
+    const capture = name.charAt(0) === '!';
+    name = capture ? name.slice(1) : name;
+    // 返回
+    return {
+      name,
+      once,
+      capture,
+      passive,
+    };
+  }
+);
 
 /**
  * 封装函数调用程序 -- 在这里会作如下两个重要封装：
@@ -60,6 +64,11 @@ export function createFnInvoker(
 
 /**
  * 通过比对更新处理程序列表，这里将只关注封装处理程序，将其新增、移除等具体逻辑通过回调让其外部决定
+ * 添加逻辑: 事件添加的技巧厉害
+ *  1. 如果新事件存在, 而旧事件不存在, 并且这个新事件没有经过内部封装处理, 此时通过 createFnInvoker 方法封装一层
+ *      -> 封装的逻辑: 返回一个新函数, 这个函数的 fns 属性引用着真实调用事件, 返回的新函数内部逻辑就是取出 fns 属性引用的事件进行调用
+ *      -> 通过操作这个 fns 引用, 可以很方便的实现事件的替换
+ *  2. 当新旧事件都存在并且不相同时, 我们只需要改变封装函数 fns 引用即可
  */
 export function updateListeners(
   on: Object, // 新事件
@@ -70,7 +79,7 @@ export function updateListeners(
   vm: Component // 组件实例
 ) {
   let name, def, cur, old, event;
-  // 遍历事件
+  // 遍历新事件集合
   for (name in on) {
     // 当前事件和旧事件
     def = cur = on[name];
@@ -89,7 +98,7 @@ export function updateListeners(
           `Invalid handler for event "${event.name}": got ` + String(cur), // 事件的处理程序无效
           vm
         );
-    } else if (isUndef(old) /** 如果旧事件不存在， */) {
+    } else if (isUndef(old) /** 如果旧事件不存在，新事件存在 */) {
       /** 如果 fns 调用列表不存在，说明是新增事件类型，那么就需要进一步封装这个处理程序 */
       if (isUndef(cur.fns)) {
         cur = on[name] = createFnInvoker(cur, vm); // 封装调用程序
@@ -100,7 +109,9 @@ export function updateListeners(
       }
       // 添加方法
       add(event.name, cur, event.capture, event.passive, event.params);
-    } else if (cur !== old /** 如果新旧处理程序不同 */) {
+    } else if (
+      cur !== old // 如果新旧处理程序不同, 此时旧事件存在的话就一定是已经封装过了的
+    ) {
       old.fns = cur; // 直接改变 fns 的指针即可替换
       on[name] = old;
     }

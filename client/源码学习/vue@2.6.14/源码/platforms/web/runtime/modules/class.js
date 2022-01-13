@@ -23,7 +23,7 @@ import {
  *      不需要对每项 class 进行比对处理，直接对整个 class 字符串进行更新
  */
 function updateClass(oldVnode: any, vnode: any) {
-  // 提取 vnode 对应的 DOM -- 如果这个 Vnode 是组件类型，vnode.elm 表示就是组件根元素 DOM，不管如何，这个 el 就是需要最终附加的 class
+  // 提取 vnode 对应的 DOM -- 如果这个 Vnode 是组件类型，vnode.elm 表示就是组件根元素 DOM，不管如何，这个 el 就是需要最终附加的 DOM
   const el = vnode.elm;
   const data: VNodeData = vnode.data; // 提取出新的 data 数据对象
   const oldData: VNodeData = oldVnode.data; // 提取出旧的 data 数据对象

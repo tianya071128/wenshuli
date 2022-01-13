@@ -33,11 +33,11 @@ function resetSchedulerState() {
   waiting = flushing = false;
 }
 
-// Async edge case #6566 requires saving the timestamp when event listeners are
-// attached. However, calling performance.now() has a perf overhead especially
-// if the page has thousands of event listeners. Instead, we take a timestamp
-// every time the scheduler flushes and use that for all event listeners
-// attached during that flush.
+// Async edge case #6566 requires saving the timestamp when event listeners are Async edge case#6566要求在启动事件侦听器时保存时间戳
+// attached. However, calling performance.now() has a perf overhead especially 附件。但是，调用 performance.now() 的性能开销尤其大
+// if the page has thousands of event listeners. Instead, we take a timestamp 如果页面有数千个事件侦听器。相反，我们使用时间戳
+// every time the scheduler flushes and use that for all event listeners 每次调度程序刷新并将其用于所有事件侦听器时
+// attached during that flush. 在冲水的过程中连接。
 export let currentFlushTimestamp = 0;
 
 // Async edge case fix requires storing an event listener's attach timestamp. 异步边缘案例修复需要存储事件侦听器的附加时间戳
