@@ -44,7 +44,7 @@ export class Observer {
     this.value = value; // 保存原始数据
     this.dep = new Dep(); // 依赖项收集器
     this.vmCount = 0; // 标识根 data
-    def(value, '__ob__', this); // 在 value 上添加 __ob__ 属性
+    def(value, '__ob__', this); // 在 value 上添加 __ob__ 属性，这个属性不可枚举
     if (Array.isArray(value) /** 数组情况下 */) {
       // 数组情况下，因为 Object.defineProperty 无法拦截数组操作，所以就需要先手动拦截数组方法操作，在添加响应式。
       // 而对于 a[0] 索引读取修改操作的话，我们就没有办法进行响应式操作，需要注意一下

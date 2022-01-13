@@ -249,13 +249,14 @@ export function extend(to: Object, _from: ?Object): Object {
 }
 
 /**
- * Merge an Array of Objects into a single Object.
+ * Merge an Array of Objects into a single Object. 将对象数组合并到单个对象中
  */
 export function toObject(arr: Array<any>): Object {
   const res = {};
   for (let i = 0; i < arr.length; i++) {
+    // 如果 arr[i] 是简单数据类型的话，不会进行 for 循环遍历
     if (arr[i]) {
-      extend(res, arr[i]);
+      extend(res, arr[i]); // 将数组每一个项合并到同一对象中
     }
   }
   return res;

@@ -9,8 +9,8 @@ export const inWeex =
   typeof WXEnvironment !== 'undefined' && !!WXEnvironment.platform; // 是否为 Weex 环境
 export const weexPlatform = inWeex && WXEnvironment.platform.toLowerCase();
 export const UA = inBrowser && window.navigator.userAgent.toLowerCase(); // UA 标识
-export const isIE = UA && /msie|trident/.test(UA); // 不是 IE 浏览器
-export const isIE9 = UA && UA.indexOf('msie 9.0') > 0;
+export const isIE = UA && /msie|trident/.test(UA); // 检测是否为 IE 浏览器
+export const isIE9 = UA && UA.indexOf('msie 9.0') > 0; // 是否为 IE9
 export const isEdge = UA && UA.indexOf('edge/') > 0;
 export const isAndroid =
   (UA && UA.indexOf('android') > 0) || weexPlatform === 'android';

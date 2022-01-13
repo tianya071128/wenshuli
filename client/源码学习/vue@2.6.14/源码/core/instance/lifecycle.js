@@ -77,7 +77,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
    * 但是最终会执行 \core\vdom\patch.js 中的最后的 patch 方法，根据 vnode 渲染成 DOM。
    *  详见 path 方法注解
    */
-  Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
+  Vue.prototype._update = function(vnode: VNode, hydrating?: boolean) {
     const vm: Component = this;
     const prevEl = vm.$el; // 上一个生成的 DOM
     const prevVnode = vm._vnode; // 上一个 Vnode
@@ -113,7 +113,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
     // updated in a parent's updated hook. 在父对象的更新挂钩中更新
   };
 
-  Vue.prototype.$forceUpdate = function () {
+  Vue.prototype.$forceUpdate = function() {
     const vm: Component = this;
     if (vm._watcher) {
       vm._watcher.update();
@@ -133,7 +133,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
    *  7. 通过 vm.$off() 关闭所有的实例侦听器
    *  8. 一些引用清空
    */
-  Vue.prototype.$destroy = function () {
+  Vue.prototype.$destroy = function() {
     const vm: Component = this;
     // 如果已经开始销毁组件, 不要重复销毁
     if (vm._isBeingDestroyed) {
@@ -217,7 +217,7 @@ export function mountComponent(
       ) {
         warn(
           'You are using the runtime-only build of Vue where the template ' + // 您使用的是仅运行时版本的Vue，其中模板
-            'compiler is not available. Either pre-compile the templates into ' + // 编译器不可用。或者将模板预编译为
+          'compiler is not available. Either pre-compile the templates into ' + // 编译器不可用。或者将模板预编译为
             'render functions, or use the compiler-included build.', // 渲染函数，或使用包含在生成中的编译器
           vm
         );
@@ -352,7 +352,7 @@ export function updateChildComponent(
 
   if (vm._vnode) {
     // update child tree's parent 更新子树的父树
-    vm._vnode.parent = parentVnode;
+    vm._vnode.parent = parentVnode; // 这个标识着这是组件的根 Vnode（不管是元素类型还是组件类型）的，引用着表示这个组件类型 Vnode
   }
   vm.$options._renderChildren = renderChildren;
 

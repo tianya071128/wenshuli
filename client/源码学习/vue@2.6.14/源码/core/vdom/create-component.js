@@ -209,6 +209,7 @@ export function createComponent(
 
   // extract props 提取 props
   // 遍历组件配置 props 项，从 data(数据对象) 的 props 尝试提取，后尝试从 attrs 中提取
+  // 需要注意的是，如果从 attrs 提取出了 prop，那么该 attrs 对应的 prop 需要从 attrs 中删除
   const propsData = extractPropsFromVNodeData(data, Ctor, tag);
 
   // functional component 函数式组件

@@ -43,6 +43,10 @@ export default class VNode {
     this.data = data; /*当前节点对应的对象，包含了具体的一些数据信息，是一个VNodeData类型，可以参考VNodeData类型中的数据信息*/
     this.children = children; // 当前节点的子节点，是一个数组
     this.text = text; // 当前节点的文本
+    /**
+     * 这个属性对应的就是真实 DOM
+     * 如果是组件类型 Vnode，这个就表示组件的根元素(如果组件根元素也是组件，那么就递归至最终的一个实际根元素)
+     */
     this.elm = elm; // 当前虚拟节点对应的真实dom节点
     this.ns = undefined; // 当前节点的名字空间 -- 命名空间可查看 https://developer.mozilla.org/zh-CN/docs/Web/API/Document/createElementNS#example
     this.context = context; // 当前 vnode 的渲染组件实例 -- 需要注意的是插槽

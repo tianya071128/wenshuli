@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>05.子组件的全周期</title>
+    <title>数据对象模块的处理</title>
     <script src="./vue.js"></script>
   </head>
   <body>
@@ -16,6 +16,7 @@
     data() {
       return {
         test: 1,
+        flag: true,
       };
     },
     render(h) {
@@ -24,6 +25,12 @@
         {
           class: {
             test123: '123',
+          },
+          style: {
+            fontSize: '18px',
+          },
+          attrs: {
+            id: this.flag ? 'foo3' : 'foo4',
           },
         },
         `这是一个子组件,${this.test}`
@@ -61,7 +68,7 @@
 
   /**
    * class 模块：初始化或更新 DOM 的 class，具有 'create' 和 'update' 钩子 -- platforms\web\runtime\modules\class.js
-   *  1. 提取出新 Vnode 的 class，并拼接成字符串形式
+   *  1. 提取出新 Vnode 的 class，并拼接成字符串形式 - 不管是组件类型 Vnode，还是元素类型 Vnode，最终目标就是提取出全部需要作用至目标元素的 Class
    *     1.1 对于组件类型 Vnode，处理组件类型 Vnode，如果这个组件类型 Vnode 已经实例化了，说明是更新阶段，而更新阶段的话，可能不会触发子组件的更新，只需要将变更的 class 重新赋值到组件根元素即可
    *          -> 在这里处理的就是将组件定义时的 class 和组件根元素定义的 class 进行合并处理
    *          -> 因为存在组件根元素又是一个组件的情况，所以就需要递归
@@ -76,7 +83,34 @@
 
   /**
    * style 模块：初始化或更新 DOM 的 style，具有 'create' 和 'update' 钩子 -- platforms\web\runtime\modules\style.js
+   *  1. 将 vnode.data.staticStyle 和 vnode.data.style 规范为对象形式，因为 style 后续要遍历一个个添加
+   *  2. 合并新 Vnode 的 style 为一个对象 - 不管是组件类型 Vnode，还是元素类型 Vnode，最终目标就是提取出全部需要作用至目标元素的 Style
+   *      1. 先提取出子组件的
+   *      2. 在提取当前 Vnode
+   *      3. 在提取父组件的
+   *      4. 上述提取都是提取出对象，直接利用对象属性进行同属性覆盖，但是优先使用父组件的
+   *       -> 例如：例如：<component1 style="fontSize: 12px"> -- 组件 component1 模板为 <component2 style="fontSize: 14px" /> -- 组件 component2 模板为 <div style="fontSize: 16px"></div>
+   *          这样的话，作用到 div 元素 DOM 上就是 style="fontSize: 12px" -- 父组件优先级最高
+   *  3. 遍历新旧 style，处理需要清除的 style，添加需要新增的 style
    *
+   *  ？？？
+   *  但是这里奇怪的是，为什么只缓存当前 Vnode 的 sytle，而没有缓存通过 getStyle 方法合并父子组件的最终 style
+   *  这样在更新阶段，即使样式没有变化，还是会通过 setProp 设置 style，虽然并没有太多影响
+   */
+
+  /**
+   * attrs 模块：初始化或更新 DOM 的 attr 属性，具有 'create' 和 'update' 钩子 -- platforms\web\runtime\modules\attrs.js
+   *  1. 从新旧的 Vnode 中提取出 attrs 属性，在编译阶段这个属性就会编译成对象
+   *  2. 直接遍历新旧 attrs，处理需要清除的属性，修改(或新增)需要的属性
+   *
+   *  注意：这里与 class、style 不同，这里不会考虑提取出当前 Vnode 的父子组件的 class、style 进行合并处理，可能会出现这样的问题(概念应该比较低)
+   *    例如：使用组件 <my-component id="flag ? 'foo1' : 'foo2'" />，组件模板 <div :id="flag ? 'foo3' : 'foo4'"></div> -- flag 都为 true
+   *     - 在组件初始化时 id 属性值是 foo1
+   *     - 如果组件中 flag 变为 false，那么 id 属性值变为 foo3 -- 此时并不会与父组件的 id 值进行比较
+   *
+   *  注意点2：在组件类型 Vnode 中，如果定义的 attrs 会组件的 props，那么在创建组件类型 Vnode 时(在 core\vdom\create-component.js 的 createComponent 中)，
+   *       从 attrs 提取出了 prop，将会将 attrs 对应的 prop 需要从 attrs 中删除
+   *       也就是说，不管是组件类型 Vnode，还是元素 Vnode，vnode.data.attrs 中的值就是需要作用到真实 DOM 元素上的
    */
   new Vue({
     el: '#root',
@@ -102,31 +136,29 @@
           },
           '这个一个 div 元素'
         ),
-        flag
-          ? h(
-              'my-component',
-              {
-                class: {
-                  foo: true,
-                  bar: false,
-                },
-                // 与 `v-bind:style` 的 API 相同，
-                // 接受一个字符串、对象，或对象组成的数组
-                style: {
-                  color: 'red',
-                  fontSize: '14px',
-                },
-                // 普通的 HTML attribute
-                attrs: {
-                  id: 'foo',
-                },
-                nativeOn: {
-                  click: () => {},
-                },
-              },
-              [h('div', '这个会当做一个插槽吗?')]
-            )
-          : null,
+        h(
+          'my-component',
+          {
+            class: {
+              foo: true,
+              bar: false,
+            },
+            // 与 `v-bind:style` 的 API 相同，
+            // 接受一个字符串、对象，或对象组成的数组
+            style: {
+              color: 'red',
+              fontSize: '14px',
+            },
+            // 普通的 HTML attribute
+            attrs: {
+              id: flag ? 'foo1' : 'foo2',
+            },
+            nativeOn: {
+              click: () => {},
+            },
+          },
+          [h('div', '这个会当做一个插槽吗?')]
+        ),
       ]);
     },
   });
