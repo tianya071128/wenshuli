@@ -44,15 +44,21 @@
   };
 
   /**
-   * 数据对象 -- 即与模板中 attribute 对应的数据对象，用来描述这个元素或组件的特性，包含 class、attrs、events、style、dom-props、transition、directives、ref
-   *  - class、attrs、events、style、dom-props、transition 这几个是直接影响 DOM 的，所以与平台相关，web 端定义在 platforms\web\runtime\modules
-   *  - directives、ref 这两个是与平台无关
-   */
-
-  /**
-   * 数据对象模块处理原理：。。。
-   * 这些模块在不同平台在调用 createPatchFunction(core\vdom\patch.js) 方法中生成 __patch__(web 端见 platforms\web\runtime\patch.js) 方法时，注入依赖平台的模块处理方法
-   * 这些模块通过添加 ['create', 'activate', 'update', 'remove', 'destroy'] 这些钩子，在 Vnode 渲染的不同时机会传入新旧 Vnode 进行数据对象的处理
+   * 数据对象 -- 用来描述这个元素或组件的，对应 Vnode 中的 data 属性，包含 class、attrs、events、style、dom-props、transition、directives、ref
+   *  - 核心模块(不区分平台)
+   *    - directives：指令
+   *    - ref
+   *  - web端：定义在 platforms\web\runtime\modules
+   *    - class：处理 DOM 的 class
+   *    - style：处理 DOM 的 style
+   *    - attrs：处理 DOM 的属性
+   *    - events：处理 DOM 的事件
+   *    - dom-props：处理 DOM 的特性
+   *    - transition：处理 transition 过渡的
+   *
+   * 在 Vue 内部，将 Vnode 的过程分成几个钩子：['create', 'activate', 'update', 'remove', 'destroy']，包含着 Vnode 的全周期
+   * 上述处理数据对象的模块就通过注册这些钩子来参与到 Vnode 的生命周期，用来在不同时机处理 Vnode 的数据对象
+   * 具体见 createPatchFunction(core\vdom\patch.js) 方法
    */
 
   /**
@@ -136,6 +142,12 @@
 
   /**
    * dom-props 模块: DOM property(例如 innerHTML), 直接使用 elm[key] 方式进行操作, 具有 'create' 和 'update' 钩子 -- platforms\web\runtime\modules\dom-props.js
+   */
+
+  /**
+   * transition 模块：在 web 端用于处理 transition 组件过渡时的，见 transition 组件分析
+   * directives 模块：处理指令，见指令部分分析
+   * ref 模块：见 ref 分析
    */
 
   new Vue({
