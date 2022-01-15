@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>v-if、v-else、v-else-if</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <div>正常 DIV</div>
+      <div v-if="flag">使用 V-IF</div>
+    </div>
+  </body>
+</html>
+<script>
+  /**
+   * 使用 v-if、v-else、v-else-if 原理：本质上这些不是指令, 会在编译期间处理
+   *  1. 如果是在 render 中, 无法使用这些指令, 可以在渲染函数中用 JavaScript 的 if/else 或者其他方式来重写
+   *  2. 在 template 模板中, 在使用 compiler 模块编译模板时, 在生成 render 时, 就类似于自定义的 render 函数
+   *
+   * 总而言之, v-if、v-else、v-else-if 会在生成 Vnode 的 render 函数中就会执行完毕, 生成对应需要渲染的 Vnode, 而不满足条件的 Vnode 则不会生成
+   */
+  new Vue({
+    el: '#root',
+    data() {
+      return {
+        flag: false,
+      };
+    },
+    render(h) {
+      const { flag } = this;
+      return h('div', [h('div', '正常 DIV'), flag && h('div', '使用 V-IF')]);
+    },
+  });
+</script>

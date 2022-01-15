@@ -28,6 +28,7 @@ import {
 } from 'weex/runtime/recycle-list/render-component-template';
 
 // inline hooks to be invoked on component VNodes during patch 在修补期间在组件VNode上调用的内联钩子
+// 组件类型 Vnode 的钩子函数
 const componentVNodeHooks = {
   // 组件 vnode 的初始钩子，在这里启动组件 vnode 的渲染过程
   // 调用位置在 core\vdom\patch.js 的 createComponent 方法中
@@ -301,7 +302,7 @@ export function createComponentInstanceForVnode(
 }
 
 // 初始化组件的 hooks，添加到 data.hook 中 -- init、prepatch、insert、destroy 的钩子
-// 这几个钩子贯穿了 vnode 的生命周期 -- 注意不是组建的生命周期
+// 这几个钩子贯穿了 vnode 的生命周期 -- 注意不是组件的生命周期
 function installComponentHooks(data: VNodeData) {
   const hooks = data.hook || (data.hook = {}); // 提取出 data.hook
   // hooksToMerge：是具有 init、prepatch、insert、destroy 方法的对象

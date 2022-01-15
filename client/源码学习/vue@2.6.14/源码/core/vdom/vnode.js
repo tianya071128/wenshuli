@@ -40,7 +40,7 @@ export default class VNode {
     asyncFactory?: Function // 异步组件
   ) {
     this.tag = tag;
-    this.data = data; /*当前节点对应的对象，包含了具体的一些数据信息，是一个VNodeData类型，可以参考VNodeData类型中的数据信息*/
+    this.data = data; // 当前节点对应的对象，包含了具体的一些数据信息，是一个 VNodeData 类型，可以参考 VNodeData 类型中的数据信息
     this.children = children; // 当前节点的子节点，是一个数组
     this.text = text; // 当前节点的文本
     /**

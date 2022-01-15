@@ -5,14 +5,89 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>指令原理</title>
-    <script src="./vue.js"></script>
+    <script src="../vue.js"></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div>正常 DIV</div>
+      <div v-show="flag" v-focus v-my-directive.foo.bar>
+        使用了 v-show 指令的 DIV
+      </div>
+    </div>
   </body>
 </html>
 <script>
   /**
+   * 指令的执行原理:
    *
+   *  与 Vnode 数据对象模块的处理一样, 通过注册数据对象的 'create'、'update'、'destroy' 钩子, 来当 Vnode 某些时刻来执行指令的钩子函数
+   *  注意的是: 'create'、'update'、'destroy' 钩子无法准确对应指令的钩子, 所以还需要通过注册 Vnode.data.hook 某些钩子来执行某些指令钩子, 具体见 指令钩子函数的执行时机
+   *    1. 提取新旧 Vnode 的 directives 指令集合
+   *    2. 将新旧 Vnode 的指令集合成规范成一个对象, 并且从指令注册中提取出对应的指令钩子函数
+   *         res: {
+   *           'v-show': { // 当前指令需要的数据
+   *             expression: 'false', // 字符串形式的指令表达式。
+   *             modiries: {}, // 一个包含修饰符的对象
+   *             name: 'show', // 指令名，不包括 v- 前缀。
+   *             rawName: 'v-show',
+   *             value: false, // 指令的绑定值
+   *             def: { // 指令钩子函数 - 注册的钩子均为可选
+   *               bind: function() {}, // 只调用一次，指令第一次绑定到元素时调用。在这里可以进行一次性的初始化设置。
+   *               inserted: function() {}, // 被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)。
+   *               update: function() {}, // 所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前。
+   *               componentUpdated: function() {}, // 指令所在组件的 VNode 及其子 VNode 全部更新后调用。
+   *               unbind：只调用一次，指令与元素解绑时调用。
+   *             }
+   *           },
+   *           ...
+   *         }
+   *    3. 根据遍历新旧指令集合(就是上面 res 对象), 对比新旧指令来执行指令相应的钩子函数(传入一些参数给这些指令), 执行时机见下面注解
    */
+
+  /**
+   * 指令钩子函数的执行时机: ----- 在 vue 中存在多种类型的钩子, 例如组件的生命周期钩子、Vnode 的钩子(vnode.data.hook 集合中)、数据对象的模块钩子以及 指令钩子函数
+   *
+   *  指令是通过注册指令钩子函数来在特定时机暴露出新旧 VNode 和 DOM 提供给用户进行操作 --- 注意的是, 这些钩子关注的是指令, 但是是与 DOM 和 Vnode 的周期紧密相关的
+   *    bind：只调用一次，指令第一次绑定到元素时调用。在这里可以进行一次性的初始化设置。 -- 此时可能是 Vnode 的数据对象模块的 create 或 update(可能是 Vnode 已经渲染, 但是指令是初次绑定) 钩子
+   *          -- 当新指令存在, 旧指令不存在时, 表示为第一次绑定到元素
+   *    inserted: 被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)。 -- 此时可能是 Vnode 的数据对象模块的 create 或 update(可能是 Vnode 已经渲染, 但是指令是初次绑定) 钩子
+   *          -- Vnode 初始化(此时执行的是数据对象模块的 create 钩子), 通过注册到 Vnode.data.hook 的 insert 钩子中(当插入到 DOM 树中执行的钩子)达到其效果
+   *          -- Vnode 不是初始化(此时 Vnode 已经渲染过, 但是指令是初次绑定), 此时直接执行钩子即可
+   *    update：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前。 -- 此时对应 Vnode 数据对象的 update 钩子
+   *          -- 当新旧指令都存在, 表示为指令更新阶段, 直接执行即可
+   *    componentUpdated：指令所在组件的 VNode 及其子 VNode 全部更新后调用。 -- 此时对应 Vnode 数据对象的 update 钩子
+   *          -- 新旧指令都存在, 但是需要注册到 Vnode.data.hook.postpatch 钩子中等待组件以及子组件全部更新完毕后再执行指令钩子
+   *    unbind：只调用一次，指令与元素解绑时调用。 -- 此时对应 Vnode 数据对象的 update 和 destroy 钩子 -- 指令卸载不代表 Vnode 销毁, 但是 Vnode 销毁, 肯定表示指令需要卸载
+   *          -- 旧指令存在, 新指令不存在, 执行指令解绑
+   */
+
+  /**
+   * 指令一般分为两种:
+   *   内置指令: 有些内置指令也是通过指令注册的方式来绑定一些指令钩子, 例如 v-show、v-model
+   *             有些则是其他机制实现的,严格来讲，这并不是钩子，例如：v-pre、v-if、v-for 等
+   *   用户自定义指令: 就是通过添加这个指令钩子来操作 Vnode 或 DOM
+   */
+  new Vue({
+    el: '#root',
+    data() {
+      return {
+        flag: false,
+      };
+    },
+    // render(h) {
+    //   return h('div', {
+    //     directives: [
+    //       {
+    //         name: 'focus',
+    //         value: '2',
+    //         expression: '1 + 1',
+    //         arg: 'foo',
+    //         modifiers: {
+    //           bar: true,
+    //         },
+    //       },
+    //     ],
+    //   });
+    // },
+  });
 </script>

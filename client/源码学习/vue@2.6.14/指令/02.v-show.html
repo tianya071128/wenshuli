@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>v-show</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <button @click="flag = !flag">切换显示</button>
+      <transition>
+        <div v-show="flag">v-show DIV</div>
+      </transition>
+    </div>
+  </body>
+</html>
+<script>
+  /**
+   * v-show 通过注册指令钩子操作 el 元素的 display 样式, 达到元素的显示隐藏 -- platforms\web\runtime\directives\show.js
+   *
+   *  v-show 还需要考虑 transition 过渡的问题, 那么为什么 v-if 不需要考虑?
+   *  因为 v-if 切换元素的时候是直接从 Vnode 源头中操作的, 此时切换是触发 Vnode 的一些钩子, transition 也是注册了一些处理数据对象模块的钩子, 在这里就可以触发了
+   */
+
+  /**
+   * 注册 bind 钩子: 只调用一次，指令第一次绑定到元素时调用。 -- 在这里需要考虑这个 Vnode 元素需要过渡的情况
+   *  1. 过渡元素: 过渡结束后设置 display -- value 为 true, 则设置为 __vOriginalDisplay(元素原始 display) -- value 为 false, 则设置为 'none'
+   *       value 为 true, 触发进入过渡
+   *       value 为 false, 则直接设置 display, 不触发过渡
+   *  2. 非过渡元素: 直接设置元素的 display -- value 为 true, 则设置为 __vOriginalDisplay(元素原始 display) -- value 为 false, 则设置为 'none'
+   */
+
+  /**
+   * 注册 update 钩子: 所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前。
+   *  1. 过渡元素: 都在过渡结束后设置 display -- value 为 true, 则设置为 __vOriginalDisplay(元素原始 display) -- value 为 false, 则设置为 'none'
+   *     value 为 true, 触发进入过渡
+   *     value 为 false,触发离开过渡
+   *  2. 非过渡元素: 直接设置元素的 display -- value 为 true, 则设置为 __vOriginalDisplay(元素原始 display) -- value 为 false, 则设置为 'none'
+   */
+
+  /**
+   * 注册 unbind 钩子: 只调用一次，指令与元素解绑时调用。
+   *  如果这个 Vnode 没有被销毁了(指令解绑不一定是 Vnode 销毁, Vnode 销毁肯定触发指令解绑), 那么将元素的 display 设置为 __vOriginalDisplay(元素原始 display)
+   */
+  new Vue({
+    el: '#root',
+    data() {
+      return {
+        flag: true,
+      };
+    },
+  });
+</script>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>v-model</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <input type="text" placeholder="使用 v-model" v-model="data" />
+      <my-component v-model="data" v-focus></my-component>
+    </div>
+  </body>
+</html>
+<script>
+  var myComponent = {
+    data: function () {
+      return {
+        test: 1,
+      };
+    },
+    render: function (h) {
+      return h(
+        'div',
+        {
+          class: {
+            test123: '123',
+          },
+        },
+        '这是一个子组件,' + this.test
+      );
+    },
+  };
+  /**
+   * v-model 在这个指令钩子方法执行之前已经做了很多工作:
+   *  1. 对于元素类型 Vnode
+   *     1.1 在编译期间在 vnode.data.on 上添加 input 事件和在 vnode.data.domProps 是添加 value 属性
+   *      例如: Vnode {
+   *              data: {
+   *                domProps: {
+   *                  value: "" // 绑定属性值
+   *                },
+   *                on: {
+   *                  input: function($event){if($event.target.composing)return; data=$event.target.value} // 这个方法为封装的方法
+   *                }
+   *              },
+   *            }
+   *      1.2 后续处理数据对象 event 和 domProps 模块时, 会给 DOM 元素添加 input 事件和 value 属性
+   *
+   *   2. 对于组件类型 Vnode - 并且不是在 vnode.data.directives 中有 model 这个指令, 因为通过下面的已经处理完成
+   *      2.1 在编译期间在  vnode.data 上添加 model, 如下:
+   *        Vnode {
+   *          data: {
+   *            model: {
+   *              callback: function ($$v) {data=$$v},
+   *              value: '123',
+   *              expression: "data", // v-model 绑定的属性名称
+   *            }
+   *          },
+   *        }
+   *      2.2 在创建组件类型 Vnode 的 transformModel(core\vdom\create-component.js) 中处理组件绑定的 v-model,具体见方法注解
+   */
+
+  /**
+   * 所有在指令钩子中只会处理元素类型的 Vnode -- 因为组件类型 Vnode 的 v-model 并不会存在于 vnode.data.directives 中, 见上方注解
+   *  并且在指令钩子只注册了 inserted 和 componentUpdated 钩子用于处理一些事件的兼容性问题
+   *  --  platforms\web\runtime\directives\model.js, 具体事件兼容性处理详见代码注解
+   *
+   *  1. inserted 钩子:
+   *      主要是处理下 textarea 或 input 的 'text,number,password,search,email,tel,url' 元素的 input 事件兼容
+   *  2. 以及在 inserted 和 componentUpdated 钩子中处理 select 元素的问题
+   */
+  new Vue({
+    el: '#root',
+    data: function () {
+      return {
+        data: '123',
+      };
+    },
+    components: {
+      myComponent: myComponent,
+    },
+  });
+</script>
