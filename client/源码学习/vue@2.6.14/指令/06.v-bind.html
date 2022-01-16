@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>v-bind</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <div :test1="'test2'" :test2.prop="'test2'" :test3.sync="flag">
+        测试 v-bind
+      </div>
+    </div>
+  </body>
+</html>
+<script>
+  /**
+   * v-bind: 动态地绑定一个或多个 attribute，或一个组件 prop 到表达式。
+   *
+   * 此指令是通过在编译期间, 生成 Vnode 时在 Vnode.data 数据对象上添加一些属性, 在数据对象模块处理过程中进行处理, 例如:
+   *  Vnode.data {
+   *    attrs: { // 不使用 .prop 修饰符的
+   *      test1: "test2",
+   *      test3: false
+   *    },
+   *    domProps: { // 如果使用 .prop 修饰符的, 作为一个 DOM property 绑定而不是作为 attribute 绑定。
+   *      test2: "test2"
+   *    },
+   *    on: { // 如果使用 .sync 修复符, 会扩展一个更新父组件绑定值的侦听器
+   *      update:test3: f($event) {}
+   *    }
+   *  }
+   */
+  new Vue({
+    el: '#root',
+    data() {
+      return {
+        flag: false,
+      };
+    },
+  });
+</script>

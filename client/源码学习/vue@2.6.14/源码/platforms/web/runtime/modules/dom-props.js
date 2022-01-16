@@ -1,7 +1,7 @@
 /* @flow */
 
 import { isDef, isUndef, extend, toNumber } from 'shared/util';
-import { isSVG } from 'web/util/index';
+import { isSVG } from 'platforms/web/util/index';
 
 let svgContainer;
 
@@ -25,7 +25,7 @@ function updateDOMProps(oldVnode: VNodeWithData, vnode: VNodeWithData) {
     props = vnode.data.domProps = extend({}, props);
   }
 
-  // 遍历旧的 domProps,
+  // 遍历旧的 domProps, 新的 domProps 不存在, 直接通过 DOM property 方式删除(elm[key] = '')
   for (key in oldProps) {
     // 在新的 domProps 不存在, 则直接通过 elm[key] = '' 方式清除
     if (!(key in props)) {
@@ -35,13 +35,21 @@ function updateDOMProps(oldVnode: VNodeWithData, vnode: VNodeWithData) {
 
   // 遍历新的 domProps
   for (key in props) {
-    cur = props[key];
+    cur = props[key]; // 取出当前项
     // ignore children if the node has textContent or innerHTML, 如果节点具有textContent或innerHTML，则忽略子节点，
     // as these will throw away existing DOM nodes and cause removal errors /因为这些将丢弃现有的DOM节点并导致删除错误
     // on subsequent patches (#3360) 在后续修补程序上（#3360）
+    /**
+     * 在这里, 如果 key 是 textContent(v-text 指令) 或 innerHTML(v-html 指令), 此时不需要子节点, 全部由 v-text 或 v-html 方式控制
+     * 所以, 需要将子节点抛弃掉, 防止后续渲染这些子节点, 例如:
+     *  <div v-text="123">
+     *    <span>123</span> // 这个子节点需要被清除, 不要渲染
+     *  </div>
+     */
     if (key === 'textContent' || key === 'innerHTML') {
-      if (vnode.children) vnode.children.length = 0;
-      if (cur === oldProps[key]) continue;
+      // 在这里把子节点抛弃掉,
+      if (vnode.children) vnode.children.length = 0; //
+      if (cur === oldProps[key]) continue; // 如果新旧相同, 则直接处理下一个 domProps
       // #6601 work around Chrome version <= 55 bug where single textNode 解决Chrome版本<=55缺陷，其中单个textNode
       // replaced by innerHTML/textContent retains its parentNode property 由innerHTML/textContent替换，保留其parentNode属性
       if (elm.childNodes.length === 1) {
@@ -49,19 +57,22 @@ function updateDOMProps(oldVnode: VNodeWithData, vnode: VNodeWithData) {
       }
     }
 
-    if (key === 'value' && elm.tagName !== 'PROGRESS') {
-      // store value as _value as well since
-      // non-string values will be stringified
-      elm._value = cur;
-      // avoid resetting cursor position when value is the same
-      const strCur = isUndef(cur) ? '' : String(cur);
+    if (
+      key === 'value' && // 如果 key 是 value
+      elm.tagName !== 'PROGRESS' // 并且 不是 progress 元素
+    ) {
+      // store value as _value as well since 将值存储为_值以及自
+      // non-string values will be stringified 非字符串值将被字符串化
+      elm._value = cur; // 加个标识？？？
+      // avoid resetting cursor position when value is the same 避免在值相同时重置光标位置
+      const strCur = isUndef(cur) ? '' : String(cur); // 设置 value 值
       if (shouldUpdateValue(elm, strCur)) {
         elm.value = strCur;
       }
     } else if (
-      key === 'innerHTML' &&
-      isSVG(elm.tagName) &&
-      isUndef(elm.innerHTML)
+      key === 'innerHTML' && // 如果需要设置 innerHTML
+      isSVG(elm.tagName) && // 并且是 SVG 标签
+      isUndef(elm.innerHTML) // 并且当前 elm 的 innerHTML 值为 undefined 或 null
     ) {
       // IE doesn't support innerHTML for SVG elements
       svgContainer = svgContainer || document.createElement('div');
@@ -74,16 +85,16 @@ function updateDOMProps(oldVnode: VNodeWithData, vnode: VNodeWithData) {
         elm.appendChild(svg.firstChild);
       }
     } else if (
-      // skip the update if old and new VDOM state is the same.
-      // `value` is handled separately because the DOM value may be temporarily
-      // out of sync with VDOM state due to focus, composition and modifiers.
-      // This  #4521 by skipping the unnecessary `checked` update.
+      // skip the update if old and new VDOM state is the same. 如果新旧VDOM状态相同，则跳过更新。
+      // `value` is handled separately because the DOM value may be temporarily 'value'是单独处理的，因为DOM值可能是临时的
+      // out of sync with VDOM state due to focus, composition and modifiers. 由于焦点、合成和修改器，与VDOM状态不同步。
+      // This  #4521 by skipping the unnecessary `checked` update. 这是通过跳过不必要的“已检查”更新来实现的。
       cur !== oldProps[key]
     ) {
-      // some property updates can throw
-      // e.g. `value` on <progress> w/ non-finite value
+      // some property updates can throw 某些属性更新可能会引发
+      // e.g. `value` on <progress> w/ non-finite value 例如，<progress>w/非有限值上的'value`
       try {
-        elm[key] = cur;
+        elm[key] = cur; // 直接设置值
       } catch (e) {}
     }
   }
@@ -92,9 +103,10 @@ function updateDOMProps(oldVnode: VNodeWithData, vnode: VNodeWithData) {
 // check platforms/web/util/attrs.js acceptValue
 type acceptValueElm = HTMLInputElement | HTMLSelectElement | HTMLOptionElement;
 
+// 检测是否应该更新值
 function shouldUpdateValue(elm: acceptValueElm, checkVal: string): boolean {
   return (
-    !elm.composing &&
+    !elm.composing && // 此时不应该在输入复合文本时, 见 platforms\web\runtime\directives\model.js 中处理 input 事件时的问题
     (elm.tagName === 'OPTION' ||
       isNotInFocusAndDirty(elm, checkVal) ||
       isDirtyWithModifiers(elm, checkVal))

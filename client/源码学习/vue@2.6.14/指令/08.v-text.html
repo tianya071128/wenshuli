@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>v-text</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <div v-text="msg"></div>
+    </div>
+  </body>
+</html>
+<script>
+  /**
+   * v-text: 更新元素的 textContent -- 注意 v-text 绑定值会被解析为文本, 在 DOM 上会输出一个文本
+   *
+   * 1. 编译器解析时会在 Vnode.data.domProps 添加 textContent
+   *    Vnode.data {
+   *      domProps: {
+   *        textContent: "测试一下 v-text"
+   *      }
+   *    }
+   * 2. 在 domProps(platforms\web\runtime\modules\dom-props.js) 模块处理 domProps 数据对象时进行处理, 详见文件注解
+   *    简单讲就是通过 dom['textContent'] = "测试一下 v-text" 设置一下, 当然还有其他的兼容性处理
+   */
+  new Vue({
+    el: '#root',
+    data() {
+      return {
+        msg: '<br />测试一下 v-text',
+      };
+    },
+  });
+</script>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>v-html</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <div v-html="msg"></div>
+    </div>
+  </body>
+</html>
+<script>
+  /**
+   * v-html: 更新元素的 innerHTML。注意：内容按普通 HTML 插入 - 不会作为 Vue 模板进行编译。
+   * 与 v-text 类似
+   *
+   * 1. 编译器解析时会在 Vnode.data.domProps 添加 innerHTML
+   *    Vnode.data {
+   *      domProps: {
+   *        innerHTML: "<span style=\"color: red\">这是一段红色文本</span>"
+   *      }
+   *    }
+   * 2. 在 domProps(platforms\web\runtime\modules\dom-props.js) 模块处理 domProps 数据对象时进行处理, 详见文件注解
+   *    简单讲就是通过 dom['innerHTML'] = "<span style=\"color: red\">这是一段红色文本</span>" 设置一下, 当然还有其他的兼容性处理
+   */
+  new Vue({
+    el: '#root',
+    data() {
+      return {
+        msg: '<span style="color: red">这是一段红色文本</span>',
+      };
+    },
+  });
+</script>

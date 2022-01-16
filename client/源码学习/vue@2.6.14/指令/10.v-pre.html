@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>v-pre</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <div v-pre>
+        <div v-if="false">这是 pre 的 DIV 元素</div>
+        <div id="123"></div>
+        <span>{{ this will not be compiled }}</span>
+      </div>
+    </div>
+  </body>
+</html>
+<script>
+  /**
+   * v-pre: 跳过这个元素和它的子元素的编译过程。
+   *
+   * 这个指令主要通过在编译期间, 不进行数据的绑定解析, 以及在 Vnode 层面进行标识:
+   *  1. 对于所有的指令、数据绑定都显示原始值
+   *  2. 在使用 v-pre 指令的“节点和子节点”上 Vnode.data.pre 设置一个标识
+   *      Vnode.data {
+   *        pre: true
+   *      }
+   *      但是也不是所有的节点和子节点都会进行添加, 会在需要的场景下才会添加(在编译期间就会决定是否需要)
+   *
+   * 如下是一些需要添加的场景:
+   *      2.1 如果 tag 是一个不合法的标签时(组件标签), 此时也需要直接渲染成标签元素
+   *          此时就渲染成一个元素类型 Vnode, 并且不对其标签进行检测
+   *
+   *      2.2 如果 tag 需要设置属性 attrs 时, 需要添加 vnode.data.pre 标识
+   *          用于在处理 Vnode 数据对象 attrs 模块中使用
+   */
+  new Vue({
+    el: '#root',
+    data() {
+      return {};
+    },
+  });
+</script>

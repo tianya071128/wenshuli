@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>v-once</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <div v-once>
+        <div v-if="flag">这是 v-once 的 子 元素</div>
+        <span>{{ msg }}</span>
+      </div>
+    </div>
+  </body>
+</html>
+<script>
+  /**
+   * v-once: 只渲染元素和组件一次。
+   *
+   * 在编译器编译期间, 会对 v-once 的 Vnode 编译的 render 函数如下:
+   *   function anonymous() {
+   *     with(this){ return _c('div',{attrs:{"id":"root"}}, [_m(0)]) }
+   *   }
+   *  -> 其中关键的 _m 工具函数实际调用的是 this._m, 定义在 core\instance\render-helpers\index.js
+   *  -> 最终调用 renderStatic(core\instance\render-helpers\render-static.js) 方法
+   *  -> 在 renderStatic 方法内部:
+   *      1. 第一次编译期间, 正常进行 render 渲染 Vnode 的过程, 但是会将其生成的 Vnode 缓存到 vm._staticTrees 集合中
+   *      2. 多次编译期间, 会从 vm._staticTrees 取出缓存节点使用
+   *      3. 注意的是: 第一次编译期间, 会正常的收集其使用的依赖, 但多次编译的话, 因为是直接从缓存中取出的缓存节点, 所以在这个 Vnode 生成过程中的依赖会被其清除
+   */
+  new Vue({
+    el: '#root',
+    data() {
+      return {
+        msg: 'v-once',
+        flag: true,
+      };
+    },
+  });
+</script>

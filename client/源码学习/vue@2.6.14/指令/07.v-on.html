@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>v-on</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <div
+        @click.stop="onFn"
+        @select="onFn"
+        @prevent.prevent="onFn"
+        @capture.capture="onFn"
+        @test.once.passive="onFn"
+        @test2.prevent.self="onFn"
+        @test3.self.prevent="onFn"
+      >
+        测试 v-on
+      </div>
+    </div>
+  </body>
+</html>
+<script>
+  /**
+   * 同 v-bind 类似, v-on 也是通过编译器在生成 render 函数, render 函数生成 Vnode 的过程中, 在 Vnode.data 上添加数据, 交由数据对象模块处理
+   *
+   * 1 常规使用 - 添加到 Vnode.data.on 上
+   *    Vnode.data.on {
+   *      select: onFn // 就是定义的事件处理程序, 不会做额外封装
+   *    }
+   * 2 .stop - 添加到 Vnode.data.on 上 - 调用 event.stopPropagation()。
+   *    Vnode.data.on {
+   *      click: function($event){$event.stopPropagation();return onFn.apply(null, arguments)} // 对事件处理程序进行封装, 先调用一下 stopPropagation()
+   *    }
+   * 3 .prevent - 与 .stop 修饰符类似, 对事件处理程序进行封装一层, 先调用一下 preventDefault()
+   * 4 .capture - 添加事件侦听器时使用 capture 模式。
+   *    4.1 首先在 Vnode.data.on 添加事件, 但是在前面加上 ! 标识
+   *        Vnode.data.on {
+   *          "!capture":function($event){return onFn.apply(null, arguments)}
+   *        }
+   *    4.2 在 event 模块处理事件的 add(platforms\web\runtime\modules\events.js) 方法中使用捕获模式添加事件
+   *
+   * 上述修饰符, 大体上是通过两种方式实现:
+   *  1. 进一步封装事件处理程序, 实现额外操作
+   *  2. 除了封装事件处理程序外, 还可以在 事件标识符 添加一些标识,后续添加事件时实现不同的注册事件方式
+   *      - .capture: ! 标识
+   *      - .passive: & 标识
+   *      - .once: ~ 标识
+   *      ...
+   */
+  new Vue({
+    el: '#root',
+    data() {
+      return {
+        flag: false,
+      };
+    },
+    methods: {
+      onFn() {
+        console.log('测试');
+      },
+    },
+  });
+</script>

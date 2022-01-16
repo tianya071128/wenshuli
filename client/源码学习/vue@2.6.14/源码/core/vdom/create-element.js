@@ -128,9 +128,9 @@ export function _createElement(
       // component 组件
       vnode = createComponent(Ctor, data, context, children, tag);
     } else {
-      // unknown or unlisted namespaced elements
-      // check at runtime because it may get assigned a namespace when its
-      // parent normalizes children
+      // unknown or unlisted namespaced elements 未知或未列出的命名空间元素
+      // check at runtime because it may get assigned a namespace when its 在运行时检查，因为当其
+      // parent normalizes children 父母使孩子正常化
       vnode = new VNode(tag, data, children, undefined, undefined, context);
     }
   } /** 如果 tag 不是字符串的话，直接当成组件生成 */ else {
