@@ -50,7 +50,7 @@
    *      1.2 后续处理数据对象 event 和 domProps 模块时, 会给 DOM 元素添加 input 事件和 value 属性
    *
    *   2. 对于组件类型 Vnode - 并且不是在 vnode.data.directives 中有 model 这个指令, 因为通过下面的已经处理完成
-   *      2.1 在编译期间在  vnode.data 上添加 model, 如下:
+   *      2.1 在编译期间在 vnode.data 上添加 model, 如下:
    *        Vnode {
    *          data: {
    *            model: {
@@ -60,7 +60,7 @@
    *            }
    *          },
    *        }
-   *      2.2 在创建组件类型 Vnode 的 transformModel(core\vdom\create-component.js) 中处理组件绑定的 v-model,具体见方法注解
+   *      2.2 在创建组件类型 Vnode 的 transformModel(core\vdom\create-component.js) 中处理组件绑定的 v-model,具体见方法注解 -- 会根据组件 model 配置绑定 prop 和 listener
    */
 
   /**
