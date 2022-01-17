@@ -144,6 +144,15 @@ const hooksToMerge = Object.keys(componentVNodeHooks);
  *      },
  *      ...
  *    }
+ *  对于函数式组件：
+ *    1. 与普通组件类似的步骤，根据 Ctor 配置项生成子类构造器 -> 处理 options 可能存在的缓存问题 -> 处理 v-model 语法糖 -> 提取 props 为 propsData
+ *    2. 后续就由 createFunctionalComponent 接管函数式组件生成 Vnode 的步骤
+ *        -> 主要见方法注解
+ *        -> 大体上是直接生成函数式组件 模板内容的 Vnode
+ *  对于异步组件：
+ *    1. 对于异步组件，不需要根据 Ctor 配置项生成子类构造器，直接判断 Ctor.cid 为 undefined 来判定为函数式组件，调用 resolveAsyncComponent 方法
+ *    2. 控制权交由 resolveAsyncComponent 方法
+ *        ->
  */
 export function createComponent(
   Ctor: Class<Component> | Function | Object | void, // 组件配置项
@@ -181,14 +190,16 @@ export function createComponent(
   }
 
   // async component 异步组件
+  // 异步组件 - 直接通过 Ctor.cid 判断是否为异步组件
   let asyncFactory;
   if (isUndef(Ctor.cid)) {
-    asyncFactory = Ctor;
+    asyncFactory = Ctor; // 异步工厂，即异步组件注册时的函数，见：https://cn.vuejs.org/v2/guide/components-dynamic-async.html#%E5%BC%82%E6%AD%A5%E7%BB%84%E4%BB%B6
+    // 根据
     Ctor = resolveAsyncComponent(asyncFactory, baseCtor);
     if (Ctor === undefined) {
-      // return a placeholder node for async component, which is rendered
-      // as a comment node but preserves all the raw information for the node.
-      // the information will be used for async server-rendering and hydration.
+      // return a placeholder node for async component, which is rendered 返回呈现的异步组件的占位符节点
+      // as a comment node but preserves all the raw information for the node. 作为注释节点，但保留节点的所有原始信息。
+      // the information will be used for async server-rendering and hydration. 这些信息将用于异步服务器渲染和水合。
       return createAsyncPlaceholder(asyncFactory, data, context, children, tag);
     }
   }
@@ -211,6 +222,7 @@ export function createComponent(
   // extract props 提取 props
   // 遍历组件配置 props 项，从 data(数据对象) 的 props 尝试提取，后尝试从 attrs 中提取
   // 需要注意的是，如果从 attrs 提取出了 prop，那么该 attrs 对应的 prop 需要从 attrs 中删除
+  // 注意：在这里，不会对 prop 进行验证，提取默认值等操作，后续实例化时才会进行操作
   const propsData = extractPropsFromVNodeData(data, Ctor, tag);
 
   // functional component 函数式组件

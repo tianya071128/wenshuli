@@ -125,7 +125,7 @@ export function _createElement(
       (!data || !data.pre) && // 不是 v-pre 元素
       isDef((Ctor = resolveAsset(context.$options, 'components', tag))) // 提取出 tga 对应的注册组件
     ) {
-      // component 组件
+      // component 组件 -- 组件类(包括函数式组件)都会走一步
       vnode = createComponent(Ctor, data, context, children, tag);
     } else {
       // unknown or unlisted namespaced elements 未知或未列出的命名空间元素

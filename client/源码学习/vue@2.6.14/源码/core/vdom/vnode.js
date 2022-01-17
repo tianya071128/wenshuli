@@ -24,8 +24,8 @@ export default class VNode {
   asyncMeta: Object | void;
   isAsyncPlaceholder: boolean;
   ssrContext: Object | void;
-  fnContext: Component | void; // real context vm for functional nodes
-  fnOptions: ?ComponentOptions; // for SSR caching
+  fnContext: Component | void; // real context vm for functional nodes 功能节点的实上下文虚拟机
+  fnOptions: ?ComponentOptions; // for SSR caching 用于SSR缓存
   devtoolsMeta: ?Object; // used to store functional render context for devtools
   fnScopeId: ?string; // functional scope id support 函数式组件的作用域id支持
 

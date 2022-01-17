@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>函数式组件</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+<script>
+  const myComponent2 = {
+    functional: true,
+    render(h, context) {
+      return h(
+        'div',
+        {
+          class: {
+            test123: '123',
+          },
+        },
+        `这是一个嵌套的函数式组件`
+      );
+    },
+  };
+  const myComponent = {
+    functional: true,
+    render(h, context) {
+      return h(
+        'div',
+        {
+          class: {
+            test123: '123',
+          },
+        },
+        [h('div', `这是一个子组件,${context.props.test}`), h('my-component2')]
+      );
+    },
+  };
+  /**
+   * 函数式组件：无状态 (没有响应式数据)，也没有实例 (没有 this 上下文)。为了弥补缺少的实例，提供第二个参数作为上下文。
+   *   组件需要的一切都是通过 context 参数传递，具体见：https://cn.vuejs.org/v2/guide/render-function.html#%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BB%84%E4%BB%B6
+   *   如果函数式组件模板中需要使用组件(或指令、过滤器)的话，这些需要配置在父组件中，而不是函数式组件中
+   */
+
+  /**
+   * 生成函数式组件 Vnode 的过程：
+   *  -> 在 render 函数中，通过 h('my-component', {...})，会调用 createElement(core\vdom\create-element.js) 方法
+   *  -> createElement：会通过 tag(my-component) 查找注册组件的配置项，然后调用 createComponent 方法
+   *  -> createComponent：
+   *      --> 与正常组件一样，也会通过 baseCtor.extend() 方法创建一个基于组件配置的子类构造器
+   *      --> 与正常组件一样，处理 options 可能存在的缓存问题 - 处理 v-model 语法糖 -> 提取 props 为 propsData
+   *      --> 然后调用 createFunctionalComponent 方法生成函数式组件的 Vnode
+   *  -> createFunctionalComponent: 最终生成函数式组件 Vnode
+   *      --> 1. 结合 propsData 和 组件配置项 生成最终使用的 props -- 在 propsData 基础上验证 prop 和提取默认值
+   *      --> 2. 通过 FunctionalRenderContext 生成函数式组件 render 函数中第二个参数 context 上下文
+   *      -->    但是还会重写 render 函数中第一个参数(封装下函数 createElement，用于生成 Vnode)，主要是预定义createElement 方法的第一个参数指向 contextVm 为实例化的父组件(不是函数式组件)
+   *      -->    -> 为什么需要预定义 contextVm 变量，因为在 createElement 方法及之后的调用栈中都需要 context 实例
+   *      -->    -> 我们可以将函数式组件看成一个只关注生成 Vnode 的函数，而组件局部注册、子孙组件的引用都是不存在的(因为不是进行实例化)
+   *      -->    -> 所以如果在函数式组件中也使用了子组件的话，这些组件都是从父组件中的注册组件中提取出来的
+   *      --> 3. 在这里直接调用 options.render 函数，并将上面重写的 _c(render 函数第一个参数) 和 context 对象作为参数，生成函数式组件模板的 Vnode 并返回
+   *      -->    所以我们这里直接生成组件模板的 Vnode，而不需要后续实例化组件
+   */
+
+  /**
+   * 渲染成 DOM 阶段：
+   * 在渲染函数式组件时，会在生成 Vnode 的过程中不是生成一个组件类型 Vnode，而是直接手动调用 options.render 函数，生成模板内容 Vnode，
+   * 后续就是这个 Vnode 的渲染生成，就是将函数式组件模板生成的 Vnode 当做父组件模板的一部分，后续直接操作这个 Vnode 即可
+   */
+
+  /**
+   * 注意点：
+   *   1. 我们可以将函数式组件的模板看成父组件模板的一部分，省去了实例化的过程(即调用 _init 方法的过程)
+   *   2. 在渲染函数式组件模板的过程中触发的依赖收集(可能会依赖传入的 prop 响应数据，插槽的渲染的依赖)，这些依赖都是收集到父组件中的(因为还是在父组件的 Watcher 依赖收集过程)
+   *   3. 如果函数式组件模板中使用了组件、自定义指令、过滤器，都是使用父组件(不是函数式组件的)的注册选项，函数式组件即使配置了 components 也不会进行使用
+   *      why?
+   *        - 因为在 createFunctionalComponent 方法中重写 _c(render 函数第一个参数) 中调用的 createElement(见 core\vdom\create-element.js) 方法
+   *        - 预定义了第一个参数 context 为实例化的父组件(即不是函数式组件的)，这样的话，渲染函数式组件模板的 Vnode 过程的 createElement 的 content 参数为
+   *        - 这样生成的 Vnode.content(当前 vnode 的渲染组件实例) 指向的是父组件实例
+   */
+  new Vue({
+    el: '#root',
+    components: {
+      myComponent,
+      myComponent2,
+    },
+    render(h) {
+      return h('div', [
+        h('div', '这是一个根组件的一个 DIV'),
+        h('my-component', {
+          attrs: {
+            test: '父组件注入的 prop',
+          },
+        }),
+      ]);
+    },
+  });
+</script>

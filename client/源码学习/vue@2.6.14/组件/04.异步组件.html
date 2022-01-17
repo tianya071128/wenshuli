@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>异步组件</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+<script>
+  const myComponent = () => ({
+    // 需要加载的组件 (应该是一个 `Promise` 对象)
+    component: new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          render(h) {
+            return h(
+              'div',
+              {
+                class: {
+                  test123: '123',
+                },
+              },
+              [h('div', `这是一个异步子组件`)]
+            );
+          },
+        });
+      }, 5000);
+    }),
+    loading: {
+      render(h) {
+        return h('div', '异步组件，异步加载中...');
+      },
+    },
+  });
+
+  /**
+   * 生成异步组件 Vnode 的过程：
+   *
+   */
+  new Vue({
+    el: '#root',
+    components: {
+      myComponent,
+    },
+    render(h) {
+      return h('div', [
+        h('div', '这是一个根组件的一个 DIV'),
+        h('my-component'),
+      ]);
+    },
+  });
+</script>

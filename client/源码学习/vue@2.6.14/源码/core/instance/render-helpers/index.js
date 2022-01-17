@@ -12,6 +12,7 @@ import { bindObjectListeners } from './bind-object-listeners';
 import { resolveScopedSlots } from './resolve-scoped-slots';
 import { bindDynamicKeys, prependModifier } from './bind-dynamic-keys';
 
+// render 函数的工具方法 - 一般内置编译器编译模板时生成调用这些方法的 render 函数
 export function installRenderHelpers(target: any) {
   target._o = markOnce;
   target._n = toNumber;
