@@ -300,6 +300,7 @@ export function mountComponent(
 /**
  * 更新子组件 Vnode，当父组件注入子组件的 props、attrs、event、插槽等改变时，就会触发这个方法
  *  1. 插槽：
+ *      -
  *      因为插槽没有进行响应式，所以我们最后会判断插槽是否改变了，改变就手动调用 vm.$forceUpdate() 方法执行子组件的更新
  *  2. attrs：
  *      直接重新赋值 vm.$attrs，因为 $attrs 属性是响应式的，所以 $attrs 属性改变的话子组件就会触发更新(如果子组件依赖了 $attrs 属性的话)

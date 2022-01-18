@@ -151,8 +151,9 @@ const hooksToMerge = Object.keys(componentVNodeHooks);
  *        -> 大体上是直接生成函数式组件 模板内容的 Vnode
  *  对于异步组件：
  *    1. 对于异步组件，不需要根据 Ctor 配置项生成子类构造器，直接判断 Ctor.cid 为 undefined 来判定为函数式组件，调用 resolveAsyncComponent 方法
- *    2. 控制权交由 resolveAsyncComponent 方法
- *        ->
+ *    2. 控制权交由 resolveAsyncComponent 方法 -> 在这个方法中，会根据加载状态返回需要渲染的组件构造器(在方法内部就已经通过 extend() 方法创建子类构造器)
+ *       -> 如果异步组件没有需要渲染的组件的话(即异步组件状态没有配置相应的组件)，此时直接返回一个空的 Vnode
+ *       -> 如果返回了组件构造器，那么后续流程都一样，进行普通组件 Vnode 的生成
  */
 export function createComponent(
   Ctor: Class<Component> | Function | Object | void, // 组件配置项
@@ -194,14 +195,16 @@ export function createComponent(
   let asyncFactory;
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor; // 异步工厂，即异步组件注册时的函数，见：https://cn.vuejs.org/v2/guide/components-dynamic-async.html#%E5%BC%82%E6%AD%A5%E7%BB%84%E4%BB%B6
-    // 根据
+    // 根据异步组件加载状态和配置返回应该展示的组件构造器 - 如果没有的话，则返回 undefined
     Ctor = resolveAsyncComponent(asyncFactory, baseCtor);
     if (Ctor === undefined) {
       // return a placeholder node for async component, which is rendered 返回呈现的异步组件的占位符节点
       // as a comment node but preserves all the raw information for the node. 作为注释节点，但保留节点的所有原始信息。
       // the information will be used for async server-rendering and hydration. 这些信息将用于异步服务器渲染和水合。
+      // 当返回 undefined 时，直接创建一个异步组件空节点占位符
       return createAsyncPlaceholder(asyncFactory, data, context, children, tag);
     }
+    // 如果这个异步组件有渲染的组件(可能是成功或失败或加载中组件)，那么我们就接着往下执行，向渲染正常组件一样进行生成 Vnode 即可
   }
 
   // 数据对象 -- 不存在的话重置为 {}
@@ -275,7 +278,7 @@ export function createComponent(
       tag, // template 中使用的组件名 - 例如： <my-component />
       children, // 子组件，作为插槽
     },
-    asyncFactory // 异步组件相关
+    asyncFactory // 异步组件工厂函数 --
   );
 
   // Weex specific: invoke recycle-list optimized @render function for

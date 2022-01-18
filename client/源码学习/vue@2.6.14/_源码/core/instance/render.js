@@ -26,7 +26,9 @@ export function initRender(vm: Component) {
   const options = vm.$options;
   const parentVnode = (vm.$vnode = options._parentVnode); // the placeholder node in parent tree 父树中的占位符节点
   const renderContext = parentVnode && parentVnode.context;
-  vm.$slots = resolveSlots(options._renderChildren, renderContext);
+  // 先处理作为 options._renderChildren(vnode.componentOptions.children 中提取出来) 插槽内容 - 一般是不带作用域的插槽(在废弃的插槽语法中，这里可能包括具名插槽)
+  vm.$slots = resolveSlots(options._renderChildren, renderContext); // 结构：{ [name: string]: ?Array<VNode> }
+  // 作用域插槽(在新语法中，具名插槽也会被封装成函数)等到实际使用时才会执行
   vm.$scopedSlots = emptyObject;
   // bind the createElement fn to this instance 将createElement fn绑定到此实例
   // so that we get proper render context inside it. 这样我们就可以在其中获得适当的渲染上下文。
@@ -111,6 +113,7 @@ export function renderMixin(Vue: Class<Component>) {
     // 如果存在组件 VNode，那么尝试从组件 VNode 中提取插槽 -- 表示这是一个子组件
     if (_parentVnode) {
       // $scopedSlots - 用来访问作用域插槽。 在 2.6.0 版本下，所有的 $slots 现在都会作为函数暴露在 $scopedSlots 中。
+      // 为什么
       vm.$scopedSlots = normalizeScopedSlots(
         _parentVnode.data.scopedSlots,
         vm.$slots,

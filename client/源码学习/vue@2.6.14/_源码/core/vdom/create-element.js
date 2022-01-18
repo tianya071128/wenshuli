@@ -85,7 +85,7 @@ export function _createElement(
       );
     }
   }
-  // support single function children as default scoped slot
+  // support single function children as default scoped slot 支持单功能子项作为默认作用域插槽
   if (Array.isArray(children) && typeof children[0] === 'function') {
     data = data || {};
     data.scopedSlots = { default: children[0] };

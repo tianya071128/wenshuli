@@ -74,7 +74,7 @@
    *      -> 在 patchVnode(core\vdom\patch.js) 方法中启动组件类型 Vnode 的补丁操作，patchVnode 方法对于组件类型 Vnode 做了如下处理:
    *       --> 需要响应式数据改变(插槽、props、attrs、event): 首先调用 vnode.data.hook.prepatch 钩子，将组件 Vnode 的补丁交给这个钩子处理, 处理插槽、props、attrs、event 等响应式数据后, 根据这些数据是否改变以及子组件是否依赖了这些数据共同决定是否重新渲染子组件
    *       --> 不需要响应式数据改变(class、sylte等等): 执行 class、style、给根元素注册原生事件(使用 .native 修饰符)等模块的 update 钩子 -- 这些模块不需要响应式, 所以只需要对其子组件的根元素进行操作即可
-   *       --> 注意: 子组件是没有子节点(vnode.children), 子节点是做为插槽使用的
+   *       --> 注意: 子组件是没有子节点(vnode.children), 子节点是做为插槽使用的(会被存放在 vnode.componentOptions.children)
    */
 
   /**

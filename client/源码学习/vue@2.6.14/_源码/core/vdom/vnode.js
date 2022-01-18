@@ -17,10 +17,10 @@ export default class VNode {
   raw: boolean; // contains raw HTML? (server only)
   isStatic: boolean; // hoisted static node
   isRootInsert: boolean; // necessary for enter transition check
-  isComment: boolean; // empty comment placeholder? 空注释占位符 - 注释节点
+  isComment: boolean; // empty comment placeholder? 空注释占位符 - 空节点或注释节点(不会显示在页面内容)
   isCloned: boolean; // is a cloned node?
   isOnce: boolean; // is a v-once node?
-  asyncFactory: Function | void; // async component factory function
+  asyncFactory: Function | void; // async component factory function 异步组件工厂函数
   asyncMeta: Object | void;
   isAsyncPlaceholder: boolean;
   ssrContext: Object | void;
@@ -60,11 +60,12 @@ export default class VNode {
     this.raw = false;
     this.isStatic = false; // 静态节点标志
     this.isRootInsert = true;
-    this.isComment = false; // 空注释占位符 - 注释节点
+    this.isComment = false; // 空节点或注释节点(不会显示在页面内容)
     this.isCloned = false;
     this.isOnce = false;
-    this.asyncFactory = asyncFactory;
-    this.asyncMeta = undefined;
+    // 异步组件工厂函数(即异步组件配置项) - 注意这个属性可以用来标识是否为异步组件，即使这个异步组件当前显示是一个空 Vnode(当没有配置相应状态组件时，渲染成一个空 Vnode)
+    this.asyncFactory = asyncFactory; //  -  - 也可以用来标识是异步组件 Vnode - 就算是异步组件没有加载
+    this.asyncMeta = undefined; // 使用异步组件时的数据对象({ data, context, children, tag }) - 在 SSR 上使用
     this.isAsyncPlaceholder = false;
   }
 
@@ -75,11 +76,11 @@ export default class VNode {
   }
 }
 
-// 生成一个空的文本 VNode
+// 生成一个空的 VNode -- 可能是注释节点或者因为没有渲染内容而展示一个空 Vnode 用于标识
 export const createEmptyVNode = (text: string = '') => {
   const node = new VNode();
   node.text = text;
-  node.isComment = true;
+  node.isComment = true; // 标识为空节点
   return node;
 };
 

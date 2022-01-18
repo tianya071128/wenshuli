@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>插槽</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <my-component>
+        <div slot="default">默认插槽1</div>
+        <template v-slot:jumingSlot>
+          <div>
+            具名插槽
+          </div>
+        </template>
+        <template v-slot:scopeSlot="slotProps">
+          <div>{{ slotProps?.test }}</div>
+        </template>
+        <div>默认插槽2</div>
+      </my-component>
+    </div>
+  </body>
+</html>
+<script>
+  const myComponent = {
+    render(h) {
+      return h('div', [h('div', '这是一个具有插槽的子组件'), h('slot')]);
+    },
+  };
+
+  /**
+   * 插槽内容的 Vnode：
+   *
+   * 一般而言，不管是内置编译器编译的 render 函数或是自定义的 render 函数，最后生成的 Vnode 大体是如下的：
+   *
+   *    1. 封装为存放在 vnode.data.scopedSlots 中，格式为 { name: props => VNode | Array<VNode> }，例如：
+   *        vnode.data.scopedSlots {
+   *          scopeslot: f(slotProps), // 作用域插槽
+   *          juminslot: f (), // 具名插槽
+   *        }
+   *        ====> 这种一般作为作用域插槽或具名插槽采用这种格式，
+   *
+   *    2. 作为组件的子节点，存放在 vnode.componentOptions.children 中，格式为：Array<VNode>
+   *        vnode.componentOptions {
+   *          children: [Vnode, Vnode, Vnode...]
+   *        }
+   *        ====> 这种直接生成 Vnode 其实并不合适，因为生成的插槽 Vnode 不一定会使用，其实这种也可以封装为函数，似乎在 vue3 中也被正式废弃
+   *        ====> 这种一般是不带作用域的插槽(在废弃的插槽语法中，这里可能包括具名插槽)，但是因为是在父组件编译成 Vnode 的，生成 Vnode 中的依赖都会被收集到父组件 renderWatcher 中
+   *              这样的话，这些依赖变更了，只能由父组件手动调用 $forceUpdate() 触发子组件更新
+   */
+
+  /**
+   * 插槽的渲染：插槽渲染是在子组件渲染过程中的，但是插槽的编译作用域是绑定于父组件作用域的
+   *
+   *  1. 当处理完插槽内容的 Vnode 后(如果是函数，就在子组件使用插槽时才会生成)，作为组件类型 Vnode 的一部分，如上述放在 vnode.data.scopedSlots、vnode.componentOptions.children 中
+   *  2. 进入到子组件的渲染过程：
+   *      2.1 对于函数式组件，因为不会调用 _init 进行初始化
+   *      2.2 对于其他类型组件，调用 _init 方法进行组件初始化过程中
+   *  3. 在 initRender 方法中，会进行作为子节点的(vnode.componentOptions.children)插槽进行处理，使用 resolveSlots 方法从 children 数组中提取出插槽
+   *      例如：vm.$slots = resolveSlots(options._renderChildren, renderContext); // { [name: string]: ?Array<VNode> }
+   *  4.
+   */
+  new Vue({
+    el: '#root',
+    components: {
+      myComponent,
+    },
+  });
+</script>

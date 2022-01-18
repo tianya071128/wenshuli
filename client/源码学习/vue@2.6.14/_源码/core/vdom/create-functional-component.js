@@ -70,6 +70,7 @@ export function FunctionalRenderContext(
   this.listeners = data.on || emptyObject; // (2.3.0+) 一个包含了所有父组件为当前组件注册的事件监听器的对象。这是 data.on 的一个别名。
   this.injections = resolveInject(options.inject, parent); // (2.3.0+) 如果使用了 inject 选项，则该对象包含了应当被注入的 property。
   // 一个函数，返回了包含所有插槽的对象
+  // 因为函数式组件不会调用 _init 进行初始化，我们就将对插槽内容在这里就进行处理
   this.slots = () => {
     if (!this.$slots) {
       normalizeScopedSlots(
@@ -171,7 +172,7 @@ export function createFunctionalComponent(
   const renderContext = new FunctionalRenderContext(
     data, // 数据对象
     props, // props
-    children, // 子节点(插槽)
+    children, // 子节点(默认插槽 - 不使用作用域默认插槽)
     contextVm, //
     Ctor // 子类构造器
   );

@@ -33,16 +33,21 @@ export const emptyNode = new VNode('', {}, []);
 
 const hooks = ['create', 'activate', 'update', 'remove', 'destroy'];
 
-// 比较 a 和 b vnode 表示是否相同，如果大致相同的话，我们就可以对现有 DOM 进行修订即可，而不需要进行消耗较大的增删节点操作
+/**
+ * 这个方法比较关键，在这里判断 a 和 b，即新旧 Vnode 是否可以复用，可以复用直接对其进行补丁即可，否则就涉及到旧 Vnode 销毁，新 Vnode 创建
+ * 主要是对异步组件的比较有些麻烦：在 SSR 上异步组件需要特殊判断，暂不知道原因
+ */
 function sameVnode(a, b) {
   return (
     a.key === b.key && // key 一定需要相同
-    a.asyncFactory === b.asyncFactory && // 。。。
+    a.asyncFactory === b.asyncFactory && // 新旧 Vnode 如果是异步组件，那么新旧 Vnode 就需要是同一异步组件
+    // 这一部分
     ((a.tag === b.tag && // tag 相同
-      a.isComment === b.isComment && // isComment 空注释占位符
-      isDef(a.data) === isDef(b.data) && // 两个的 vnode 数据对象(data)都不为 undefined(或null)
-      sameInputType(a, b)) || // a,b 如果是 input 元素并且需要 type 相同或相似
-      (isTrue(a.isAsyncPlaceholder) && isUndef(b.asyncFactory.error))) // 。。。
+    a.isComment === b.isComment && // 新旧 Vnode 要不都是空节点或注释节点，要不都不是
+    isDef(a.data) === isDef(b.data) && // 新旧 Vnode 的 data 要不都不存在，要不都存在 -- 这一点待思考一下
+      sameInputType(a, b)) || // 新旧 Vnode 如果是 input 元素并且需要 type 相同或相似
+      (isTrue(a.isAsyncPlaceholder) && // isAsyncPlaceholder：这个参数似乎只有在 SSR 上才会存在 -- 旧的 Vnode 是一个异步组件空的 Vnode(此时表示为异步组件没有渲染组件状态) && 新的异步组件加载状态不为 error
+        isUndef(b.asyncFactory.error)))
   );
 }
 
@@ -211,9 +216,9 @@ export function createPatchFunction(backend) {
         if (isUnknownElement(vnode, creatingElmInVPre)) {
           warn(
             'Unknown custom element: <' + // 未知的自定义元素：<
-              tag +
-              '> - did you ' + // >-是吗
-              'register the component correctly? For recursive components, ' + // 正确注册组件？对于递归组件
+            tag +
+            '> - did you ' + // >-是吗
+            'register the component correctly? For recursive components, ' + // 正确注册组件？对于递归组件
               'make sure to provide the "name" option.', // 确保提供“名称”选项
             vnode.context
           );
@@ -399,7 +404,8 @@ export function createPatchFunction(backend) {
     }
   }
 
-  // 是否为可修补的
+  // 检测 vnode 的 tag 是否存在 -- 如果 tag 存在，表示元素类型 Vnode，添加事件、class、style 等才有意义
+  // 对于组件类型 Vnode，我们需要递归找到到组件模板的根元素(如果组件模板也是一个组件，就需要递归查找)
   function isPatchable(vnode) {
     // 如果这个 vnode 是一个表示组件的 vnode，则 vnode.componentInstance
     while (vnode.componentInstance) {
@@ -806,7 +812,7 @@ export function createPatchFunction(backend) {
     // 组件渲染成的 elm 使用旧的 -- 在调用这个方法之前就已经比较新旧 vnode 生成的 DOM 是可以复用的，所以就会 vnode.elm 的基础上进行补丁
     const elm = (vnode.elm = oldVnode.elm);
 
-    // 似乎是异步组件的概念。。。
+    // 不简单的是异步组件，看了一圈，只有在 SSR 上 isAsyncPlaceholder 才为 true
     if (isTrue(oldVnode.isAsyncPlaceholder)) {
       if (isDef(vnode.asyncFactory.resolved)) {
         hydrate(oldVnode.elm, vnode, insertedVnodeQueue);
@@ -1073,7 +1079,7 @@ export function createPatchFunction(backend) {
     let isInitialPatch = false;
     const insertedVnodeQueue = [];
 
-    // 如果旧的 Vnode 不能存在，那么可能是：
+    // 如果旧的 Vnode 不存在，那么可能是：
     //  1. 子组件初始渲染
     //  2. 根组件初始化没有提供挂载点仅生成一个 DOM 使用，例如：new Vue({...}).$mount()
     if (isUndef(oldVnode)) {
@@ -1088,7 +1094,7 @@ export function createPatchFunction(backend) {
       // 更新阶段
       if (
         !isRealElement && // 是否为真实的 DOM 节点
-        sameVnode(oldVnode, vnode) // 并且 oldVnode、vnode 大致相同，走补丁操作
+        sameVnode(oldVnode, vnode) // 并且 oldVnode、vnode 可以复用，走补丁操作
       ) {
         // patch existing root node 修补现有根节点
         patchVnode(
@@ -1100,7 +1106,7 @@ export function createPatchFunction(backend) {
           removeOnly
         );
       } else {
-        // 如果是真实的 DOM 节点
+        // 如果旧 Vnode 参数传入的是真实的 DOM 节点
         if (isRealElement) {
           // mounting to a real element 安装到真实元素
           // check if this is server-rendered content and if we can perform 检查这是否是服务器呈现的内容，以及我们是否可以执行
@@ -1108,7 +1114,7 @@ export function createPatchFunction(backend) {
           // SSR 服务端相关
           if (oldVnode.nodeType === 1 && oldVnode.hasAttribute(SSR_ATTR)) {
             oldVnode.removeAttribute(SSR_ATTR);
-            hydrating = true;
+            hydrating = true; // 这个参数似乎在 SSR 才会具有存在意义吧
           }
           // ？？？
           if (isTrue(hydrating)) {
@@ -1118,9 +1124,9 @@ export function createPatchFunction(backend) {
             } else if (process.env.NODE_ENV !== 'production') {
               warn(
                 'The client-side rendered virtual DOM tree is not matching ' + // 客户端呈现的虚拟DOM树不匹配
-                  'server-rendered content. This is likely caused by incorrect ' + // 服务器呈现的内容。这可能是由不正确的
-                  'HTML markup, for example nesting block-level elements inside ' + // HTML标记，例如内部嵌套块级元素
-                  '<p>, or missing <tbody>. Bailing hydration and performing ' + // <p>，或缺少<tbody>。白令水化与表演
+                'server-rendered content. This is likely caused by incorrect ' + // 服务器呈现的内容。这可能是由不正确的
+                'HTML markup, for example nesting block-level elements inside ' + // HTML标记，例如内部嵌套块级元素
+                '<p>, or missing <tbody>. Bailing hydration and performing ' + // <p>，或缺少<tbody>。白令水化与表演
                   'full client-side render.' // 完整客户端渲染。
               );
             }
@@ -1148,6 +1154,7 @@ export function createPatchFunction(backend) {
         );
 
         // update parent placeholder node element, recursively 递归更新父占位符节点元素
+        // 待续？？？
         if (isDef(vnode.parent)) {
           let ancestor = vnode.parent;
           const patchable = isPatchable(vnode);

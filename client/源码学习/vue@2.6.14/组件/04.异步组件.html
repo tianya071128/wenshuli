@@ -12,35 +12,97 @@
   </body>
 </html>
 <script>
+  const asynCom = {
+    data() {
+      return {
+        flag: false,
+      };
+    },
+    render(h) {
+      const { flag } = this;
+      return h(
+        'div',
+        {
+          class: {
+            test123: '123',
+          },
+        },
+        [
+          h(
+            'div',
+            `这是一个异步子组件，当前状态为${
+              !myComponent.resolved ? '加载中...' : '加载成功'
+            }`
+          ),
+        ]
+      );
+    },
+  };
   const myComponent = () => ({
     // 需要加载的组件 (应该是一个 `Promise` 对象)
-    component: new Promise((resolve) => {
+    component: new Promise((resolve, reject) => {
       setTimeout(() => {
-        resolve({
-          render(h) {
-            return h(
-              'div',
-              {
-                class: {
-                  test123: '123',
-                },
-              },
-              [h('div', `这是一个异步子组件`)]
-            );
-          },
-        });
+        resolve(asynCom);
+        // reject('测试一下失败态');
       }, 5000);
     }),
-    loading: {
-      render(h) {
-        return h('div', '异步组件，异步加载中...');
-      },
-    },
+    loading: asynCom,
   });
+  /**
+   * 异步组件注册的三种方式：
+   *
+   * 1. function (resolve, reject) { resolve(成功时组件) } // 这里并没有使用 reject 传递一个失败组件(而是传入一个失败原因)，只关注了成功态
+   * 2. function () { return import('./my-async-component') } // 返回一个 Promise，相当于只存在成功时加载组件
+   * 3. function () { // 这种提供的选项更为丰富
+   *      return {
+   *        // 需要加载的组件 (应该是一个 `Promise` 对象)
+   *        component: import('./MyComponent.vue'),
+   *        // 异步组件加载时使用的组件
+   *        loading: LoadingComponent,
+   *        // 加载失败时使用的组件
+   *        error: ErrorComponent,
+   *        // 展示加载时组件的延时时间。默认值是 200 (毫秒)
+   *        delay: 200,
+   *        // 如果提供了超时时间且组件加载也超时了，
+   *        // 则使用加载失败时使用的组件。默认值是：`Infinity`
+   *        timeout: 3000
+   *      }
+   *    }
+   */
 
   /**
    * 生成异步组件 Vnode 的过程：
    *
+   *  1. 对于异步组件，不需要根据 Ctor 配置项生成子类构造器，直接判断 Ctor.cid 为 undefined 来判定为函数式组件，调用 resolveAsyncComponent 方法
+   *  2. 控制权交由 resolveAsyncComponent 方法 -> 在这个方法中，会根据加载状态返回需要渲染的组件构造器(在方法内部就已经通过 extend() 方法创建子类构造器)
+   *      -> 根据异步组件注册方式可知，所以我们大致有以下四种状态，并根据不同状态返回不同的构造器；
+   *        1. 成功状态：返回根据成功态组件配置项生成的构造器
+   *        2. 失败状态：如果配置了失败时展示组件，则返回根据失败态组件配置项生成的构造器
+   *        3. 正在加载状态：如果配置了加载时展示组件，则返回根据加载态组件配置项生成的构造器
+   *        4. 空状态(因为可能配置了展示加载时组件的延时时间)：此时返回一个 undefined
+   *  3. 根据 resolveAsyncComponent 方法返回值进行判断
+   *      1. 如果异步组件没有需要渲染的组件的话(即异步组件状态没有配置相应的组件)，此时直接返回一个空的 Vnode
+   *      2. 如果返回了组件构造器，那么后续流程都一样，进行普通组件 Vnode 的生成
+   *  4. 这样就生成了异步组件的 Vnode，后续针对这个 Vnode 进行渲染即可 ==> 这个 Vnode 具有特殊标识 asyncFactory 标识为异步组件 Vnode
+   */
+
+  /**
+   * 异步组件状态变更阶段：
+   *  1. 在 resolveAsyncComponent 方法中，异步组件初次加载时，会设置多个回调：
+   *     -> 设置成功回调，当异步组件加载成功时，调用这个回调将其 factory.resolved 设置成功态组件构造器
+   *     -> 设置失败回调，当异步组件加载失败时，调用这个回调
+   *     -> 如果配置了加载时使用的组件
+   *         ==> 如果设置了展示加载时组件的延时时间，那么就设置一个定时器，当延迟时间到了而异步组件还是没有结果的话，我们就将 factory.loading 设置为 true
+   *         ==> 如果没有设置延迟时间，那么就直接将 factory.loading 设置为 true
+   *     -> 如果配置了超时时间，设置定时器，当超时时间到了但组件还没有加载完毕，那么就直接调用 reject 回调并传入失败原因
+   *  2. 在这些状态之间出现变化时，就会遍历使用异步组件的父组件集合，手动调用 $forceUpdate() 让父组件重新渲染，这样就会触发父组件重新渲染 Vnode，进而带动异步组件重新生成 Vnode
+   *     为什么使用异步组件的父组件是一个集合？ ==> 因为同一异步可以有多个地方使用，所以是一个集合
+   */
+
+  /**
+   * 异步组件渲染、更新、销毁阶段：
+   *
+   *   在生成 Vnode 的过程中，就会生成异步组件相应状态对应的 Vnode，后续渲染、更新、销毁都是操作这个 Vnode ==> 但是需要注意服务端渲染(SSR)有所差异
    */
   new Vue({
     el: '#root',

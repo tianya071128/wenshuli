@@ -26,6 +26,7 @@ function ensureCtor(comp: any, base) {
   return isObject(comp) ? base.extend(comp) : comp;
 }
 
+// 创建一个异步组件空节点占位符
 export function createAsyncPlaceholder(
   factory: Function,
   data: ?VNodeData,
@@ -33,9 +34,9 @@ export function createAsyncPlaceholder(
   children: ?Array<VNode>,
   tag: ?string
 ): VNode {
-  const node = createEmptyVNode();
-  node.asyncFactory = factory;
-  node.asyncMeta = { data, context, children, tag };
+  const node = createEmptyVNode(); // 空节点
+  node.asyncFactory = factory; // 引用异步组件的配置项，一方面是用来标识这是个异步组件
+  node.asyncMeta = { data, context, children, tag }; // 缓存下使用异步组件的数据对象信息
   return node;
 }
 
