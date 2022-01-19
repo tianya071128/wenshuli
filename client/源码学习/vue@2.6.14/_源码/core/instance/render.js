@@ -113,9 +113,28 @@ export function renderMixin(Vue: Class<Component>) {
     // 如果存在组件 VNode，那么尝试从组件 VNode 中提取插槽 -- 表示这是一个子组件
     if (_parentVnode) {
       // $scopedSlots - 用来访问作用域插槽。 在 2.6.0 版本下，所有的 $slots 现在都会作为函数暴露在 $scopedSlots 中。
-      // 为什么
+      /**
+       * 处理作用域插槽：
+       *  1. 先根据各个缓存属性来判断是否可以从上一次提取结果获取
+       *  2. 遍历 slots(作用域插槽集合，一般对应 vnode.data.scopedSlots)，将作用域插槽函数进一步封装
+       *     - 如果是使用 v-slot 新语法的话，那么就在　normalSlots(一般对应 vm.$slots) 参数上添加这个插槽 key - 通过复杂数据对象引用改变入参
+       *  3. 遍历已经提取出来的插槽(对应 vm.$slots)，如果不存在作用域插槽集合(对应 vm.$scopedSlots)中，那么就封装一下添加在作用域插槽集合
+       *     - 在 2.6.0 中，所有的插槽现在都会作为函数暴露在 $scopedSlots 中。
+       *
+       * 总而言之，这里可能会将插槽处理为如下结构：
+       *  slots(对应 vm.$scopedSlots) { // 所有插槽都会被封装成函数
+       *    default: f (),
+       *    jumingslot: f (),
+       *    scopeslot: f ()
+       *  }
+       *
+       *  noramlSlots(对应 vm.$slots) { // 注意这里已经将具名插槽(不包含作用域插槽)已经提取出来了
+       *    default: Array<VNode>,
+       *    jumingslot: Array<VNode>
+       *  }
+       */
       vm.$scopedSlots = normalizeScopedSlots(
-        _parentVnode.data.scopedSlots,
+        _parentVnode.data.scopedSlots, // 随时从组件类型 Vnode.data 中取出最新的，因为也可以更新前后不一致
         vm.$slots,
         vm.$scopedSlots
       );

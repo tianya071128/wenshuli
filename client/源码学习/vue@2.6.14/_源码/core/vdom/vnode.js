@@ -11,7 +11,7 @@ export default class VNode {
   key: string | number | void;
   componentOptions: VNodeComponentOptions | void;
   componentInstance: Component | void; // component instance
-  parent: VNode | void; // component placeholder node
+  parent: VNode | void; // component placeholder node 组件占位符节点
 
   // strictly internal
   raw: boolean; // contains raw HTML? (server only)
@@ -54,9 +54,9 @@ export default class VNode {
     this.fnOptions = undefined;
     this.fnScopeId = undefined; // 函数式组件的作用域id支持
     this.key = data && data.key;
-    this.componentOptions = componentOptions;
-    this.componentInstance = undefined;
-    this.parent = undefined;
+    this.componentOptions = componentOptions; // 组件类型 Vnode 的配置项
+    this.componentInstance = undefined; // 组件类型 Vnode 的实例
+    this.parent = undefined; // 当前 vnode 如果是一个组件的根 Vnode，那么引用的是组件类型 Vnode
     this.raw = false;
     this.isStatic = false; // 静态节点标志
     this.isRootInsert = true;

@@ -163,7 +163,7 @@ export function initInternalComponent(
   const vnodeComponentOptions = parentVnode.componentOptions;
   opts.propsData = vnodeComponentOptions.propsData; // 父组件注入的 props
   opts._parentListeners = vnodeComponentOptions.listeners; // 父组件侦听的事件
-  opts._renderChildren = vnodeComponentOptions.children; // 插槽
+  opts._renderChildren = vnodeComponentOptions.children; // 作为子节点插槽(静态插槽)
   opts._componentTag = vnodeComponentOptions.tag; // tag 标签
 
   // 。。。

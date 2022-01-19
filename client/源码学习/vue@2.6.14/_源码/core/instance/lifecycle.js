@@ -300,8 +300,8 @@ export function mountComponent(
 /**
  * 更新子组件 Vnode，当父组件注入子组件的 props、attrs、event、插槽等改变时，就会触发这个方法
  *  1. 插槽：
- *      -
  *      因为插槽没有进行响应式，所以我们最后会判断插槽是否改变了，改变就手动调用 vm.$forceUpdate() 方法执行子组件的更新
+ *      - 应该是部分插槽不会进行响应式的，详见 06.插槽.html 注解以及代码具体注释
  *  2. attrs：
  *      直接重新赋值 vm.$attrs，因为 $attrs 属性是响应式的，所以 $attrs 属性改变的话子组件就会触发更新(如果子组件依赖了 $attrs 属性的话)
  *  3. listeners:
@@ -317,7 +317,7 @@ export function updateChildComponent(
   propsData: ?Object, // 更新注入的 props
   listeners: ?Object, // 更新注入的 listeners 事件
   parentVnode: MountedComponentVNode, // 新的组件类型 Vnode
-  renderChildren: ?Array<VNode> // 。。
+  renderChildren: ?Array<VNode> // 作为子节点的插槽(不包含作用域插槽)
 ) {
   if (process.env.NODE_ENV !== 'production') {
     isUpdatingChildComponent = true; // 标识正在更新子组件
@@ -329,22 +329,29 @@ export function updateChildComponent(
   // check if there are dynamic scopedSlots (hand-written or compiled but with 检查是否存在动态scopedSlots（手写或编译，但使用
   // dynamic slot names). Static scoped slots compiled from template has the 动态插槽名称）。从模板编译的静态作用域插槽具有
   // "$stable" marker. “$stable”标记
-  const newScopedSlots = parentVnode.data.scopedSlots;
-  const oldScopedSlots = vm.$scopedSlots;
+  const newScopedSlots = parentVnode.data.scopedSlots; // 新生成的作用域插槽(在 2.6.0 中，具名插槽也会生成函数式插槽)
+  const oldScopedSlots = vm.$scopedSlots; // 旧的 $scopedSlots -- 在 2.6.0 中，所有的 $slots 现在都会作为函数暴露在 $scopedSlots 中。
+  // $stable 标识：标识着这个作用域插槽集合是否为稳定的，即不是新增或删除插槽
+  // 例如: <template v-if="defaultSlot" v-slot:jumingslot><div>{{ jumingSlot }}</div></template>
+  // 这种具有 v-if 判断的，有可能前后不一样
+  // 简单的讲，这里还要判断一下作用域插槽是否可能是动态的，如果是的话，我们也需要让子组件重新渲染
   const hasDynamicScopedSlot = !!(
-    (newScopedSlots && !newScopedSlots.$stable) ||
-    (oldScopedSlots !== emptyObject && !oldScopedSlots.$stable) ||
-    (newScopedSlots && vm.$scopedSlots.$key !== newScopedSlots.$key) ||
+    (newScopedSlots && !newScopedSlots.$stable) || // 如果新的作用域插槽是动态的
+    (oldScopedSlots !== emptyObject && !oldScopedSlots.$stable) || // 或者旧的作用域插槽是动态的
+    (newScopedSlots && vm.$scopedSlots.$key !== newScopedSlots.$key) || // 或者。。。
     (!newScopedSlots && vm.$scopedSlots.$key)
   );
 
   // Any static slot children from the parent may have changed during parent's 来自父级的任何静态插槽子级在父级的
   // update. Dynamic scoped slots may also have changed. In such cases, a forced 使现代化动态作用域插槽也可能已更改。在这种情况下，必须采取强制措施
   // update is necessary to ensure correctness. 必须进行更新以确保正确性
+  // 只要新旧存在静态插槽或者作用域插槽是动态的，那么新需要强制子组件进行渲染
   const needsForceUpdate = !!(
-    renderChildren || // has new static slots
-    vm.$options._renderChildren || // has old static slots
-    hasDynamicScopedSlot
+    (
+      renderChildren || // has new static slots 有新的静态插槽
+      vm.$options._renderChildren || // has old static slots 有旧的静态插槽
+      hasDynamicScopedSlot
+    ) // 判断作用域插槽是否为动态的
   );
 
   // 让 vm.$options._parentVnode、vm.$vnode 这两个引用至新的组件类型 Vnode
@@ -403,6 +410,8 @@ export function updateChildComponent(
 
   // resolve slots + force update if has children 解决插槽+强制更新（如果有子项）
   if (needsForceUpdate) {
+    // 只要重新生成 $slots，因为 vm.$scopedSlots 中的依赖属性都是被收集到子组件中
+    // 在内部子组件的 _render 渲染过程中，会重新生成 vm.$scopedSlots
     vm.$slots = resolveSlots(renderChildren, parentVnode.context);
     vm.$forceUpdate();
   }

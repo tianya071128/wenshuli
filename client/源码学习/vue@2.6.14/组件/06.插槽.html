@@ -10,10 +10,10 @@
   <body>
     <div id="root">
       <my-component>
-        <div slot="default">默认插槽1</div>
-        <template v-slot:jumingSlot>
+        <div slot="default">{{ defaultSlot }}</div>
+        <template v-if="defaultSlot" v-slot:jumingslot>
           <div>
-            具名插槽
+            {{ jumingSlot }}
           </div>
         </template>
         <template v-slot:scopeSlot="slotProps">
@@ -22,12 +22,46 @@
         <div>默认插槽2</div>
       </my-component>
     </div>
+    <script type="text/x-template" id="hello-world-template">
+      <div>
+        <!-- 默认插槽 -->
+        <slot></slot>
+        <!-- 具名插槽 -->
+        <slot name="jumingslot"></slot>
+        <!-- 作用域插槽 -->
+        <!-- <slot name="scopeslot" test="123"></slot> -->
+        <!-- 使用后备内容的插槽 -->
+        <slot name="no">使用后备内容的插槽</slot>
+
+        <!-- 将该插槽作为另一个子组件的插槽 -->
+        <my-component2>
+          <!-- 并且还可以切换一下名字 -->
+          <!-- 如下会被生成：_c('my-component2', [_t("jumingslot", null, {"slot": "zhuanfa"})], 2)] -->
+          <!-- <slot name="jumingslot" slot="zhuanfa"></slot> -->
+          <template v-slot:scopeSlot="slotProps">
+            <slot name="scopeslot" :test="slotProps.test"></slot>
+          </template>
+        </my-component2>
+      </div>
+    </script>
   </body>
 </html>
 <script>
-  const myComponent = {
+  const myComponent2 = {
     render(h) {
-      return h('div', [h('div', '这是一个具有插槽的子组件'), h('slot')]);
+      return h('div', [
+        '这个转发了一个插槽的嵌套子组件',
+        this.$scopedSlots.zhuanfa?.(),
+        this.$scopedSlots.scopeSlot?.({
+          test: '转发一下测试',
+        }),
+      ]);
+    },
+  };
+  const myComponent = {
+    template: '#hello-world-template',
+    components: {
+      myComponent2,
     },
   };
 
@@ -53,7 +87,7 @@
    */
 
   /**
-   * 插槽的渲染：插槽渲染是在子组件渲染过程中的，但是插槽的编译作用域是绑定于父组件作用域的
+   * 插槽的渲染1：插槽渲染是在子组件渲染过程中的，但是插槽的编译作用域是绑定于父组件作用域的
    *
    *  1. 当处理完插槽内容的 Vnode 后(如果是函数，就在子组件使用插槽时才会生成)，作为组件类型 Vnode 的一部分，如上述放在 vnode.data.scopedSlots、vnode.componentOptions.children 中
    *  2. 进入到子组件的渲染过程：
@@ -61,12 +95,74 @@
    *      2.2 对于其他类型组件，调用 _init 方法进行组件初始化过程中
    *  3. 在 initRender 方法中，会进行作为子节点的(vnode.componentOptions.children)插槽进行处理，使用 resolveSlots 方法从 children 数组中提取出插槽
    *      例如：vm.$slots = resolveSlots(options._renderChildren, renderContext); // { [name: string]: ?Array<VNode> }
-   *  4.
+   *  4. 在 Vue.prototype._render 生成 Vnode 的方法中，首先会进行作用域插槽的提取
+   *       --> 1. 先根据各个缓存属性来判断是否可以从上一次提取结果获取
+   *       --> 2. 遍历 slots(作用域插槽集合，一般对应 vnode.data.scopedSlots)，将作用域插槽函数进一步封装
+   *       -->       - 如果是使用 v-slot 新语法的话，那么就在　normalSlots(一般对应 vm.$slots) 参数上添加这个插槽 key - 通过复杂数据对象引用改变入参
+   *       --> 3. 遍历已经提取出来的插槽(对应 vm.$slots)，如果不存在作用域插槽集合(对应 vm.$scopedSlots)中，那么就封装一下添加在作用域插槽集合
+   *       -->       - 在 2.6.0 中，所有的插槽现在都会作为函数暴露在 $scopedSlots 中。
+   *       -->
+   *       --> 总而言之，这里可能会将插槽处理为如下结构：
+   *       -->   slots(对应 vm.$scopedSlots) { // 所有插槽都会被封装成函数
+   *       -->     default: f (),
+   *       -->     jumingslot: f (),
+   *       -->     scopeslot: f ()
+   *       -->   }
+   *       -->
+   *       -->   noramlSlots(对应 vm.$slots) { // 注意这里已经将具名插槽(不包含作用域插槽)已经提取出来了
+   *       -->     default: Array<VNode>,
+   *       -->     jumingslot: Array<VNode>
+   *       -->   }
    */
+
+  /**
+   * 插槽的渲染2：上面已经将插槽提取出来在 vm.$scopedSlots、vm.$slots 中，在 render 函数调用生成 Vnode 的过程中，使用这些插槽
+   *
+   * 1. 自定义 render 函数：使用插槽见 https://cn.vuejs.org/v2/guide/render-function.html#%E6%8F%92%E6%A7%BD
+   *    例如：this.$scopedSlots.default({ text: this.message }) -- 这样使用默认插槽，传入参数进去供插槽使用
+   *
+   * 2. 在编译器生成的 render 函数中：
+   *    2.1 默认插槽：<slot></slot>
+   *        ==> _t("default") -- _t 渲染工具方法在 renderSlot(core\instance\render-helpers\render-slot.js) 中，就会提取出真实 Vnode
+   *    2.2 具体插槽：<slot name="jumingslot"></slot>
+   *        ==> _t("jumingslot")
+   *    2.3 作用域插槽：<slot name="scopeslot" test="123"></slot>
+   *        ==> _t("scopeslot", null, {"test": "123"})
+   *    2.4 提供了后备内容的插槽：<slot name="no">使用后备内容的插槽</slot>
+   *        ==> _v("使用后备内容的插槽")
+   * 3. 然后根据生成的 Vnode 进行后续正常渲染
+   */
+
+  /**
+   * 插槽的更新：
+   *
+   *    1. 对于不带作用域默认插槽(在废弃的插槽语法中，这里可能包括具名插槽)而言，因为是在父组件渲染中就会被生成 Vnode，作为组件的子节点存放在 vnode.componentOptions.children
+   *       在渲染这些 Vnode 的过程中，依赖的属性都会被收集到父组件的 renderWatcher 中，所以当这些依赖改变，触发的是父组件的 renderWatcher，重新渲染父组件，
+   *       当对比新旧组件类型 Vnode(父组件中使用的子组件 Vnode)时，触发 updateChildComponent 方法检测插槽是否发生改变从而判读是否手动触发子组件更新
+   *
+   *       ===> 还需要注意一点的是，只要是父组件进行渲染，就会进行子组件类型 Vndoe 的对比，从而触发 updateChildComponent 方法进行比对
+   *            此时如果存在子节点插槽的话(vnode.componentOptions.children)，就会强制子组件重新渲染
+   *
+   *    2. 对于其他插槽(作为组件类型 vnode.data.scopedSlots)，在父组件渲染时会封装成函数而不进行调用，只有在子组件使用到这个插槽时才会进行插槽函数调用，
+   *       这样的话，在生成这些插槽 Vnode 的时候，正在观察的是子组件的 renderWatcher，所以依赖属性都会被收集到子组件的 renderWatcher 中
+   *       从而，在依赖属性变更时，直接重新渲染子组件即可
+   *
+   *       ===> 注意注意：但是在父组件重渲染期间，在 patchVnode 这个子组件 Vnode 时，会对作用域插槽也要做动态检测(在 updateChildComponent 方法进行比对)
+   *                     因为不能保证这个作用域插槽(vnode.data.scopedSlots)没有进行新增和删除插槽
+   *
+   *    3. 注意：如何重新渲染一个组件，关键看的是这个组件依赖属性是否发生改变，但不是关心这个依赖属性来源于哪里，只要这个依赖属性是具有响应式的
+   */
+
   new Vue({
     el: '#root',
     components: {
       myComponent,
+    },
+    data() {
+      return {
+        defaultSlot: '默认插槽',
+        jumingSlot: '具名插槽',
+      };
     },
   });
 </script>

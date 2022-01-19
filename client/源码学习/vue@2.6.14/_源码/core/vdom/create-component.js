@@ -66,7 +66,7 @@ const componentVNodeHooks = {
       options.propsData, // updated props 更新注入的 props
       options.listeners, // updated listeners 更新 listeners 事件
       vnode, // new parent vnode 新的组件类型 Vnode
-      options.children // new children 新的子节点(插槽？)
+      options.children // new children 新的子节点(作为插槽，不包含作用域插槽))
     );
   },
 

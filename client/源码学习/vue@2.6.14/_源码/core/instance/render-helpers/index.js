@@ -18,7 +18,7 @@ export function installRenderHelpers(target: any) {
   target._n = toNumber;
   target._s = toString;
   target._l = renderList;
-  target._t = renderSlot;
+  target._t = renderSlot; // 渲染插槽
   target._q = looseEqual;
   target._i = looseIndexOf;
   target._m = renderStatic; // 渲染静态树工具类 - v-once

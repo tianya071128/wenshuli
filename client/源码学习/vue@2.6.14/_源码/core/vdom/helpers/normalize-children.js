@@ -29,9 +29,9 @@ export function simpleNormalizeChildren(children: any) {
 // with hand-written render functions / JSX. In such cases a full normalization 使用手工编写的渲染函数/JSX。在这种情况下，需要完全正常化
 // is needed to cater to all possible types of children values. 需要满足所有可能类型的儿童价值观。
 export function normalizeChildren(children: any): ?Array<VNode> {
-  return isPrimitive(children)
-    ? [createTextVNode(children)]
-    : Array.isArray(children)
+  return isPrimitive(children) // 检查值是否为原始值(string、number、symbol、boolean)
+    ? [createTextVNode(children)] // 根据这个值创建一个文本 Vnode，作为子节点返回
+    : Array.isArray(children) // 如果是数组
     ? normalizeArrayChildren(children)
     : undefined;
 }
