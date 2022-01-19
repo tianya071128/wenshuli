@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>props</title>
+  </head>
+  <body></body>
+</html>
+<script>
+  /**
+   * 生成组件类型 Vnode 时, 提取出 propsData: 在 vnode.componentOptions.propsData 上, 后续初始化 props 时从这里提取值
+   *
+   *   1. 方法 createComponent(core\vdom\create-component.js) 中, 调用 extractPropsFromVNodeData 方法进行提取
+   *   2. 提取出 propsData(父组件传递的 props): 后续初始化组件 props 时会提取值
+   *      1. 提取出组件配置的 props
+   *      2. 遍历 props, 进行每一项 prop 的处理
+   *         2.1 检查该 prop 定义的名称是否不符合规范
+   *         2.2 首先从 vnode.data.props 中提取
+   *         2.2 如果不存在 vnode.data.props 中, 再次尝试从 vnode.data.attrs 中提取出来, 如果提取出来就需要从 vnode.data.attrs 中删除这个属性(因为 vnode.data.attrs 会作为 DOM 属性添加到元素上)
+   *      3. 最后生成一个对象结构: { [key: string]: any }
+   *
+   *      注意: 这里只是提取出父组件传递的 props, 并不进行 prop 的验证以及默认值操作, 会在后续初始化 props 处理
+   */
+
+  /**
+   * 初始化 props: 见 initProps(core\instance\state.js) 方法
+   *  1. 遍历组件定义的 props(vm.$options.props), 处理每一项 prop
+   *  2. 调用 validateProp 方法, 从 propsData(父组件传递的props) 和 propsOptions(组件定义的 props)中提取出该 prop 对应的值(如果父组件没有传递, 则尝试取默认值), 并对该值进行验证
+   *  3. 验证该 prop 的名称是否符合规范, 不符合给出错误警告
+   *  4. 通过 defineReactive(core\observer\index.js) 方法在 vm._props 添加该 prop, 并设置为响应数据
+   *      - 在这里只会进行该 prop 属性的响应化, 而不会深度响应式，所以决定该 prop 属性值是否响应式, 取决于父组件传入的是否为响应式数据
+   *      - 并且在开发环境下，如果不是在更新子组件过程中修改 prop, 就会发出错误警告 -- 但是如果传入的是复杂数据类型, 修改对象属性的话是不会触发这个警告的
+   *  5. 在 vm 实例上添加这个prop, 并设置访问这个属性时代理到 vm._props 上, 也就是 this.propKey 访问时,实际访问的是 thi._props.propKey
+   */
+
+  /**
+   * props 的更新(响应式):
+   *  1. prop值的属性变更:
+   *     对于父组件传入的 prop 值来将, 如果是一个已经在父组件响应化了的对象的话, 在子组件依赖这个 prop 值的某个属性的话, 这个 Dep 依赖会被子组件的 renderWatcher 收集
+   *     也就是说, 在这种情况下, prop值的属性变更的话, 会直接触发子组件的更新. 例如:
+   *     父组件: <my-component :propTest="propTest" />, 父组件 data() { return { propTest: { test: 1 } } }
+   *     子组件: <div>{{ propTest.test }}</div>
+   *     当父组件修改 propTest.test = 2 时, 此时子组件就会重新渲染
+   *
+   *  2. 当父组件重新渲染时(不一定是传递的 props 修改, 其他依赖变更也会走这一步), 重新生成子组件 Vnode 时, 会重新调用 extractPropsFromVNodeData 方法提取父组件传递的 props 存放在 vnode.componentOptions.propsData
+   *     接下来在对比新旧 Vnode 时, 进行子组件 Vnode 比对, 就会调用 updateChildComponent 方法进行 props 的修改
+   *     ==> 将 isUpdatingChildComponent 标识置为 true(后面会重置为 false), 这样修改 props 时不会发出错误警告
+   *     ==> 遍历 vm.$options._propKeys(在组件初始化时，props 会将 props 的 key 缓存到 _propKeys 属性上), 重新调用 validateProp 方法进行 prop 的提取, 验证操作, 并直接赋值到 vm._props[key]
+   *     ==> 在这里, 如果 prop 值没有发生改变的话, 就算这样直接赋值, 也不会触发依赖变更, 因为在 Object.defineProperty 的 setter 方法中, 会检测值是否发生改变
+   *     ==> 如果 prop 值发生改变, 就会触发子组件更新
+   */
+</script>

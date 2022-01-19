@@ -55,23 +55,32 @@ export function initState(vm: Component) {
   vm._watchers = []; // 组件的观察者集合
   const opts = vm.$options; // 提取出配置项
   /**
-   * 首先初始化 props，这里只是在创建组件时初始化 props，更新阶段在其他地方
-   *  1. 首先提取 props 值，并且进行校验。
-   *  2. 通过 defineReactive 响应式添加到 props(vm._props) 上，如果在更新阶段修改 prop 的话，就会触发依赖更新从而更新组件
-   *  3. 通过代理模式，将 prop 的 key 代理到 vm 实例上，这样的话，通过 this[propKey] 访问的话，就相当于访问 _props
+   * 在组件创建阶段初始化 props，组件更新阶段 props 在其他地方
+   *  1. 遍历组件定义的 props(vm.$options.props), 处理每一项 prop
+   *  2. 调用 validateProp 方法, 从 propsData(父组件传递的props) 和 propsOptions(组件定义的 props)中提取出该 prop 对应的值(如果父组件没有传递, 则尝试取默认值), 并对该值进行验证
+   *  3. 验证该 prop 的名称是否符合规范, 不符合给出错误警告
+   *  4. 通过 defineReactive 方法在 vm._props 添加该 prop, 并设置为响应数据
+   *      - 在这里只会进行该 prop 属性的响应化, 而不会深度响应式，所以决定该 prop 属性值是否响应式, 取决于父组件传入的是否为响应式数据
+   *      - 并且在开发环境下，如果不是在更新子组件过程中修改 prop, 就会发出错误警告 -- 但是如果传入的是复杂数据类型, 修改对象属性的话是不会触发这个警告的
+   *  5. 在 vm 实例上添加这个prop, 并设置访问这个属性时代理到 vm._props 上, 也就是 this.propKey 访问时,实际访问的是 thi._props.propKey
    */
   if (opts.props) initProps(vm, opts.props);
   /**
    * 初始化 methods
-   * 首先进行验证，不能定义为非函数，不能与 prop 定义重复，不能定义已经在实例上并且以 _、$ 开头的名称
-   * 然后直接将其添加到 vm 实例上
+   *  1. 首先进行方法名(key)验证
+   *      -> 不能定义为非函数
+   *      -> 不能与 prop 属性定义重复
+   *      -> 不能定义已经在实例上并且以 _、$ 开头的名称
+   *  2. 与 data、prop 不同, methods 是直接定义在 vm 实例上, 并且会通过 bind 将其 this 指向 vm
    */
   if (opts.methods) initMethods(vm, opts.methods);
   /**
    * 初始化 data：
-   *  1. 从 data 选项中提取出 data
-   *  2. 与 methods、props 上定义的属性做重复 key 检测，
-   *  3. 调用 observe 响应式数据
+   *  1. 从 data 选项中提取出 data, 并将其添加到 vm._data 上
+   *  2. 遍历 data 对象
+   *      - 与 methods、props 上定义的属性做重复 key(属性) 检测，
+   *      - 在 vm 实例上添加这个属性, 并设置访问这个属性时代理到 vm._data 上, 也就是 this.test 访问时,实际访问的是 thi._data.test
+   *  4. 调用 observe 方法将 data 转化为响应式数据
    */
   if (opts.data) {
     initData(vm);
@@ -91,8 +100,12 @@ export function initState(vm: Component) {
    */
   if (opts.computed) initComputed(vm, opts.computed);
   /**
-   * 初始化 watch：通过 $watch 创建 Watcher 观察者
-   *  在 Wathcher 构造函数中，会将 'a.b.c' 封装成对象读取函数，这样就会触发依赖收集的过程
+   * 初始化 watch：
+   *  1. 遍历 watch 选项, 为每个回调通过 createWatcher 创建一个 Watcher 来监听属性(如果回调是一个数组的话, 那么就为每一项都创建一个 Watcher)
+   *  2. createWatcher 方法:
+   *      2.1 规范化参数, 提取出回调和选项(handler, options)
+   *      2.2 调用 $watch 方法实现侦听器，来响应数据的变化。
+   *  3. 调用 $watch 方法实现, 详见方法注解
    */
   if (opts.watch && opts.watch !== nativeWatch) {
     initWatch(vm, opts.watch);
@@ -101,9 +114,13 @@ export function initState(vm: Component) {
 
 /**
  * 在组件创建阶段初始化 props，组件更新阶段 props 在其他地方
- *  1. 提取 value 并且校验 props
- *  2. 通过 defineReactive 响应式添加到 props(vm._props) 上，如果在更新阶段修改 prop 的话，就会触发依赖更新从而更新组件
- *  3. 通过代理模式，将 prop 的 key 代理到 vm 实例上，这样的话，通过 this[propKey] 访问的话，就相当于访问 _props
+ *  1. 遍历组件定义的 props(vm.$options.props), 处理每一项 prop
+ *  2. 调用 validateProp 方法, 从 propsData(父组件传递的props) 和 propsOptions(组件定义的 props)中提取出该 prop 对应的值(如果父组件没有传递, 则尝试取默认值), 并对该值进行验证
+ *  3. 验证该 prop 的名称是否符合规范, 不符合给出错误警告
+ *  4. 通过 defineReactive 方法在 vm._props 添加该 prop, 并设置为响应数据
+ *      - 在这里只会进行该 prop 属性的响应化, 而不会深度响应式，所以决定该 prop 属性值是否响应式, 取决于父组件传入的是否为响应式数据
+ *      - 并且在开发环境下，如果不是在更新子组件过程中修改 prop, 就会发出错误警告 -- 但是如果传入的是复杂数据类型, 修改对象属性的话是不会触发这个警告的
+ *  5. 在 vm 实例上添加这个prop, 并设置访问这个属性时代理到 vm._props 上, 也就是 this.propKey 访问时,实际访问的是 thi._props.propKey
  */
 function initProps(
   vm: Component,
@@ -150,8 +167,8 @@ function initProps(
         ) {
           warn(
             `Avoid mutating a prop directly since the value will be ` + // 避免直接改变 prop，因为该值将
-            `overwritten whenever the parent component re-renders. ` + // 每当父组件重新渲染时覆盖
-            `Instead, use a data or computed property based on the prop's ` + // 相反，使用基于道具属性的数据或计算属性
+              `overwritten whenever the parent component re-renders. ` + // 每当父组件重新渲染时覆盖
+              `Instead, use a data or computed property based on the prop's ` + // 相反，使用基于道具属性的数据或计算属性
               `value. Prop being mutated: "${key}"`, // value. 正在变异的支柱
             vm
           );
@@ -175,9 +192,11 @@ function initProps(
 
 /**
  * 初始化 data：
- *  1. 从 data 选项中提取出 data
- *  2. 与 methods、props 上定义的属性做重复 key 检测，
- *  3. 调用 observe 响应式数据
+ *  1. 从 data 选项中提取出 data, 并将其添加到 vm._data 上
+ *  2. 遍历 data 对象
+ *      - 与 methods、props 上定义的属性做重复 key(属性) 检测，
+ *      - 在 vm 实例上添加这个属性, 并设置访问这个属性时代理到 vm._data 上, 也就是 this.test 访问时,实际访问的是 thi._data.test
+ *  4. 调用 observe 方法将 data 转化为响应式数据
  */
 function initData(vm: Component) {
   let data = vm.$options.data; // 提取 data 配置
@@ -340,7 +359,7 @@ export function defineComputed(
     sharedPropertyDefinition.set === noop
   ) {
     // 那么就定义一个 setter 方法，修改提示报错
-    sharedPropertyDefinition.set = function() {
+    sharedPropertyDefinition.set = function () {
       warn(
         `Computed property "${key}" was assigned to but it has no setter.`, // 计算属性“${key}”已分配给，但它没有setter
         this
@@ -383,8 +402,11 @@ function createGetterInvoker(fn) {
 
 /**
  * 初始化 methods
- * 首先进行验证，不能定义为非函数，不能与 prop 定义重复，不能定义已经在实例上并且以 _、$ 开头的名称
- * 然后直接将其添加到 vm 实例上
+ *  1. 首先进行方法名(key)验证
+ *      -> 不能定义为非函数
+ *      -> 不能与 prop 属性定义重复
+ *      -> 不能定义已经在实例上并且以 _、$ 开头的名称
+ *  2. 与 data、prop 不同, methods 是直接定义在 vm 实例上, 并且会通过 bind 将其 this 指向 vm
  */
 function initMethods(vm: Component, methods: Object) {
   const props = vm.$options.props; // 提取出 props 配置
@@ -420,8 +442,12 @@ function initMethods(vm: Component, methods: Object) {
 }
 
 /**
- * 初始化 watch：通过 $watch 创建 Watcher 观察者
- *  在 Wathcher 构造函数中，会将 'a.b.c' 封装成对象读取函数，这样就会触发依赖收集的过程
+ * 初始化 watch：
+ *  1. 遍历 watch 选项, 为每个回调通过 createWatcher 创建一个 Watcher 来监听属性(如果回调是一个数组的话, 那么就为每一项都创建一个 Watcher)
+ *  2. createWatcher 方法:
+ *      2.1 规范化参数, 提取出回调和选项(handler, options)
+ *      2.2 调用 $watch 方法实现侦听器，来响应数据的变化。
+ *  3. 调用 $watch 方法实现, 详见方法注解
  */
 function initWatch(vm: Component, watch: Object) {
   // 遍历 watch 选项
@@ -460,23 +486,23 @@ export function stateMixin(Vue) {
   // when using Object.defineProperty, so we have to procedurally build up 当使用对象时。定义属性，所以我们必须按程序建立
   // the object here. 这里的物体
   const dataDef = {};
-  dataDef.get = function() {
+  dataDef.get = function () {
     return this._data;
   };
   const propsDef = {};
-  propsDef.get = function() {
+  propsDef.get = function () {
     return this._props;
   };
   // 如果不是在生产环境，那么修改 $data 和 $props 时会发出警告
   if (process.env.NODE_ENV !== 'production') {
-    dataDef.set = function() {
+    dataDef.set = function () {
       warn(
         'Avoid replacing instance root $data. ' + // 避免替换实例根$data
           'Use nested data properties instead.', // 改用嵌套数据属性
         this
       );
     };
-    propsDef.set = function() {
+    propsDef.set = function () {
       warn(`$props is readonly.`, this); // $props是只读的
     };
   }
@@ -490,8 +516,31 @@ export function stateMixin(Vue) {
   Vue.prototype.$set = set;
   Vue.prototype.$delete = del;
 
-  // $watch -- 观察 Vue 实例上的一个表达式或者一个函数计算结果的变化。
-  Vue.prototype.$watch = function(
+  /**
+   * $watch -- 观察 Vue 实例上的一个表达式或者一个函数计算结果的变化。
+   *  1. 如何实现响应式?
+   *      在 Wathcer 内部, 会对 expOrFn 解析表达式进行处理
+   *        -> 如果是函数, 直接观察表达式函数执行过程, 从而收集依赖
+   *        -> 如果是字符串, 那么将字符串封装成函数, 读取其监听属性, 从而触发依赖收集过程, 例如: expOrFn: 'a.b.c', 就会封装成:
+   *
+   *            function(obj) { // obj 一般为组件实例
+   *              for (let i = 0; i < segments.length; i++) {
+   *                if (!obj) return; // 如果 obj 不存在，则直接退出函数执行
+   *                obj = obj[segments[i]]; // 否则访问一下对象，这样就会触发依赖收集了
+   *              }
+   *              return obj; // 返回最后的取值
+   *            }
+   *  2. 何时执行回调?
+   *      注意: 当 Watcher 初始初始实例化时, 除了惰性 Watcher 外, 一般都会执行表达式函数, 收集其依赖的属性, 但是在这里不会执行回调
+   *      只有当更新时(依赖变更, 触发 Watcher 变更)时, 执行 Watcher.prototype.run() 方法重新执行表达式函数收集依赖后, 会根据更新前后的值(以及其他判断条件)来决定是否触发回调 ==> 表达式函数的结果值存储在 watcher.value
+   *  3. immediate 立即执行一次
+   *      由上面可知, 初始执行表达式函数收集依赖时, 是不会执行回调的
+   *      所以在实例化 Wathcer 后, 手动执行一次 cb 回调
+   *  4. deep 深度侦听
+   *      在 Watcher 执行表达式函数收集完依赖后, 如果需要深度侦听的话, 就继续执行 traverse(core\observer\traverse.js) 方法
+   *      在 traverse 方法中, 继续遍历这个表达式函数(例如: a.b.c, 返回的是一个对象)返回值, 深度读取对象的属性, 触发依赖收集, 详见方法注解
+   */
+  Vue.prototype.$watch = function (
     expOrFn: string | Function,
     cb: any,
     options?: Object

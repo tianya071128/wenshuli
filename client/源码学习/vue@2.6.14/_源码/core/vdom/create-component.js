@@ -223,9 +223,17 @@ export function createComponent(
   }
 
   // extract props 提取 props
-  // 遍历组件配置 props 项，从 data(数据对象) 的 props 尝试提取，后尝试从 attrs 中提取
-  // 需要注意的是，如果从 attrs 提取出了 prop，那么该 attrs 对应的 prop 需要从 attrs 中删除
-  // 注意：在这里，不会对 prop 进行验证，提取默认值等操作，后续实例化时才会进行操作
+  /**
+   * 提取出 propsData(父组件传递的 props): 后续初始化组件 props 时会提取值
+   * 1. 提取出组件配置的 props
+   * 2. 遍历 props, 进行每一项 prop 的处理
+   *    2.1 检查该 prop 定义的名称是否不符合规范
+   *    2.2 首先从 vnode.data.props 中提取
+   *    2.2 如果不存在 vnode.data.props 中, 再次尝试从 vnode.data.attrs 中提取出来, 如果提取出来就需要从 vnode.data.attrs 中删除这个属性(因为 vnode.data.attrs 会作为 DOM 属性添加到元素上)
+   * 3. 最后生成一个对象结构: { [key: string]: any }
+   *
+   * 注意: 这里只是提取出父组件传递的 props, 并不进行 prop 的验证以及默认值操作, 会在后续初始化 props 处理
+   */
   const propsData = extractPropsFromVNodeData(data, Ctor, tag);
 
   // functional component 函数式组件

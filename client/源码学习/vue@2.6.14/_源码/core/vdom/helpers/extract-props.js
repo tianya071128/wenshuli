@@ -9,8 +9,17 @@ import {
   formatComponentName,
 } from 'core/util/index';
 
-// 根据 data(数据对象) 和 构造函数 提取出 res(即 propsData)，后续供给初始化 props 的值使用
-// 遍历组件配置 props 项，从 data(数据对象) 的 props 尝试提取，后尝试从 attrs 中提取
+/**
+ * 提取出 propsData(父组件传递的 props): 后续初始化组件 props 时会提取值
+ * 1. 提取出组件配置的 props
+ * 2. 遍历 props, 进行每一项 prop 的处理
+ *    2.1 检查该 prop 定义的名称是否不符合规范
+ *    2.2 首先从 vnode.data.props 中提取
+ *    2.2 如果不存在 vnode.data.props 中, 再次尝试从 vnode.data.attrs 中提取出来, 如果提取出来就需要从 vnode.data.attrs 中删除这个属性(因为 vnode.data.attrs 会作为 DOM 属性添加到元素上)
+ * 3. 最后生成一个对象结构: { [key: string]: any }
+ *
+ * 注意: 这里只是提取出父组件传递的 props, 并不进行 prop 的验证以及默认值操作, 会在后续初始化 props 处理
+ */
 export function extractPropsFromVNodeData(
   data: VNodeData, // 数据对象
   Ctor: Class<Component>, // 组件的构造函数
@@ -38,13 +47,13 @@ export function extractPropsFromVNodeData(
         if (key !== keyInLowerCase && attrs && hasOwn(attrs, keyInLowerCase)) {
           tip(
             `Prop "${keyInLowerCase}" is passed to component ` + // Prop "${keyInLowerCase}" 传递给组件
-            `${formatComponentName(
-              // 提取组件名信息
-              tag || Ctor
-            )}, but the declared prop name is` + // 但是声明的道具名称是
-            ` "${key}". ` + // "${key}"
-            `Note that HTML attributes are case-insensitive and camelCased ` + // 请注意，HTML属性不区分大小写，大小写为'
-            `props need to use their kebab-case equivalents when using in-DOM ` + // 道具在DOM中使用时需要使用它们的烤串大小写等价物
+              `${formatComponentName(
+                // 提取组件名信息
+                tag || Ctor
+              )}, but the declared prop name is` + // 但是声明的道具名称是
+              ` "${key}". ` + // "${key}"
+              `Note that HTML attributes are case-insensitive and camelCased ` + // 请注意，HTML属性不区分大小写，大小写为'
+              `props need to use their kebab-case equivalents when using in-DOM ` + // 道具在DOM中使用时需要使用它们的烤串大小写等价物
               `templates. You should probably use "${altKey}" instead of "${key}".` // 模板。您可能应该使用“${altKey}”而不是“${key}
           );
         }

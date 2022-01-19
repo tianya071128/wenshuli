@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>watch</title>
+  </head>
+  <body></body>
+</html>
+
+<script>
+  /**
+   * 初始化 watch：：见 initWatch(core\instance\state.js) 方法
+   *  1. 遍历 watch 选项, 为每个回调通过 createWatcher 创建一个 Watcher 来监听属性(如果回调是一个数组的话, 那么就为每一项都创建一个 Watcher)
+   *  2. createWatcher 方法:
+   *      2.1 规范化参数, 提取出回调和选项(handler, options)
+   *      2.2 调用 $watch 方法实现侦听器，来响应数据的变化。
+   *  3. $watch 方法: 观察 Vue 实例上的一个表达式或者一个函数计算结果的变化。
+   *     ==> 1. 如何实现响应式?
+   *     ==>     在 Wathcer 内部, 会对 expOrFn 解析表达式进行处理
+   *     ==>       -> 如果是函数, 直接观察表达式函数执行过程, 从而收集依赖
+   *     ==>       -> 如果是字符串, 那么将字符串封装成函数, 读取其监听属性, 从而触发依赖收集过程, 例如: expOrFn: 'a.b.c', 就会封装成:
+   *     ==>
+   *     ==>           function(obj) { // obj 一般为组件实例
+   *     ==>             for (let i = 0; i < segments.length; i++) {
+   *     ==>               if (!obj) return; // 如果 obj 不存在，则直接退出函数执行
+   *     ==>               obj = obj[segments[i]]; // 否则访问一下对象，这样就会触发依赖收集了
+   *     ==>             }
+   *     ==>             return obj; // 返回最后的取值
+   *     ==>           }
+   *     ==> 2. 何时执行回调?
+   *     ==>     注意: 当 Watcher 初始初始实例化时, 除了惰性 Watcher 外, 一般都会执行表达式函数, 收集其依赖的属性, 但是在这里不会执行回调
+   *     ==>     只有当更新时(依赖变更, 触发 Watcher 变更)时, 执行 Watcher.prototype.run() 方法重新执行表达式函数收集依赖后, 会根据更新前后的值(以及其他判断条件)来决定是否触发回调 ==> 表达式函数的结果值存储在 watcher.value
+   *     ==> 3. immediate 立即执行一次
+   *     ==>     由上面可知, 初始执行表达式函数收集依赖时, 是不会执行回调的
+   *     ==>     所以在实例化 Wathcer 后, 手动执行一次 cb 回调
+   *     ==> 4. deep 深度侦听
+   *     ==>     在 Watcher 执行表达式函数收集完依赖后, 如果需要深度侦听的话, 就继续执行 traverse(core\observer\traverse.js) 方法
+   *     ==>     在 traverse 方法中, 继续遍历这个表达式函数(例如: a.b.c, 返回的是一个对象)返回值, 深度读取对象的属性, 触发依赖收集, 详见方法注解
+   *  4. 所有的 Watcher 都会被收集到 vm._watchers 集合中
+   */
+</script>
