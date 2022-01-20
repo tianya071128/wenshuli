@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>keepAlive</title>
+    <script src="../vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <button @click="currentTabComponent = 'Home'">Home</button>
+      <button @click="currentTabComponent = 'Posts'">Posts</button>
+      <keep-alive>
+        <component v-bind:is="currentTabComponent"></component>
+        <input
+          type="text"
+          placeholder="测试一下"
+          v-if="currentTabComponent === 'Home'"
+        />
+      </keep-alive>
+    </div>
+  </body>
+</html>
+<script>
+  const Home = {
+    render(h) {
+      return h('div', [h('label', 'Home：'), h('input')]);
+    },
+  };
+  const Posts = {
+    render(h) {
+      return h('div', [h('label', 'Posts：'), h('input')]);
+    },
+  };
+
+  /**
+   * 实现缓存的机制：
+   *  1. 每次渲染 keep-alive 时，都会调用 render 函数，此时可以默认插槽中提取出需要缓存组件类型 Vnode
+   *  2. keep-alive 组件会维护一个缓存对象(hasMap: { [key: string]: Vndoe })
+   *      - 根据组件 name 判断是否允许被缓存(根据 include、exclude)
+   *      - 根据组件 key(componentOptions.Ctor.cid + (componentOptions.tag ? `::${componentOptions.tag}` : '')) 判断是否已经被缓存
+   *  3. 如果这个 Vnode 被缓存，从缓存对象中提取该 Vnode 对应的实例 ===> cache[key].componentInstance
+   *      - 只需要保持组件实例是缓存之前的，其他数据对象模块(class、style、events等)都会被单独处理
+   */
+
+  /**
+   * 返回 keep-alive 实际渲染的 Vnode：
+   *
+   *   1. 从默认插槽数组中提取出第一个组件类型 Vnode ===> 也就是我们只会根据默认插槽的第一个组件类型 Vnode 进行缓存(是用在其一个直属的子组件被开关的情形)
+   *   2. 从这个 Vnode 中提取出 name ===> 首先检查组件自身的 name 选项，如果 name 选项不可用，则匹配它的局部注册名称 (父组件 components 选项的键值)。
+   *   3. 通过检测 Vnode 的 name 如果不被 include 匹配或被 exclude 排除的话，就不缓存这个组件了，直接返回这个 Vnode
+   *   4. 如果已经被缓存的话，从缓存中提取 cache[key].componentInstance 缓存的组件实例放在 Vnode.componentInstance 中 ===> 因为组件状态都是存放在 componentInstance 实例上的
+   *   5. 如果没有被缓存的话，延迟进行缓存 ===> 此时 Vnode 是最新的，还没有进行实例化，延迟到 mounted 钩子中进行缓存
+   *   6. 标识一下这个一个缓存的 vnode：vnode.data.keepAlive = true;
+   *   7. 将处理好的 vnode 返回，后续就会对这个 vndoe 进行渲染
+   */
+
+  /**
+   * Vnode 渲染：主要是在组件类型 Vnode 的几个钩子中根据 vnode.data.keepAlive 特殊处理一下(componentVNodeHooks[core\vdom\create-component.js])
+   *
+   *  1. 当 keep-alive 初始渲染阶段：此时就会像普通组件 Vnode 渲染一样
+   *  2. 当缓存组件初次缓存时：此时会在 vnode.data.keepAlive 上打上一个标记，也跟普通组件一样初始渲染
+   *  3. 当切换缓存组件时：
+   *      例如：<keep-alive><a v-if="flag" /><b v-else /></keep-alive> 当缓存从组件 a 切换到组件 b
+   *      此时 keep-alive 渲染的新的 Vnode 为 b，旧的 Vnode 为 a，这样在对新旧 Vnode 比对时，就不会复用 Vnode。
+   *
+   *      ===> 对于失活组件(a 组件)来说，就需要进行 Vnode 的 destroy(销毁)钩子：见 componentVNodeHooks.destroy(core\vdom\create-component.js)
+   *            此时并不会进行组件的销毁，而是递归执行缓存组件本身及子孙组件的 deactivated 失活钩子即可
+   *      ===> 对于组件 b 而言，也有两种情况：
+   *            1. 组件 b 初次缓存：此时会在 vnode.data.keepAlive 上打上一个标记，也跟普通组件一样初始渲染
+   *            2. 组件 b 已经缓存的话，那么就会提取出缓存的实例
+   *                2.1 执行 Vnode 的 init 钩子，在这个钩子中不会进行实例化操作，而是执行 Vndoe 的 prepatch 钩子，处理一下父组件传递子组件的参数即可
+   *                2.2
+   *
+   */
+  new Vue({
+    el: '#root',
+    components: {
+      Home,
+      Posts,
+    },
+    data() {
+      return {
+        currentTabComponent: 'Home',
+      };
+    },
+  });
+</script>

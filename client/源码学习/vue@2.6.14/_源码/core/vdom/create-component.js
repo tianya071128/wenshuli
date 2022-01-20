@@ -40,6 +40,7 @@ const componentVNodeHooks = {
     ) {
       // kept-alive components, treat as a patch 保持活性的组件，作为补丁处理
       const mountedNode: any = vnode; // work around flow
+      // 此时执行 prepatch 钩子更新
       componentVNodeHooks.prepatch(mountedNode, mountedNode);
     } else {
       // 不是缓存组件，初始化组件 -- 通过
@@ -82,7 +83,7 @@ const componentVNodeHooks = {
       componentInstance._isMounted = true; // 标识为已挂载状态
       callHook(componentInstance, 'mounted'); // 执行 mounted 钩子
     }
-    // 此时是缓存组件的情况
+    // 此时是缓存组件的情况 -- 此时对应着组件
     if (vnode.data.keepAlive) {
       if (context._isMounted) {
         // vue-router#1212
@@ -107,7 +108,8 @@ const componentVNodeHooks = {
       if (!vnode.data.keepAlive /** 不是缓存组件 */) {
         componentInstance.$destroy(); // 调用 $destroy() 方法进行组件的销毁
       } else {
-        // 缓存组件
+        // 缓存组件 - 此时对应着 keep-alive 切换缓存组件时，失活的组件执行 destroy 销毁
+        // 递归执行缓存组件的 deactivated 失活钩子
         deactivateChildComponent(componentInstance, true /* direct */);
       }
     }

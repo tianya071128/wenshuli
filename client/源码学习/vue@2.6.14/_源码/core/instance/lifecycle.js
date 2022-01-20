@@ -63,8 +63,8 @@ export function initLifecycle(vm: Component) {
 
   // 以 _ 开头，是其内部属性
   vm._watcher = null; // 该组件的渲染函数对应的 Wathcer
-  vm._inactive = null;
-  vm._directInactive = false;
+  vm._inactive = null; // 该 Vnode 是否为独立的(大概表示为游离在 DOM 树之外的，也可以表示为该组件已经是失活状态)
+  vm._directInactive = false; // true：表示为失活状态 | false：激活状态
   vm._isMounted = false; // 表示是否初次渲染过的标识
   vm._isDestroyed = false; // 组件被销毁标识
   vm._isBeingDestroyed = false; // 开始销毁组件标识
@@ -77,7 +77,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
    * 但是最终会执行 \core\vdom\patch.js 中的最后的 patch 方法，根据 vnode 渲染成 DOM。
    *  详见 path 方法注解
    */
-  Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
+  Vue.prototype._update = function(vnode: VNode, hydrating?: boolean) {
     const vm: Component = this;
     const prevEl = vm.$el; // 上一个生成的 DOM
     const prevVnode = vm._vnode; // 上一个 Vnode
@@ -113,7 +113,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
     // updated in a parent's updated hook. 在父对象的更新挂钩中更新
   };
 
-  Vue.prototype.$forceUpdate = function () {
+  Vue.prototype.$forceUpdate = function() {
     const vm: Component = this;
     if (vm._watcher) {
       vm._watcher.update();
@@ -133,7 +133,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
    *  7. 通过 vm.$off() 关闭所有的实例侦听器
    *  8. 一些引用清空
    */
-  Vue.prototype.$destroy = function () {
+  Vue.prototype.$destroy = function() {
     const vm: Component = this;
     // 如果已经开始销毁组件, 不要重复销毁
     if (vm._isBeingDestroyed) {
@@ -217,7 +217,7 @@ export function mountComponent(
       ) {
         warn(
           'You are using the runtime-only build of Vue where the template ' + // 您使用的是仅运行时版本的Vue，其中模板
-            'compiler is not available. Either pre-compile the templates into ' + // 编译器不可用。或者将模板预编译为
+          'compiler is not available. Either pre-compile the templates into ' + // 编译器不可用。或者将模板预编译为
             'render functions, or use the compiler-included build.', // 渲染函数，或使用包含在生成中的编译器
           vm
         );
@@ -424,7 +424,12 @@ export function updateChildComponent(
   }
 }
 
+// 检测该组件是否属于一颗独立的树(不在 DOM 树之中)
+/**
+ * 如果存在嵌套 keep-alive, 并且深层 keep-alive 处于失活状态，那么我们就没有必要对失活状态的 keep-alive 中缓存的组件进行生命周期的执行
+ */
 function isInInactiveTree(vm) {
+  // 递归查找父组件
   while (vm && (vm = vm.$parent)) {
     if (vm._inactive) return true;
   }
@@ -449,18 +454,26 @@ export function activateChildComponent(vm: Component, direct?: boolean) {
   }
 }
 
+// 递归执行缓存组件本身及子孙组件的 deactivated 生命周期
 export function deactivateChildComponent(vm: Component, direct?: boolean) {
   if (direct) {
-    vm._directInactive = true;
+    vm._directInactive = true; // 表示该组件处于失活状态
+    // 如果存在嵌套 keep-alive, 并且深层 keep-alive 处于失活状态，那么我们就没有必要对失活状态的 keep-alive 中缓存的组件进行生命周期的执行
     if (isInInactiveTree(vm)) {
       return;
     }
   }
   if (!vm._inactive) {
     vm._inactive = true;
+    // 遍历子组件，
     for (let i = 0; i < vm.$children.length; i++) {
+      /**
+       * 我们只需要对 keep-alive 缓存的根组件进行嵌套 keep-alive 检测该 keep-alive 是否属于失活状态即可，如果失活的话，在上面就会对其进行 return
+       * 先执行子组件的 deactivated 钩子，在执行父组件的
+       */
       deactivateChildComponent(vm.$children[i]);
     }
+    // 执行 deactivated 钩子
     callHook(vm, 'deactivated');
   }
 }

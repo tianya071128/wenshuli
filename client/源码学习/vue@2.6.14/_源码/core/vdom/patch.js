@@ -276,7 +276,7 @@ export function createPatchFunction(backend) {
     }
   }
 
-  // 初始化子组件的 vnode -- 是子组件 vnode 渲染的启动地方
+  // 初始化渲染子组件的 vnode -- 是子组件 vnode 渲染的启动地方
   function createComponent(
     vnode, //
     insertedVnodeQueue, // 组件渲染队列
