@@ -24,6 +24,9 @@
 </html>
 <script>
   const Home = {
+    activated() {
+      console.log('初次渲染也会执行');
+    },
     render(h) {
       return h('div', [h('label', 'Home：'), h('input')]);
     },
@@ -33,6 +36,13 @@
       return h('div', [h('label', 'Posts：'), h('input')]);
     },
   };
+
+  /**
+   * 写在前面，注意点：
+   *  1. 我们可以通过传递 include、exclude、max 来控制组件是否缓存，但是在动态改变 props 时，监听 include、exclude 变化是通过 this.$watch 监听的
+   *     也就是异步清除缓存组件的，并且已经缓存的组件同样会调用 destroyed 生命周期。
+   *  2. 缓存组件初次渲染时也会调用 activated 钩子。
+   */
 
   /**
    * 实现缓存的机制：
@@ -60,7 +70,9 @@
    * Vnode 渲染：主要是在组件类型 Vnode 的几个钩子中根据 vnode.data.keepAlive 特殊处理一下(componentVNodeHooks[core\vdom\create-component.js])
    *
    *  1. 当 keep-alive 初始渲染阶段：此时就会像普通组件 Vnode 渲染一样
+   *
    *  2. 当缓存组件初次缓存时：此时会在 vnode.data.keepAlive 上打上一个标记，也跟普通组件一样初始渲染
+   *
    *  3. 当切换缓存组件时：
    *      例如：<keep-alive><a v-if="flag" /><b v-else /></keep-alive> 当缓存从组件 a 切换到组件 b
    *      此时 keep-alive 渲染的新的 Vnode 为 b，旧的 Vnode 为 a，这样在对新旧 Vnode 比对时，就不会复用 Vnode。
@@ -71,8 +83,14 @@
    *            1. 组件 b 初次缓存：此时会在 vnode.data.keepAlive 上打上一个标记，也跟普通组件一样初始渲染
    *            2. 组件 b 已经缓存的话，那么就会提取出缓存的实例
    *                2.1 执行 Vnode 的 init 钩子，在这个钩子中不会进行实例化操作，而是执行 Vndoe 的 prepatch 钩子，处理一下父组件传递子组件的参数即可
-   *                2.2
+   *                2.2 在启动 init 钩子的 createComponent(core\vdom\patch.js) 方法中，会推入到 insertedVnodeQueue 集合中，后续会执行 vnode.data.hook.insert 钩子
+   *                2.3 vnode.data.hook.insert 钩子：对于缓存组件，主要是执行 activated 钩子
    *
+   *  4. keep-alive 重新渲染，但缓存组件没有切换：即渲染前和渲染后组件都是同一组件
+   *       此时 keep-alive 生成的 Vnode 都是同一缓存组件，就会走 patchVnode 方法进行组件补丁即可，跟普通组件一致
+   *
+   *  5. 当 keep-alive 被销毁时，其缓存组件需要被全部销毁
+   *      此时在 keep-alive 组件的 destroyed 钩子中销毁全部缓存组件(调用缓存组件 $destroy 钩子)：见 core\components\keep-alive.js
    */
   new Vue({
     el: '#root',

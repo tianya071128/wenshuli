@@ -63,7 +63,14 @@ export function initLifecycle(vm: Component) {
 
   // 以 _ 开头，是其内部属性
   vm._watcher = null; // 该组件的渲染函数对应的 Wathcer
-  vm._inactive = null; // 该 Vnode 是否为独立的(大概表示为游离在 DOM 树之外的，也可以表示为该组件已经是失活状态)
+  /**
+   * _inactive 和 _directInactive 变量都是在缓存组件中使用的
+   *  可能存在嵌套 keep-alive 的情况，例如在外层 keep-alive 缓存组件失活情况下，内层的 keep-alive 缓存的组件即使是激活状态，那么也没有必要执行 activated 钩子，当成失活状态即可
+   *
+   * _inactive：表示这个实例不在活动树中(即游离于 DOM 树之外)
+   * _directInactive：只会在缓存组件打上这个标识，这个标识就是用来表示这个组件在所属的 keep-alive 的状态，而不关心嵌套 keep-alive 的情况
+   */
+  vm._inactive = null; // 该 Vnode 是否为独立的(大概表示为游离在 DOM 树之外的)
   vm._directInactive = false; // true：表示为失活状态 | false：激活状态
   vm._isMounted = false; // 表示是否初次渲染过的标识
   vm._isDestroyed = false; // 组件被销毁标识
@@ -436,9 +443,12 @@ function isInInactiveTree(vm) {
   return false;
 }
 
+// 递归执行缓存组件本身及子孙组件的 activated 生命周期
 export function activateChildComponent(vm: Component, direct?: boolean) {
+  // 只有缓存组件本身才需要做这些工作 - 如果这个缓存组件本身都不是在活动树上的，那么就会阻止子孙组件的递归调用
   if (direct) {
-    vm._directInactive = false;
+    vm._directInactive = false; // 表示该组件是激活状态
+    // 如果存在嵌套 keep-alive, 并且深层 keep-alive 处于失活状态，那么我们就没有必要对失活状态的 keep-alive 中缓存的组件进行生命周期的执行
     if (isInInactiveTree(vm)) {
       return;
     }
@@ -450,6 +460,7 @@ export function activateChildComponent(vm: Component, direct?: boolean) {
     for (let i = 0; i < vm.$children.length; i++) {
       activateChildComponent(vm.$children[i]);
     }
+    // 执行 activated 钩子
     callHook(vm, 'activated');
   }
 }

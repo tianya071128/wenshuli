@@ -312,11 +312,16 @@ export function createPatchFunction(backend) {
     }
   }
 
-  // 除了建立 insertedVnodeQueue 队列，还做了其他工作，但是有点难以理解
+  /**
+   * 组件初始化渲染完成时(包括子孙组件都已初始化完毕)才会调用这个方法
+   * 并且是在组件初次渲染才会调用
+   */
   function initComponent(vnode, insertedVnodeQueue) {
-    // 如果 pendingInsert 不能 undefined，表示这个组件类型 vnode 表示的 DOM 还没有挂载到 DOM 树上
+    /**
+     * 我们是递归渲染子孙组件的，在渲染子孙组件的过程中，收集到的具有 vnode.data.hook.insert 钩子已经存放在 vnode.data.pendingInsert 集合中，见 invokeInsertHook 方法，
+     * 此时将这些集合推入到 insertedVnodeQueue 集合，表示这个组件初次渲染过程中碰到存在 vnode.data.hook.insert 钩子的 Vnode
+     */
     if (isDef(vnode.data.pendingInsert)) {
-      // 此时需要将这个组件类型 vnode 添加进 insertedVnodeQueue 队列中，以待后续 invokeInsertHook 方法执行组件类型 vnode.insert 钩子
       // 为什么借助 apply 方法？利用 apply 特性，将 vnode.data.pendingInsert 数组每项作为单独的元素参数，拼接成一维数组
       insertedVnodeQueue.push.apply(
         insertedVnodeQueue,
@@ -326,24 +331,28 @@ export function createPatchFunction(backend) {
       vnode.data.pendingInsert = null;
     }
     vnode.elm = vnode.componentInstance.$el; // 取出渲染的 DOM
-    if (isPatchable(vnode)) {
+    if (isPatchable(vnode) /** 此时这个 vnode 会渲染真实元素 DOM */) {
+      // 此时执行 vnode 的相关钩子，并且将该组件类型 Vnode 推入到 insertedVnodeQueue 集合中
       invokeCreateHooks(vnode, insertedVnodeQueue);
+      // 设置作用域
       setScope(vnode);
     } else {
-      // empty component root.
-      // skip all element-related modules except for ref (#3455)
+      // empty component root. 空组件根目录。
+      // skip all element-related modules except for ref (#3455) 跳过除ref（#3455）之外的所有元素相关模块
+      // 此时空组件(不渲染内容)如果需要执行 ref 数据对象模块外，其他都跳过
       registerRef(vnode);
-      // make sure to invoke the insert hook
+      // make sure to invoke the insert hook 确保调用 insert 钩子
       insertedVnodeQueue.push(vnode);
     }
   }
 
+  // 如果是缓存组件并且具有 transition 过渡的话，需要额外处理
   function reactivateComponent(vnode, insertedVnodeQueue, parentElm, refElm) {
     let i;
-    // hack for #4339: a reactivated component with inner transition
-    // does not trigger because the inner node's created hooks are not called
-    // again. It's not ideal to involve module-specific logic in here but
-    // there doesn't seem to be a better way to do it.
+    // hack for #4339: a reactivated component with inner transition #4339的破解：具有内部转换的重新激活组件
+    // does not trigger because the inner node's created hooks are not called 不会触发，因为未调用内部节点创建的挂钩
+    // again. It's not ideal to involve module-specific logic in here but 再说一遍。在这里涉及特定于模块的逻辑并不理想，但是
+    // there doesn't seem to be a better way to do it. 似乎没有更好的办法了。
     let innerNode = vnode;
     while (innerNode.componentInstance) {
       innerNode = innerNode.componentInstance._vnode;
@@ -355,8 +364,8 @@ export function createPatchFunction(backend) {
         break;
       }
     }
-    // unlike a newly created component,
-    // a reactivated keep-alive component doesn't insert itself
+    // unlike a newly created component, 与新创建的组件不同，
+    // a reactivated keep-alive component doesn't insert itself 重新激活的保持活动组件不会插入自身
     insert(parentElm, vnode.elm, refElm);
   }
 
@@ -406,6 +415,7 @@ export function createPatchFunction(backend) {
 
   // 检测 vnode 的 tag 是否存在 -- 如果 tag 存在，表示元素类型 Vnode，添加事件、class、style 等才有意义
   // 对于组件类型 Vnode，我们需要递归找到到组件模板的根元素(如果组件模板也是一个组件，就需要递归查找)
+  // 何时不存在？当组件模板是一个文本节点或者一个空节点时，此时 vnode.tag 为 undefined
   function isPatchable(vnode) {
     // 如果这个 vnode 是一个表示组件的 vnode，则 vnode.componentInstance
     while (vnode.componentInstance) {
@@ -416,7 +426,12 @@ export function createPatchFunction(backend) {
     return isDef(vnode.tag);
   }
 
-  // 执行 vnode 中 data 的 create 钩子
+  /**
+   * 执行 Vnode 的相关钩子
+   *  1. 数据对象模板的 create 钩子
+   *  2. vnode.data.hook.create(表示 Vnode 生命周期) 的钩子
+   *  3. 如果存在 vnode.data.hook.insert 钩子，先推入到集合，延迟执行
+   */
   function invokeCreateHooks(vnode, insertedVnodeQueue) {
     // 遍历 cbs 模块中的钩子 -- cbs 是 vnode 中 data 数据对象的钩子
     for (let i = 0; i < cbs.create.length; ++i) {
@@ -425,8 +440,9 @@ export function createPatchFunction(backend) {
     }
     i = vnode.data.hook; // Reuse variable 重用变量
     if (isDef(i)) {
-      // 执行 vnode 中 data.hook 的钩子 -- 一般而言，子组件时会存在该类型钩子
+      // 如果该 vnode 具有 create 钩子，此时就执行，说明 vnode 已经渲染完毕，生成了 vnode 表示的 DOM
       if (isDef(i.create)) i.create(emptyNode, vnode);
+      // 如果这个 Vnode 存在 insert，添加至 insertedVnodeQueue 队列，延迟到挂载到 DOM 树执行
       if (isDef(i.insert)) insertedVnodeQueue.push(vnode);
     }
   }
@@ -906,17 +922,25 @@ export function createPatchFunction(backend) {
    *      但是在更新阶段，存在组件新创建的情况下，同样会将这个新组件及其子孙组件都添加至队列中，等待更新组件更新完毕，元素都插入到 DOM 树中开始执行
    *
    * 总结就是，只有组件已经真正插入到 DOM 树后才会执行
+   *
+   * 注意：一般只有组件类型 Vnode 才具有 insert 钩子，但是其他 Vnode 也可能存在 insert 钩子，所以这里所说的组件并不准确
+   *      总而言之就是需要延迟 Vnode.data.hook.insert 钩子到插入 DOM 树之后执行
    */
   function invokeInsertHook(
     vnode, // vnode 表示
     queue, // 队列
-    initial // true：子组件初始渲染
+    initial // true：组件初始渲染
   ) {
     // delay insert hooks for component root nodes, invoke them after the 延迟为组件根节点插入钩子，在
     // element is really inserted 元素是真正插入的
-    if (isTrue(initial) && isDef(vnode.parent)) {
+    if (
+      isTrue(initial) && // 如果是初次渲染
+      isDef(vnode.parent) // 并且存在父组件
+    ) {
+      // 此时这个组件还没有被挂载，那么将该组件以及子孙组件添加到父组件的引用中，后续会合并起来
       vnode.parent.data.pendingInsert = queue;
     } else {
+      // 在这里，表示这个组件不是初次渲染(此时是更新阶段，对现有 DOM 进行补丁) || 这是个根组件，那么就递归执行 insert 钩子
       for (let i = 0; i < queue.length; ++i) {
         queue[i].data.hook.insert(queue[i]);
       }
@@ -1077,6 +1101,9 @@ export function createPatchFunction(backend) {
     }
 
     let isInitialPatch = false;
+    // 当前组件渲染时，子孙组件初始渲染(初始化)的集合，收集这个集合，延迟到组件插入 DOM 树之后在执行 insert 钩子
+    // 这样说并不是很准确，应该是存在 insert 钩子的 Vnode 集合 -- 一般而言，组件 Vnode 才存在，但可能存在一些特殊 Vnode 添加了 insert 钩子
+    // 并且这个队列是子组件优先(子组件的 mounted 生命周期钩子先执行)
     const insertedVnodeQueue = [];
 
     // 如果旧的 Vnode 不存在，那么可能是：
@@ -1195,7 +1222,11 @@ export function createPatchFunction(backend) {
     }
 
     // 如果组件已经插入到 DOM 树中，执行子组件类型 vnode 的 insert 钩子
-    invokeInsertHook(vnode, insertedVnodeQueue, isInitialPatch);
+    invokeInsertHook(
+      vnode,
+      insertedVnodeQueue,
+      isInitialPatch /** 是否为初次渲染 */
+    );
     return vnode.elm;
   };
 }

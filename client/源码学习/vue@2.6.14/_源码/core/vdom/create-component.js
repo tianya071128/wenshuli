@@ -40,7 +40,7 @@ const componentVNodeHooks = {
     ) {
       // kept-alive components, treat as a patch 保持活性的组件，作为补丁处理
       const mountedNode: any = vnode; // work around flow
-      // 此时执行 prepatch 钩子更新
+      // 此时执行 prepatch 钩子更新 - 此时这种情况，只需要渲染缓存前的 Vnode
       componentVNodeHooks.prepatch(mountedNode, mountedNode);
     } else {
       // 不是缓存组件，初始化组件 -- 通过
@@ -93,6 +93,7 @@ const componentVNodeHooks = {
         // be processed after the whole patch process ended. 在整个修补程序过程结束后进行处理。
         queueActivatedComponent(componentInstance);
       } else {
+        // 缓存组件初次渲染 --- 有意思的是，缓存组件初次渲染也会执行 activated 钩子
         activateChildComponent(componentInstance, true /* direct */);
       }
     }
