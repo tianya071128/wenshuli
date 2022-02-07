@@ -18,6 +18,7 @@ module.exports = [
     items: [
       { text: 'vscode', link: '/vscode/' },
       { text: 'ESLint', link: '/eslint/' },
+      { text: 'webpack', link: '/webpack/' },
     ],
   },
   {

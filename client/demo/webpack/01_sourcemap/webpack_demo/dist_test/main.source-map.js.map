@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "file": "main.source-map.js",
+  "mappings": ";;;;;AAAA;AACA;AACA",
+  "sources": [
+    "webpack://webpack_demo/./src/index.js"
+  ],
+  "sourcesContent": [
+    "const test = 2;\r\n\r\nconsole.log(test2);\r\n"
+  ],
+  "names": [],
+  "sourceRoot": ""
+}

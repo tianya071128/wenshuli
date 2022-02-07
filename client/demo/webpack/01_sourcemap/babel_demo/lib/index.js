@@ -1,0 +1,5 @@
+"use strict";
+
+var test = 2;
+console.log(test2);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9pbmRleC5qcyJdLCJuYW1lcyI6WyJ0ZXN0IiwiY29uc29sZSIsImxvZyIsInRlc3QyIl0sIm1hcHBpbmdzIjoiOztBQUFBLElBQU1BLElBQUksR0FBRyxDQUFiO0FBRUFDLE9BQU8sQ0FBQ0MsR0FBUixDQUFZQyxLQUFaIiwic291cmNlc0NvbnRlbnQiOlsiY29uc3QgdGVzdCA9IDI7XHJcblxyXG5jb25zb2xlLmxvZyh0ZXN0Mik7XHJcbiJdfQ==
