@@ -1,6 +1,6 @@
 const path = require('path');
 
-const i = 6;
+const i = 0;
 const modes = [
   'source-map',
   'eval',
@@ -9,6 +9,7 @@ const modes = [
   'inline-cheap-source-map',
   'inline-cheap-module-source-map',
   'hidden-source-map',
+  'nosources-source-map',
 ];
 
 module.exports = {

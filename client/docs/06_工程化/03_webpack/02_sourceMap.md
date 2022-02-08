@@ -52,7 +52,7 @@ tags:
 | file           | 转换后的文件名                                               |
 | mappings       | **记录位置信息的字符串**                                     |
 | sources        | **转换前的文件,该项是一个数组,表示可能存在多个文件合并** -  所以在开发者工具的 `sources` 中会有 webpack 文件夹 |
-| sourcesContent | 原始文件内容                                                 |
+| sourcesContent | **原始文件内容**                                             |
 | names          | 转换前的所有变量名和属性名                                   |
 | sourceRoot     | 转换前的文件所在的目录。如果与转换前的文件在同一目录，该项为空 |
 
@@ -63,6 +63,8 @@ tags:
 其中 map 文件的 `mappings` 记录着映射关系(转换前和转换后文件的对比)，具体原理涉及到 **VLQ编码**，暂不研究。
 
 ## webpack 中的 sourcemap 配置
+
+**注意：**可以使用 [`SourceMapDevToolPlugin`](https://webpack.docschina.org/plugins/source-map-dev-tool-plugin) 进行更细粒度的配置。查看 [`source-map-loader`](https://webpack.docschina.org/loaders/source-map-loader) 来处理已有的 source map。
 
 在 webpack 中，sourcemap 的配置多达二十来种，但关键的只有五种模式相互搭配：eval、source-map、cheap、module 和 inline。 --- webpack5 中新增了两种模式主要用于生产环境：hidden、nosources
 
@@ -86,7 +88,7 @@ source-map 会单独生产 map 文件，效率比较低。通过在生成文件�
 
 ### eval-*
 
-eval 关键字会使用 `eval()` 包裹执行，加上 eval 主要是利用字符串可缓存的特点，可以缓存模块的源映射，在重建时能够提效
+eval 关键字会使用 `eval()` 包裹执行，加上 eval 主要是利用**字符串可缓存**的特点，可以缓存模块的源映射，在重建时能够提效(why？)
 
 * eval：每个模块都使用 eval() 执行，并且都有 `//# sourceURL=`。会被映射到[**生成后的代码**](https://webpack.docschina.org/configuration/devtool/#qualities)
 
@@ -155,9 +157,42 @@ cheap 模式还会导致不能映射 loader 转换的代码，仅显示转换后
 
 * hidden 模式通常用于单独生成 map 文件，可以将其上传至监控系统，这样就可以通过 map 和源文件解析出错误信息
 
-* 或者本地收集到错误信息，通过`source-map` 和 `stacktracey` 等库进行解析，[demo]()
+* 或者本地收集到错误信息，通过`source-map` 和 `stacktracey` 等库进行解析，[demo](https://github.com/tianya071128/wenshuli/blob/master/client/demo/webpack/01_sourcemap/webpack_demo/src/stacktraceySourceMap.js)
 
 :::
+
+### nosources-*
+
+这个模式不包含源代码内容，只是用来映射客户端上的堆栈跟踪。
+
+* nosources-source-map：不包含源代码内容(即生成的 map 文件中没有 `sourcesContent` 字段)，只存在映射关系
+
+  ![image-20220208094754712](/img/74.png)
+
+::: tip 提示
+
+相较于 hidden 模式而言，这个作为生产环境的错误追踪成本更低，精准度不足
+
+:::
+
+## webpack 的推荐配置
+
+### 开发环境
+
+开发环境下一般要求：重建快(eval)、信息全(module)，并且只需要定义到行即可(cheap)
+
+`devtool: cheap-module-eval-source-map`
+
+### 生产环境
+
+生产环境肯定不要将 sourcemap 暴露出去，但是可能会使用监控平台进行监控，或者如果安全要求不严格，最好可以追踪调用堆栈
+
+* 使用监控平台的：`hidden-source-map`
+* 简单追踪调用栈的：`nosources-source-map`
+* **或者针对特定用户(白名单)访问 source-map**：`source-map`
+* 没有要求则不使用：`(none)`
+
+
 
 ## 参考
 
