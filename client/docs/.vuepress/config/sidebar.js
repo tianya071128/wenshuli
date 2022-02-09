@@ -142,7 +142,7 @@ module.exports = {
       title: 'webpack', // 分组标题
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['01_webpack', '02_sourceMap'],
+      children: ['01_webpack', '02_sourceMap', '03_loader'],
     },
   ],
   '/07_参考/': ['01.index'],
