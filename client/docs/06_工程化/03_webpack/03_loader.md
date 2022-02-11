@@ -145,7 +145,7 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 
 可以通过 loader 的预处理函数，为 JavaScript 生态系统提供更多能力。用户现在可以更加灵活地引入细粒度逻辑，例如：压缩、打包、语言转译（或编译）和 [更多其他特性](https://webpack.docschina.org/loaders)。
 
-## 浅析 webpack 如何调用 loader？
+## 浅析 webpack 调用 loader 流程？
 
 在 `node_modules\webpack\lib\NormalModule.js` 文件中的 `_doBuild` 方法中启动 `loader` 的调用
 
