@@ -145,20 +145,42 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 
 可以通过 loader 的预处理函数，为 JavaScript 生态系统提供更多能力。用户现在可以更加灵活地引入细粒度逻辑，例如：压缩、打包、语言转译（或编译）和 [更多其他特性](https://webpack.docschina.org/loaders)。
 
-## 浅析 webpack 调用 loader 流程？
+## 浅析 webpack 调用 loader 构建模块流程
 
-在 `node_modules\webpack\lib\NormalModule.js` 文件中的 `_doBuild` 方法中启动 `loader` 的调用
+### 1. 启动构建模块
 
-1. 调用 `_createLoaderContext` 方法创建 `loaderContent`，为所有的 `loader` 提供[上下文环境](https://webpack.docschina.org/api/loaders/#example-for-the-loader-context)并共享：
+1. 在 `Compiler` 构建完成 `Compilation` 时，会执行 [`make` ](https://webpack.docschina.org/api/compiler-hooks/#make)钩子
 
    ```js
-   const loaderContext = this._createLoaderContext(
-   	resolver,
-   	options,
-   	compilation,
-   	fs,
-   	hooks
-   );
+   this.hooks.finishMake.callAsync(compilation, (err) => {...}
+   ```
+
+2. webpack 内部会根据 `enter` 入口数量注册相应的 `EntryPlugin` 插件(webpack/lib/EntryPlugin.js)，在这个插件会注册 `compiler.hooks.make` 钩子，用于执行 `compilation.addEntry` 方法从 `entry` 入口文件启动构建
+
+   ```js
+   // 注册 compiler.make(compilation 结束之前执行) 钩子
+   compiler.hooks.make.tapAsync("EntryPlugin", (compilation, callback) => {
+   	// addEntry：为编译添加入口
+   	compilation.addEntry(context, // 入口的上下文路径。
+   		dep, // 入口依赖 - 包含着入口路径等信息
+   		options, // 入口配置 - 包含着入口名称
+   		err => { // 添加入口完成之后回调的函数。
+   			callback(err);
+   		});
+   });
+   ```
+
+3. **最终启动 `compilation.addEntry` 方法启动模块构建**，从入口点开始，分解每个请求，解析文件内容以查找进一步的请求，然后通过分解所有请求以及解析新的文件来爬取全部文件。
+
+   ```js
+   addEntry(context, entry, optionsOrName, callback) {
+   	const options =
+   		typeof optionsOrName === "object"
+   			? optionsOrName
+   			: { name: optionsOrName };
+     // 实际通过 _addEntryItem 启动入口处开始构建模块
+   	this._addEntryItem(context, entry, "dependencies", options, callback);
+   }
    ```
 
    
