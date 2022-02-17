@@ -7,7 +7,7 @@ module.exports = {
     filename: `main.js`,
     path: path.resolve(__dirname, 'dist_test'),
   },
-  devtool: 'eval-source-map',
+  devtool: 'source-map',
   module: {
     rules: [
       {
@@ -24,6 +24,17 @@ module.exports = {
       {
         test: /\.css$/i,
         use: ['style-loader', 'css-loader'],
+      },
+      {
+        test: /\.(png|jpg|gif)$/i,
+        use: [
+          {
+            loader: 'url-loader',
+            options: {
+              limit: 1 * 1024,
+            },
+          },
+        ],
       },
     ],
   },

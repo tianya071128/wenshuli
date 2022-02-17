@@ -145,6 +145,10 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 
 可以通过 loader 的预处理函数，为 JavaScript 生态系统提供更多能力。用户现在可以更加灵活地引入细粒度逻辑，例如：压缩、打包、语言转译（或编译）和 [更多其他特性](https://webpack.docschina.org/loaders)。
 
+## 简单 loader 库源码解读
+
+
+
 ## 浅析 webpack 调用 loader 构建模块流程
 
 ### 1. 启动构建模块
@@ -526,4 +530,69 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
     	 */
    ```
 
+### 4. 递归构建模块的依赖
+
+1. 在编译完成模块后，最后回到启动编译的方法 `_handleModuleBuildAndDependencies` 中，会调用 `processModuleDependencies` 方法递归解析依赖：
+
+   ```js
+   // 处理模块构建 和 处理模块依赖项的递归构建
+   _handleModuleBuildAndDependencies(originModule, module, recursive, callback) {
+   	// ...
+   	// 启动构建模块
+   	this.buildModule(module, err => {
+   		//...
+   	
+   		// 递归解析模块的依赖
+   		this.processModuleDependencies(module, err => {
+   			if (err) {
+   				return callback(err);
+   			}
+   			callback(null, module);
+   		});
+   ```
+
+2. 在 `processModuleDependencies` 方法中，通过内部执行机制，最终调用 `_processModuleDependencies` 进行依赖解析，解析出依赖列表后，遍历调用 `handleModuleCreation` 方法，重复上述步骤：创建模块实例、loaders 编译模块、解析模块依赖、递归构建模块依赖
+
+   ```js
+   // processModuleDependencies -- 最终调用 _processModuleDependencies 方法
+   processModuleDependencies(module, callback) {
+   	this.processDependenciesQueue.add(module, callback);
+   }
    
+   // _processModuleDependencies
+   _processModuleDependencies(module, callback) {
+   	// ...
+   	/**
+   	 * 最终会分析模块的依赖项集合：
+   	 * {
+   	 *   factory: NormalModuleFactory,
+   	 *   dependencies: [HarmonyImportSideEffectDependency, HarmonyImportSpecifierDependency],
+   	 * 	 originModule: module
+   	 * }
+   	 */
+   	const sortedDependencies = []; // 收集到的这个模块依赖
+     // 其他步骤都省略一下，最终会执行这个方法，遍历依赖，执行 handleModuleCreation 方法，重复上述步骤：创建模块实例、loaders 编译模块、解析模块依赖、递归构建模块依赖
+     const onDependenciesSorted = err => {
+   		this.processDependenciesQueue.increaseParallelism();
+   		// 遍历模块的依赖项
+   		for (const item of sortedDependencies) {
+   			inProgressTransitive++;
+   			// 递归调用 handleModuleCreation 方法，启动构建这个模块：创建模块实例、缓存模块、loaders 编译模块、递归构建模
+         this.handleModuleCreation(item, err => {
+   
+         });
+   	}
+   };
+   }
+   ```
+
+### 5. 总结
+
+上述步骤都比较省略，可以查看[源代码注释](https://github.com/tianya071128/wenshuli/tree/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/lib)查看全流程，最终会将构建的全部模块都存放在 `Compilation._modules` 中，查看下图。
+
+![image-20220217104710309](/img/75.png)
+
+## 参考
+
+* [webpack 4 源码主流程分析（一）：前言及总流程概览](https://juejin.cn/post/6844904047221145613#heading-2)
+* [多图详解，一次性搞懂Webpack Loader](https://juejin.cn/post/6992754161221632030#heading-9)
