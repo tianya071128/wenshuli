@@ -37,7 +37,7 @@ class FileUriPlugin {
 				hooks.readResource
 					.for(undefined)
 					.tapAsync("FileUriPlugin", (loaderContext, callback) => {
-						const { resourcePath } = loaderContext;
+						const { resourcePath } = loaderContext; // loader 上下文
 						loaderContext.addDependency(resourcePath);
 						loaderContext.fs.readFile(resourcePath, callback);
 					});

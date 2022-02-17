@@ -509,7 +509,7 @@ class Module extends DependenciesBlock {
 	}
 
 	/**
-	 * Removes all dependencies and blocks
+	 * Removes all dependencies and blocks 删除所有依赖项和块
 	 * @returns {void}
 	 */
 	clearDependenciesAndBlocks() {
@@ -573,10 +573,11 @@ class Module extends DependenciesBlock {
 	}
 
 	/**
-	 * removes all warnings and errors
+	 * removes all warnings and errors 删除所有警告和错误
 	 * @returns {void}
 	 */
 	clearWarningsAndErrors() {
+		// 在新构建模块的时候删除之前的模块警告和错误
 		if (this._warnings !== undefined) {
 			this._warnings.length = 0;
 		}

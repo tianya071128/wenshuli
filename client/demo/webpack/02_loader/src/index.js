@@ -1,5 +1,5 @@
+import test from './js/test';
 import _ from 'lodash';
-import test from './test';
 import './index.css';
 
 window.onerror = (msg, url, lineNo, columnNo, error) => {

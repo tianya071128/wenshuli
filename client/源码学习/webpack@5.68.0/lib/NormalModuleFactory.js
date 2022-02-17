@@ -265,30 +265,35 @@ class NormalModuleFactory extends ModuleFactory {
 			associatedObjectForCache
 		);
 
+		// NormalModuleFactory.factorize：在初始化解析之前调用 -- https://webpack.docschina.org/api/normalmodulefactory-hooks/#factorize
 		this.hooks.factorize.tapAsync(
 			{
 				name: "NormalModuleFactory",
 				stage: 100
 			},
 			(resolveData, callback) => {
+				// 继续解析该模块，执行 NormalModuleFactory.resolve：在请求被解析之前调用。可以通过返回 false 来忽略依赖项。返回一个模块实例将结束进程。否则，返回 undefined 以继续。
+				// https://webpack.docschina.org/api/normalmodulefactory-hooks/#resolve
 				this.hooks.resolve.callAsync(resolveData, (err, result) => {
 					if (err) return callback(err);
 
-					// Ignored
+					// Ignored 可以通过返回 false 来忽略依赖项。
 					if (result === false) return callback();
 
-					// direct module
+					// direct module 返回一个模块实例将结束进程。
 					if (result instanceof Module) return callback(null, result);
 
 					if (typeof result === "object")
 						throw new Error(
 							deprecationChangedHookMessage("resolve", this.hooks.resolve) +
-								" Returning a Module object will result in this module used as result."
+								" Returning a Module object will result in this module used as result." // 返回模块对象将导致此模块用作结果
 						);
-
+					
+					// 执行 afterResolve 钩子：在请求解析后调用 -- webpack 内部没有注册这个钩子，直接执行回调
 					this.hooks.afterResolve.callAsync(resolveData, (err, result) => {
 						if (err) return callback(err);
 
+						// 返回对象的话，直接抛出错误
 						if (typeof result === "object")
 							throw new Error(
 								deprecationChangedHookMessage(
@@ -297,29 +302,36 @@ class NormalModuleFactory extends ModuleFactory {
 								)
 							);
 
-						// Ignored
+						// Ignored 返回 false，忽略这个模块
 						if (result === false) return callback();
 
+						// 该模块的相关信息，为创建模块实例提供各种必备的环境条件
 						const createData = resolveData.createData;
 
+						// createModule：在创建 NormalModule 实例之前调用 -- 内部没有注册这个钩子
 						this.hooks.createModule.callAsync(
 							createData,
 							resolveData,
 							(err, createdModule) => {
+								// 如果这个钩子返回了一个模块实例的话，就使用返回的模块实例，否则就根据模块数据创建这个模块的实例
 								if (!createdModule) {
+									// 没有模块需要处理的话
 									if (!resolveData.request) {
-										return callback(new Error("Empty dependency (no request)"));
+										return callback(new Error("Empty dependency (no request)")); // 空依赖项（无请求）
 									}
 
+									// 根据 createData 信息创建模块实例(NormalModule) -- 实例化时不做具体操作，只是实例化这个模块的数据
 									createdModule = new NormalModule(createData);
 								}
 
+								// module 钩子：在创建 NormalModule 实例后调用 -- webpack 中用于处理模块其他问题，这里常规模块不会使用
 								createdModule = this.hooks.module.call(
 									createdModule,
 									createData,
 									resolveData
 								);
-
+								
+								// 得到模块对象后，通过 callback 回调抛出这个模块
 								return callback(null, createdModule);
 							}
 						);
@@ -327,12 +339,21 @@ class NormalModuleFactory extends ModuleFactory {
 				});
 			}
 		);
+		// 注册 NormalModuleFactory.resolve 钩子：在请求被解析之前调用。可以通过返回 false 来忽略依赖项。返回一个模块实例将结束进程。否则，返回 undefined 以继续。
+		/**
+		 * 在下面的 resolve 钩子中，会处理该模块的相关信息，为创建模块实例提供各种必备的环境条件
+		 * 	loaders：使用的 loader 集合
+		 * 	parser：用于解析模块为 ast -- 后续解析模块使用
+		 * 	generator：用于模版生成时提供方法 -- 后续解析模块使用
+		 * 	。。。
+		 */
 		this.hooks.resolve.tapAsync(
 			{
 				name: "NormalModuleFactory",
 				stage: 100
 			},
 			(data, callback) => {
+				// 提取这个模块的数据
 				const {
 					contextInfo,
 					context,
@@ -345,6 +366,7 @@ class NormalModuleFactory extends ModuleFactory {
 					missingDependencies,
 					contextDependencies
 				} = data;
+				// ？
 				const loaderResolver = this.getResolver("loader");
 
 				/** @type {ResourceData | undefined} */
@@ -730,15 +752,38 @@ class NormalModuleFactory extends ModuleFactory {
 	}
 
 	/**
-	 * @param {ModuleFactoryCreateData} data data object
-	 * @param {function(Error=, ModuleFactoryResult=): void} callback callback
+	 * @param {ModuleFactoryCreateData} data data object 数据对象
+	 * @param {function(Error=, ModuleFactoryResult=): void} callback callback 回调
 	 * @returns {void}
+	 * 	以在 ./src/index.js 中导入 index.css 文件为例
+	 */
+	/**
+	 * 最终在这里启动创建模块实例 -- 会从入口点开始解析，递归解析所有的依赖文件，最后会将每个依赖项都生成一个模块实例
+	 * 大致流程为解析模块信息，解析需要的 loaders、parser 等信息，new NormalModule 构造模块实例，以及其他模块相关信息，将其返回
+	 * 
+	 * --> 1. 在 ./Compilation 的 _factorizeModule 的方法中调用 factory.create() 启动构建这个模块
+	 * --> 2. 封装一些数据后，执行 NormalModuleFactory.hooks.beforeResolve 钩子 -- webpack 没有注册这个钩子，直接执行回调
+	 * --> 3. 在 beforeResolve 钩子回调中，执行 NormalModuleFactory.hooks.factorize 钩子 -- 在初始化 NormalModuleFactory 时注册了这个钩子(在上方 constructor 初始化时)
+	 * 	--> 3.1. 在 hooks.factorize 钩子事件中，直接执行 NormalModuleFactory.hooks.resolve 钩子 -- 在初始化 NormalModuleFactory 时注册了这个钩子(在上方 constructor 初始化时)
+	 * 		--> 3.1.1 在 resolve 钩子事件中(即 constructor 初始化注册的事件)，提取出会处理该模块的相关信息，为创建模块实例提供各种必备的环境条件(loaders：使用的 loader 集合、parser：用于解析模块为 ast -- 后续解析模块使用、generator：用于模版生成时提供方法 -- 后续解析模块使用。。。)
+	 * 	--> 3.2 resolve 钩子事件执行完毕，提取出模块相关信息，接着执行 NormalModuleFactory.hooks.resolve 钩子的回调
+	 * 		--> 3.2.1 在 resolve 钩子回调中，接着执行 NormalModuleFactory.hooks.afterResolve 钩子 -- webpack 内部没有注册这个钩子，直接执行回调
+	 * 		--> 3.2.2 在 afterResolve 钩子回调中，执行 NormalModuleFactory.hooks.createModule -- webpack 内部没有注册这个钩子，直接执行回调
+	 * 		--> 3.2.3 在 createModule 钩子回调中，根据第四步 resolve 钩子中提取的模块信息，调用 new NormalModule(createData) 生成模块信息，在这里只是初始化一些模块信息
+	 * 							 接着执行 NormalModuleFactory.hooks.module 钩子 -- webpack 中用于处理模块其他问题，这里常规模块不会使用
+	 * 		--> 3.2.4 至此，我们根据模块信息创建了模块实例，将这个模块实例通过 callback 跳出第 3 步注册的 factorize 事件(即 constructor 初始化注册的事件)
+	 * --> 4. NormalModuleFactory.hooks.factorize 钩子事件执行完毕，执行这个钩子回调，就在 create 方法内部
+	 * --> 5. 初始化模块完毕，组装模块实例以及其他相关信息，执行 callback 回调跳出 cretae 方法，会回到 ./Compilation 的 _factorizeModule 的方法中
 	 */
 	create(data, callback) {
+		// 依赖项 - 需要解析的模块
 		const dependencies = /** @type {ModuleDependency[]} */ (data.dependencies);
+		// 模块的上下文路径 -- "C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\02_loader\\src"
 		const context = data.context || this.context;
 		const resolveOptions = data.resolveOptions || EMPTY_RESOLVE_OPTIONS;
+		// 当前需要解析的模块：在 dependencies 文件夹中处理各种模块，表示该模块的相关信息
 		const dependency = dependencies[0];
+		// 当前模块的请求路径 -- "./index.css"
 		const request = dependency.request;
 		const assertions = dependency.assertions;
 		const contextInfo = data.contextInfo;
@@ -748,6 +793,7 @@ class NormalModuleFactory extends ModuleFactory {
 		const dependencyType =
 			(dependencies.length > 0 && dependencies[0].category) || "";
 		/** @type {ResolveData} */
+		// 当前模块的封装数据
 		const resolveData = {
 			contextInfo,
 			resolveOptions,
@@ -762,7 +808,10 @@ class NormalModuleFactory extends ModuleFactory {
 			createData: {},
 			cacheable: true
 		};
+		// 触发 NormalModuleFactory.beforeResolve 钩子 -- 当遇到新的依赖项请求时调用。可以通过返回 false 来忽略依赖项。否则，返回 undefined 以继续。
+		// webpack 内部也没有这个钩子，直接执行回调内容
 		this.hooks.beforeResolve.callAsync(resolveData, (err, result) => {
+			// 出现错误，错误处理
 			if (err) {
 				return callback(err, {
 					fileDependencies,
@@ -772,7 +821,7 @@ class NormalModuleFactory extends ModuleFactory {
 				});
 			}
 
-			// Ignored
+			// Ignored 忽略 -- 注册的钩子返回了 false，忽略这个模块的构建
 			if (result === false) {
 				return callback(null, {
 					fileDependencies,
@@ -782,6 +831,7 @@ class NormalModuleFactory extends ModuleFactory {
 				});
 			}
 
+			// 返回了 object 类型的话，抛出错误
 			if (typeof result === "object")
 				throw new Error(
 					deprecationChangedHookMessage(
@@ -790,7 +840,9 @@ class NormalModuleFactory extends ModuleFactory {
 					)
 				);
 
+			// NormalModuleFactory.factorize：在初始化解析之前调用 -- webpack 内部注册了这个钩子
 			this.hooks.factorize.callAsync(resolveData, (err, module) => {
+				// 如果存在错误的话，返回构建模块失败信息
 				if (err) {
 					return callback(err, {
 						fileDependencies,
@@ -800,14 +852,16 @@ class NormalModuleFactory extends ModuleFactory {
 					});
 				}
 
+				// 模块构建结果 -- 下面的都是标识模块的信息
 				const factoryResult = {
-					module,
+					module, // 模块实例
 					fileDependencies,
 					missingDependencies,
 					contextDependencies,
 					cacheable: resolveData.cacheable
 				};
 
+				// 初始化模块完毕，执行 callback 回调跳出 cretae 方法
 				callback(null, factoryResult);
 			});
 		});

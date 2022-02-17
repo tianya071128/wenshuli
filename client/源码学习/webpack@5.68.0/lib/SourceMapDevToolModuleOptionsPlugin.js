@@ -24,6 +24,7 @@ class SourceMapDevToolModuleOptionsPlugin {
 			compilation.hooks.buildModule.tap(
 				"SourceMapDevToolModuleOptionsPlugin",
 				module => {
+					// 说明这个模块需要生成 sourceMap
 					module.useSourceMap = true;
 				}
 			);

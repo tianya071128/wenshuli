@@ -1098,14 +1098,17 @@ ${other}`);
   }
 
   /**
-   * @param {CompilationParams} params the compilation parameters
-   * @returns {Compilation} the created compilation
+   * @param {CompilationParams} params the compilation parameters 编译参数
+   * @returns {Compilation} the created compilation 创建的 compilation
    */
-  newCompilation(params) {
+	newCompilation(params) {
+		// 创建一个 compilation 实例
     const compilation = this.createCompilation(params);
     compilation.name = this.name;
-    compilation.records = this.records;
-    this.hooks.thisCompilation.call(compilation, params);
+		compilation.records = this.records;
+		// 初始化 compilation 时调用，在触发 compilation 事件之前调用 -- webpack 内部注册了很多钩子 -- https://webpack.docschina.org/api/compiler-hooks/#thiscompilation
+		this.hooks.thisCompilation.call(compilation, params);
+		// compilation 创建之后执行 -- webpack 内部注册了很多钩子 -- https://webpack.docschina.org/api/compiler-hooks/#compilation
     this.hooks.compilation.call(compilation, params);
     return compilation;
   }
@@ -1162,11 +1165,13 @@ ${other}`);
       // beforeCompile 之后立即调用，但在一个新的 compilation 创建之前 -- webpack 内部存在一个插件注册了这个钩子(./ExternalsPlugin.js)
       this.hooks.compile.call(params);
 
+			// 创建一个 Compilation 实例：访问所有的模块和它们的依赖（大部分是循环依赖）。 它会对应用程序的依赖图中所有模块， 进行字面上的编译(literal compilation)。 在编译阶段，模块会被加载(load)、封存(seal)、优化(optimize)、 分块(chunk)、哈希(hash)和重新创建(restore)。
       const compilation = this.newCompilation(params);
 
       const logger = compilation.getLogger('webpack.Compiler');
 
-      logger.time('make hook');
+			logger.time('make hook');
+			// compilation 结束之前执行 -- 在 ./EntryPlugin.js 内部中注册了这个钩子，用于处理程序的入口
       this.hooks.make.callAsync(compilation, (err) => {
         logger.timeEnd('make hook');
         if (err) return callback(err);

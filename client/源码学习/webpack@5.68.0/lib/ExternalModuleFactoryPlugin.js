@@ -56,6 +56,7 @@ class ExternalModuleFactoryPlugin {
 	 */
 	apply(normalModuleFactory) {
 		const globalType = this.type;
+		// factorize：在初始化解析之前调用。它应该返回 undefined 以继续 -- https://webpack.docschina.org/api/normalmodulefactory-hooks/#factorize
 		normalModuleFactory.hooks.factorize.tapAsync(
 			"ExternalModuleFactoryPlugin",
 			(data, callback) => {
