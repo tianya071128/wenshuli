@@ -116,7 +116,7 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 
 同一种类的 loader 的从右到左（或从下到上）地取值(evaluate)/执行(execute)。
 
-所有一个接一个地进入的 loader，都有两个阶段：
+所有一个接一个地进入的 loader，**都有两个阶段**：
 
 1. **Pitching** 阶段: loader 上的 pitch 方法，按照 `后置(post)、行内(inline)、普通(normal)、前置(pre)` 的顺序调用。更多详细信息，请查看 [Pitching Loader](https://webpack.docschina.org/api/loaders/#pitching-loader)。
 2. **Normal** 阶段: loader 上的 常规方法，按照 `前置(pre)、普通(normal)、行内(inline)、后置(post)` 的顺序调用。模块源码的转换， 发生在这个阶段。
@@ -147,7 +147,9 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 
 ## 简单 loader 库源码解读
 
-
+* [url-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/url-loader/index.js)
+* [file-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/file-loader/index.js)
+* [eslint-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/file-loader/index.js)
 
 ## 浅析 webpack 调用 loader 构建模块流程
 
