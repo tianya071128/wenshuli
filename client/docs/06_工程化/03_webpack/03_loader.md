@@ -147,9 +147,9 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 
 ## 简单 loader 库源码解读
 
-* [url-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/url-loader/index.js)
-* [file-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/file-loader/index.js)
-* [eslint-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/file-loader/index.js)
+* [url-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/url-loader@4.1.1/index.js)
+* [file-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/file-loader@6.2.0/index.js)
+* [eslint-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/eslint-loader@4.0.2/index.js)
 
 ## 浅析 webpack 调用 loader 构建模块流程
 
