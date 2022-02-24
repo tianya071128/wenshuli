@@ -302,6 +302,124 @@ const getNormalizedEntryStatic = entry => {
 };
 ```
 
+#### 2. webpack 内部插件处理 entry
+
+流程大致如下：启动注册 `webpack` 插件 --> 注册 `EntryOptionPlugin` 插件，插件内部注册 `entryOption` 钩子 --> 立马执行 `entryOption` 钩子 --> 在 `EntryOptionPlugin` 插件 ` entryOption` 钩子事件中，遍历每个 `entry` 的 `import` 数组，注册 `EntryPlugin` 插件
+
+```js
+/** 初始化 compiler -- webpack/lib/webpack.js */
+const createCompiler = rawOptions => {
+	// 标准化配置项 -- 初始化 Compiler -- 注册用户定义的插件 。。。
+  
+	// 注册 webpack 内部插件
+	new WebpackOptionsApply().process(options, compiler);
+	
+  // ... 
+};
+
+/** 注册 webpack 内部插件 -- webpack/lib/WebpackOptionsApply.js */
+process(options, compiler) {
+  // ... 
+  
+	// 在这里注册的是处理 entry 的插件
+	new EntryOptionPlugin().apply(compiler); 
+	/**
+	 * entryOption 钩子：在 webpack 选项中的 entry 被处理过之后调用
+	 * SyncBailHook 类型钩子：同步钩子，执行过程中注册的回调返回非 undefined 时就停止不在执行。
+	 * 
+	 * 因为用户级别的插件已经被注册，所以先执行用户的钩子，让用户先处理一下 entry
+	 * 然后在通过上面的 EntryOptionPlugin 插件内部处理 entry 钩子
+	 */
+	compiler.hooks.entryOption.call(options.context, options.entry);
+  
+  // ...
+}
+
+/** EntryOptionPlugin 插件 -- webpack/lib/EntryOptionPlugin.js */
+apply(compiler) {
+	/**
+	 * 注册 entryOption 钩子：在 webpack 选项中的 entry 被处理过之后调用。
+	 * 为什么不在这里直接处理 entry？ -- 猜测可能是提供一个钩子给用户使用，可以让用户能够有机会处理 entry
+	 */
+	compiler.hooks.entryOption.tap("EntryOptionPlugin", (context, entry) => {
+		EntryOptionPlugin.applyEntryOption(compiler, context, entry);
+		return true; // 返回非 undefined 的值，结束 entryOption(SyncBailHook 类型钩子) 钩子的执行
+	});
+}
+static applyEntryOption(compiler, context, entry) {
+	if (typeof entry === "function" /** 如果是函数 */) {
+		const DynamicEntryPlugin = require("./DynamicEntryPlugin");
+		new DynamicEntryPlugin(context, entry).apply(compiler);
+	} else {
+		// 当前插件(EntryOptionPlugin)是用来处理 entry 选项的，但是 entry 可能有多个入口或者多个需要处理的 entry(传入了数组：entry: ['./src/index2.js',...])
+		const EntryPlugin = require("./EntryPlugin");
+		// 遍历 entry - 多入口情况
+		for (const name of Object.keys(entry)) {
+			const desc = entry[name]; // 入口对象
+			// 处理一下 desc，组装成 EntryOptions(与 desc(EntryDescription) 类似，增加了 name 属性，排除了 import 属性)
+			const options = EntryOptionPlugin.entryDescriptionToOptions(
+				compiler,
+				name,
+				desc
+			);
+			// 遍历 desc.import 数组 - 会被标准化为数组 -- 启动时加载的模块，最后一个是出口
+			for (const entry of desc.import) {
+				/**
+				 * 每个入口的 import 项 都会被视为依赖图的起点，这些起点都通过 EntryPlugin 插件来处理
+				 * 在这个插件中，会通过 options 生成 EntryDependency 入口依赖对象，并注册 make 钩子，在这个钩子事件中，通过 compilation.addEntry 方法启动模块的构建
+				 */
+				new EntryPlugin(context, entry, options).apply(compiler);
+			}
+		}
+	}
+}
+```
+
+#### 3. EntryPlugin 插件处理每个依赖起口
+
+webpack 会将每个 `entry` 的每个 `import` 都视为依赖的起点，以这些为起点来构建项目的所有的依赖
+
+例如如下 `entry` 配置：
+
+```js
+entry: {
+  entry1: ['./src/entry1.js', './src/entry2.js'],
+  entry2: ['./src/entry3.js', './src/entry4.js']
+}
+```
+
+此时相当于存在四个依赖起点，会被遍历调用 `EntryPlugin` 插件处理依赖，在插件内部会注册 [`compiler.hooks.make`](https://webpack.docschina.org/api/compiler-hooks/#make) 钩子，在钩子事件中调用 `compilation.addEntry` 方法启动模块的构建
+
+```js
+/* EntryPlugin 插件 -- webpack/lib/EntryPlugin.js */
+apply(compiler) {
+	// 注册 compilation 钩子：compilation 创建之后执行。
+	compiler.hooks.compilation.tap(
+		"EntryPlugin",
+		(compilation, { normalModuleFactory }) => {
+			compilation.dependencyFactories.set(
+				EntryDependency,
+				normalModuleFactory
+			);
+		}
+	);
+	const { entry, options, context } = this; 
+	// webpack 会将每个模块都视为一个不同的依赖，在这里就是创建一个入口依赖
+	const dep = EntryPlugin.createDependency(entry, options);
+	// 注册 make 钩子：compilation 结束之前执行。这个钩子 不会 被复制到子编译器。
+	// 在这里钩子中，就会执行 addEntry 方法启动入口模块的构建，并递归构建依赖图
+	compiler.hooks.make.tapAsync("EntryPlugin", (compilation, callback) => {
+		// addEntry：为编译添加入口
+		compilation.addEntry(context, // 入口的上下文路径。
+			dep, // 入口依赖 - 包含着入口路径等信息
+			options, // 入口配置 - 包含着入口名称
+			err => { // 添加入口完成之后回调的函数。
+				callback(err);
+			});
+	});
+}
+```
+
 
 
 ## 上下文(context)
