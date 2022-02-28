@@ -145,6 +145,7 @@ module.exports = {
       children: [
         '01_webpack',
         '04_entryandcontext',
+        '05_output',
         '02_sourceMap',
         '03_loader',
       ],
