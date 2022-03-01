@@ -1,4 +1,3 @@
-"use strict";
 (self["myCustomFunc"] = self["myCustomFunc"] || []).push([["main"],[
 /* 0 */,
 /* 1 */
@@ -44,4 +43,4 @@ __webpack_require__.e(/*! import() */ "src_chunk_chunk01_js").then(__webpack_req
 /******/ var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
 /******/ var __webpack_exports__ = (__webpack_exec__(1));
 /******/ }
-]);
+])

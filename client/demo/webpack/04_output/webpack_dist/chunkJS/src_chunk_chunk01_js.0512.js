@@ -1,4 +1,3 @@
-"use strict";
 (self["myCustomFunc"] = self["myCustomFunc"] || []).push([["src_chunk_chunk01_js"],[
 /* 0 */
 /*!******************************!*\
@@ -16,4 +15,4 @@ const test = function() {
 
 
 /***/ })
-]]);
+]])
