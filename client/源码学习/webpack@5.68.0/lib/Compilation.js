@@ -4726,9 +4726,9 @@ This prevents using hashes of each other and should be avoided.`);
 	}
 
 	/**
-	 * @param {string | function(PathData, AssetInfo=): string} filename used to get asset path with hash
+	 * @param {string | function(PathData, AssetInfo=): string} filename used to get asset path with hash 用于通过哈希获取资产路径
 	 * @param {PathData} data context data
-	 * @returns {string} interpolated path
+	 * @returns {string} interpolated path 插值路径
 	 */
 	getAssetPath(filename, data) {
 		return this.hooks.assetPath.call(
@@ -4739,13 +4739,18 @@ This prevents using hashes of each other and should be avoided.`);
 	}
 
 	/**
-	 * @param {string | function(PathData, AssetInfo=): string} filename used to get asset path with hash
+	 * @param {string | function(PathData, AssetInfo=): string} filename used to get asset path with hash 用于通过哈希获取资产路径
 	 * @param {PathData} data context data
-	 * @returns {{ path: string, info: AssetInfo }} interpolated path and asset info
+	 * @returns {{ path: string, info: AssetInfo }} interpolated path and asset info 插值路径和资产信息
 	 */
 	getAssetPathWithInfo(filename, data) {
 		const assetInfo = {};
-		// TODO webpack 5: refactor assetPath hook to receive { path, info } object
+		// TODO webpack 5: refactor assetPath hook to receive { path, info } object TODO webpack 5：重构assetPath钩子以接收{path，info}对象
+		/**
+		 * assetPath：调用以决定 asset 的路径
+		 * SyncWaterfallHook：同步钩子，接受至少一个参数，上一个注册的回调返回值会作为下一个注册的回调的参数
+		 * 在这个钩子中，决定 chunk 的名称
+		 */
 		const newPath = this.hooks.assetPath.call(
 			typeof filename === "function" ? filename(data, assetInfo) : filename,
 			data,

@@ -566,7 +566,7 @@ class WebpackOptionsApply extends OptionsApply {
       new SizeLimitsPlugin(options.performance).apply(compiler);
     }
 
-    new TemplatedPathPlugin().apply(compiler);
+    new TemplatedPathPlugin().apply(compiler); // make - TemplatedPathPlugin
 
     new RecordIdsPlugin({
       portableIds: options.optimization.portableRecords,
