@@ -6,5 +6,8 @@ module.exports = {
   output: {
     filename: 'js/[name].[fullhash:4].js',
     path: path.resolve(__dirname, 'webpack_dist'),
+    clean: true,
   },
+  name: 'wenshuli',
+  // recordsPath: path.join(__dirname, 'records.json'),
 };
