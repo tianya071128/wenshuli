@@ -122,8 +122,13 @@ class Compiler {
    * @param {WebpackOptions} options options
    */
   constructor(context, options = /** @type {WebpackOptions} */ ({})) {
+    // Compiler 钩子
     this.hooks = Object.freeze({
       /** @type {SyncHook<[]>} */
+      /**
+      * initialize 钩子：当编译器对象被初始化时调用。
+      * SyncHook 钩子：基础同步钩子，顺序执行钩子事件
+      */
       initialize: new SyncHook([]),
 
       /** @type {SyncBailHook<[Compilation], boolean>} */
@@ -134,8 +139,16 @@ class Compiler {
       afterDone: new SyncHook(['stats']),
       /** @type {AsyncSeriesHook<[]>} */
       additionalPass: new AsyncSeriesHook([]),
+      /**
+       * beforeRun 钩子：在开始执行一次构建之前调用，compiler.run 方法开始执行后立刻进行调用。
+       * AsyncSeriesHook 钩子：异步钩子，串联执行
+       */
       /** @type {AsyncSeriesHook<[Compiler]>} */
       beforeRun: new AsyncSeriesHook(['compiler']),
+      /**
+       * run 钩子：在开始读取 records 之前调用。
+       * AsyncSeriesHook 钩子：异步钩子，串联执行
+       */
       /** @type {AsyncSeriesHook<[Compiler]>} */
       run: new AsyncSeriesHook(['compiler']),
       /** @type {AsyncSeriesHook<[Compilation]>} */
@@ -145,17 +158,41 @@ class Compiler {
       /** @type {AsyncSeriesHook<[Compilation]>} */
       afterEmit: new AsyncSeriesHook(['compilation']),
 
+      /**
+       * thisCompilation 钩子：初始化 compilation 时调用，在触发 compilation 事件之前调用。
+       * SyncHook 钩子：同步串联执行
+       */
       /** @type {SyncHook<[Compilation, CompilationParams]>} */
       thisCompilation: new SyncHook(['compilation', 'params']),
+      /**
+       * compilation 钩子：compilation 创建之后执行。
+       * SyncHook 钩子：同步串联钩子
+       */
       /** @type {SyncHook<[Compilation, CompilationParams]>} */
       compilation: new SyncHook(['compilation', 'params']),
       /** @type {SyncHook<[NormalModuleFactory]>} */
+      /**
+       * normalModuleFactory 钩子：NormalModuleFactory 创建之后调用。
+       * SyncHook 钩子；同步，串联执行
+       */
       normalModuleFactory: new SyncHook(['normalModuleFactory']),
       /** @type {SyncHook<[ContextModuleFactory]>}  */
+      /**
+       * contextModuleFactory 钩子：ContextModuleFactory 创建之后调用。
+       * SyncHook 钩子；同步，串联执行
+       */
       contextModuleFactory: new SyncHook(['contextModuleFactory']),
 
+      /**
+       * beforeCompile 钩子：在创建 compilation parameter 之后执行。
+       * AsyncSeriesHook 钩子：异步串联执行
+       */
       /** @type {AsyncSeriesHook<[CompilationParams]>} */
       beforeCompile: new AsyncSeriesHook(['params']),
+      /**
+       * compile 钩子：beforeCompile 之后立即调用，但在一个新的 compilation 创建之前。这个钩子 不会 被复制到子编译器。
+       * SyncHook 钩子：同步串联执行
+       */
       /** @type {SyncHook<[CompilationParams]>} */
       compile: new SyncHook(['params']),
       /** @type {AsyncParallelHook<[Compilation]>} */
@@ -184,8 +221,12 @@ class Compiler {
       /** @type {SyncBailHook<[string, string, any[]], true>} */
       infrastructureLog: new SyncBailHook(['origin', 'type', 'args']),
 
-      // TODO the following hooks are weirdly located here
-      // TODO move them for webpack 5
+      // TODO the following hooks are weirdly located here 下面的钩子奇怪地位于这里
+      // TODO move them for webpack 5 在webpack 5中移动它们
+      /**
+       * environment 钩子：在编译器准备环境时调用，时机就在配置文件中初始化插件之后。
+       * SyncHook 钩子：基础同步钩子，顺序执行钩子事件
+       */
       /** @type {SyncHook<[]>} */
       environment: new SyncHook([]),
       /** @type {SyncHook<[]>} */
@@ -198,14 +239,14 @@ class Compiler {
       entryOption: new SyncBailHook(['context', 'entry']),
     });
 
-    this.webpack = webpack;
+    this.webpack = webpack; // webpack 方法
 
-    /** @type {string=} */
-    this.name = undefined;
+    /** @type {string=} 配置名称 - webpack.options.name */
+    this.name = undefined; //  - https://webpack.docschina.org/configuration/other-options/#name
     /** @type {Compilation=} */
     this.parentCompilation = undefined;
     /** @type {Compiler} */
-    this.root = this;
+    this.root = this; // 根编译器 - 如果存在子编译器的话，就会指向根编译器，一般是本身
     /** @type {string} */
     this.outputPath = '';
     /** @type {Watching} */
@@ -257,9 +298,9 @@ class Compiler {
     /** @type {Map<Module, { buildInfo: object, references: WeakMap<Dependency, Module>, memCache: WeakTupleMap }> | undefined} */
     this.moduleMemCaches = undefined;
 
-    this.compilerPath = '';
+    this.compilerPath = ''; // 
 
-    /** @type {boolean} */
+    /** @type {boolean} 运行时标记 */
     this.running = false;
 
     /** @type {boolean} */
@@ -271,9 +312,9 @@ class Compiler {
     this._backCompat = this.options.experiments.backCompat !== false;
 
     /** @type {Compilation} */
-    this._lastCompilation = undefined;
+    this._lastCompilation = undefined; // 当前 Compiler 创建的 Compilation 实例 - 可能 Compiler 会被重用，此时就通过这个引用来做一些清除工作
     /** @type {NormalModuleFactory} */
-    this._lastNormalModuleFactory = undefined;
+    this._lastNormalModuleFactory = undefined; // 当前 Compiler 创建的 NormalModuleFactory 实例 - 可能 Compiler 会被重用，此时就通过这个引用来做一些清除工作
 
     /** @private @type {WeakMap<Source, { sizeOnlySource: SizeOnlySource, writtenTo: Map<string, number> }>} */
     this._assetEmittingSourceCache = new WeakMap();
@@ -377,9 +418,10 @@ class Compiler {
     );
   }
 
-  // TODO webpack 6: solve this in a better way
-  // e.g. move compilation specific info from Modules into ModuleGraph
+  // TODO webpack 6: solve this in a better way 用更好的方法解决这个问题
+  // e.g. move compilation specific info from Modules into ModuleGraph 将编译的特定信息从模块移到模块图中
   _cleanupLastCompilation() {
+    // 将上一次编译的信息做清除
     if (this._lastCompilation !== undefined) {
       for (const module of this._lastCompilation.modules) {
         ChunkGraph.clearChunkGraphForModule(module);
@@ -418,12 +460,14 @@ class Compiler {
   }
 
   /**
-   * @param {Callback<Stats>} callback signals when the call finishes
+   * @param {Callback<Stats>} callback signals when the call finishes 调用结束时发出的信号
    * @returns {void}
    */
   run(callback) {
+    // 如果已经开始运行，则抛出错误
     if (this.running) {
-      return callback(new ConcurrentCompilationError());
+      // 抛出错误：你运行了Webpack两次。每个实例一次只支持一个并发编译
+      return callback(new ConcurrentCompilationError() /** 继承至 Error */);
     }
 
     let logger;
@@ -444,7 +488,7 @@ class Compiler {
 
     const startTime = Date.now();
 
-    this.running = true;
+    this.running = true; // 运行标识置为 true
 
     const onCompiled = (err, compilation) => {
       if (err) return finalCallback(err);
@@ -511,14 +555,27 @@ class Compiler {
       });
     };
 
+    // 开始 Compiler 构建
     const run = () => {
+      /**
+       * beforeRun 钩子：在开始执行一次构建之前调用，compiler.run 方法开始执行后立刻进行调用。
+       * AsyncSeriesHook 钩子：异步钩子，串联执行
+       */
       this.hooks.beforeRun.callAsync(this, (err) => {
+        // 构建失败，抛出错误交由 finalCallback 处理
         if (err) return finalCallback(err);
 
+        /**
+         * run 钩子：在开始读取 records 之前调用。
+         * AsyncSeriesHook 钩子：异步钩子，串联执行
+         */
         this.hooks.run.callAsync(this, (err) => {
+          // 出现错误，抛出错误交由 finalCallback 处理
           if (err) return finalCallback(err);
 
+          // records 是用来记录「用于存储跨多次构建(across multiple builds)的模块标识符」的数据片段 -- https://webpack.docschina.org/configuration/other-options/#recordsinputpath
           this.readRecords((err) => {
+            // 出现错误，抛出错误
             if (err) return finalCallback(err);
 
             this.compile(onCompiled);
@@ -535,7 +592,7 @@ class Compiler {
         run();
       });
     } else {
-      run();
+      run(); // 开始运行
     }
   }
 
@@ -951,11 +1008,11 @@ ${other}`);
   }
 
   /**
-   * @param {Callback<void>} callback signals when the call finishes
+   * @param {Callback<void>} callback signals when the call finishes 调用结束时发出的信号
    * @returns {void}
    */
   readRecords(callback) {
-    if (this.hooks.readRecords.isUsed()) {
+    if (this.hooks.readRecords.isUsed() /** 应该是用来检测是否注册了这个钩子 */) {
       if (this.recordsInputPath) {
         asyncLib.parallel([
           (cb) => this.hooks.readRecords.callAsync(cb),
@@ -976,7 +1033,7 @@ ${other}`);
   }
 
   /**
-   * @param {Callback<void>} callback signals when the call finishes
+   * @param {Callback<void>} callback signals when the call finishes 调用结束时发出的信号
    * @returns {void}
    */
   _readRecords(callback) {
@@ -1092,8 +1149,10 @@ ${other}`);
     return !!this.parentCompilation;
   }
 
+  // 实例化 Compilation，实例化过程中只做了初始化属性，不做具体工作
   createCompilation(params) {
-    this._cleanupLastCompilation();
+    this._cleanupLastCompilation(); // 
+    // 实例化 Compilation，实例化过程中只做了初始化属性，不做具体工作
     return (this._lastCompilation = new Compilation(this, params));
   }
 
@@ -1102,51 +1161,76 @@ ${other}`);
    * @returns {Compilation} the created compilation 创建的 compilation
    */
 	newCompilation(params) {
-		// 创建一个 compilation 实例
+		// 实例化 compilation 
     const compilation = this.createCompilation(params);
-    compilation.name = this.name;
+    compilation.name = this.name; // 当前 Compilation 的 name，由 webpack.options.name 配置
 		compilation.records = this.records;
-		// 初始化 compilation 时调用，在触发 compilation 事件之前调用 -- webpack 内部注册了很多钩子 -- https://webpack.docschina.org/api/compiler-hooks/#thiscompilation
+    /**
+     * thisCompilation 钩子：初始化 compilation 时调用，在触发 compilation 事件之前调用。
+     * SyncHook 钩子：同步串联执行
+     * webpack 内部注册了很多钩子事件
+     */
 		this.hooks.thisCompilation.call(compilation, params);
-		// compilation 创建之后执行 -- webpack 内部注册了很多钩子 -- https://webpack.docschina.org/api/compiler-hooks/#compilation
+    /**
+     * compilation 钩子：compilation 创建之后执行。
+     * SyncHook 钩子：同步串联钩子
+     * webpack 内部注册了很多钩子事件
+     */
     this.hooks.compilation.call(compilation, params);
     return compilation;
   }
 
-  // 初始化模块工厂实例 - 用来为每个模块创建模块实例
+  /**
+   * 创建 NormalModuleFactory 实例：
+   *  从入口点开始，此模块会分解每个请求，解析文件内容以查找进一步的请求，然后通过分解所有请求以及解析新的文件来爬取全部文件。
+   *  在最后阶段，每个依赖项都会成为一个模块实例。
+   */
   createNormalModuleFactory() {
-    this._cleanupLastNormalModuleFactory();
+    this._cleanupLastNormalModuleFactory(); // 清理旧的 NormalModuleFactory 实例
     // 创建一个模块工厂实例
     const normalModuleFactory = new NormalModuleFactory({
-      context: this.options.context, // 根目录
-      fs: this.inputFileSystem, // 读取文件系统
+      context: this.options.context, // webpack.options.contxt：路径上下文
+      fs: this.inputFileSystem, // 读取文件系统 - 封装 Node 的 fs 模块
       resolverFactory: this.resolverFactory,
-      options: this.options.module, // module 配置项(用户配置和默认配置相结合)
-      associatedObjectForCache: this.root,
-      layers: this.options.experiments.layers,
+      options: this.options.module, // webpack.options.module 配置项(用户配置和默认配置相结合) - 用来处理模块的配置
+      associatedObjectForCache: this.root, // 根编译器
+      layers: this.options.experiments.layers, // 在 webpack5 中还是实验特性
     });
-    this._lastNormalModuleFactory = normalModuleFactory;
-    // NormalModuleFactory 创建之后调用 -- webpack 内部没有注册这个钩子
+    this._lastNormalModuleFactory = normalModuleFactory; // 当前 Compiler 的 NormalModuleFactory 实例
+    /**
+     * normalModuleFactory 钩子：NormalModuleFactory 创建之后调用。
+     * SyncHook 钩子；同步，串联执行
+     */
     this.hooks.normalModuleFactory.call(normalModuleFactory);
     return normalModuleFactory; // 返回模块工厂实例 - 用来为每个模块创建模块实例
   }
 
+  /**
+   * 创建 ContextModuleFactory 实例：
+   *  从 webpack 独特的 require.context API 生成依赖关系。它会解析请求的目录，为每个文件生成请求，并依据传递来的 regExp 进行过滤。
+   *  最后匹配成功的依赖关系将被传入 NormalModuleFactory。
+   */
   createContextModuleFactory() {
     const contextModuleFactory = new ContextModuleFactory(this.resolverFactory);
+    /**
+     * contextModuleFactory 钩子：ContextModuleFactory 创建之后调用。
+     * SyncHook 钩子；同步，串联执行
+     */
     this.hooks.contextModuleFactory.call(contextModuleFactory);
     return contextModuleFactory;
   }
 
-  // 新建 Compilation 的初始化参数
+  // 创建 Compilation 需要的参数
   newCompilationParams() {
     const params = {
-      normalModuleFactory: this.createNormalModuleFactory(), // 初始化模块工厂实例 - 用来为每个模块创建模块实例
-      contextModuleFactory: this.createContextModuleFactory(),
+      normalModuleFactory: this.createNormalModuleFactory(), // 初始化 NormalModuleFactory 实例 - 用来为每个模块创建模块实例
+      contextModuleFactory: this.createContextModuleFactory(), // 初始化 ContextModuleFactory 实例 - 从 webpack 独特的 require.context API 生成依赖关系
     };
     return params;
   }
 
   /**
+   * 初始化 compilation，并启动 compilation 开始构建
    * @param {Callback<Compilation>} callback signals when the compilation finishes 编译完成时发出信号
    * @returns {void}
    */
@@ -1157,21 +1241,37 @@ ${other}`);
      *  2. ContextModuleFactory: 解析请求的目录，为每个文件生成请求，并依据传递来的 regExp 进行过滤。最后匹配成功的依赖关系将被传入 NormalModuleFactory
      */
     const params = this.newCompilationParams();
-    // 在创建 compilation 参数之后执行 -- webpack 内部没有注册这个钩子
+    /**
+     * beforeCompile 钩子：在创建 compilation parameter 之后执行。
+     * AsyncSeriesHook 钩子：异步串联执行
+     */
     this.hooks.beforeCompile.callAsync(params, (err) => {
       // 发生错误时，直接结束编译
       if (err) return callback(err);
 
-      // beforeCompile 之后立即调用，但在一个新的 compilation 创建之前 -- webpack 内部存在一个插件注册了这个钩子(./ExternalsPlugin.js)
+      /**
+       * compile 钩子：beforeCompile 之后立即调用，但在一个新的 compilation 创建之前。这个钩子 不会 被复制到子编译器。
+       * SyncHook 钩子：同步串联执行
+       */
       this.hooks.compile.call(params);
 
-			// 创建一个 Compilation 实例：访问所有的模块和它们的依赖（大部分是循环依赖）。 它会对应用程序的依赖图中所有模块， 进行字面上的编译(literal compilation)。 在编译阶段，模块会被加载(load)、封存(seal)、优化(optimize)、 分块(chunk)、哈希(hash)和重新创建(restore)。
+      /**
+       * 创建一个 Compilation 实例，并执行了 thisCompilation 和 compilation 钩子
+       */
       const compilation = this.newCompilation(params);
 
       const logger = compilation.getLogger('webpack.Compiler');
 
 			logger.time('make hook');
 			// compilation 结束之前执行 -- 在 ./EntryPlugin.js 内部中注册了这个钩子，用于处理程序的入口
+      /**
+       * make 钩子：compilation 结束之前执行。
+       * AsyncParallelHook 钩子：异步并行钩子，会并发执行所有异步钩子
+       * 
+       * 在 ./EntryPlugin.js 内部中注册了这个钩子，用于处理 entry 的启动构建
+       * 在这个插件内部，会通过调用 compilation.addEntry 方法启动 entry 的构建 --> 值得注意的是，会并行构建每个入口(还会遍历 entry.import)，见 ./EntryOptionPlugin.js 插件
+       * 在之后，控制权就交由 compilation，开启对程序的模块进行编译、优化、分块等等操作
+       */
       this.hooks.make.callAsync(compilation, (err) => {
         logger.timeEnd('make hook');
         if (err) return callback(err);

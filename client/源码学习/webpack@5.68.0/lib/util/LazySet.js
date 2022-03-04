@@ -40,9 +40,9 @@ const flatten = (targetSet, toDeepMerge) => {
 };
 
 /**
- * Like Set but with an addAll method to eventually add items from another iterable.
- * Access methods make sure that all delayed operations are executed.
- * Iteration methods deopts to normal Set performance until clear is called again (because of the chance of modifications during iteration).
+ * Like Set but with an addAll method to eventually add items from another iterable. 与Set类似，但使用了一个add All方法，最终从另一个可迭代对象中添加项
+ * Access methods make sure that all delayed operations are executed. 访问方法确保所有延迟的操作都被执行
+ * Iteration methods deopts to normal Set performance until clear is called again (because of the chance of modifications during iteration). 迭代方法deopts正常的Set性能，直到再次调用clear(因为迭代期间有修改的机会)
  * @template T
  */
 class LazySet {

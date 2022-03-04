@@ -60,17 +60,18 @@ const D = (obj, prop, value) => {
 };
 
 /**
- * Sets a dynamic default value when undefined, by calling the factory function
+ * Sets a dynamic default value when undefined, by calling the factory function 当未定义时，通过调用工厂函数来设置一个动态默认值
  * @template T
  * @template {keyof T} P
  * @param {T} obj an object
- * @param {P} prop a property of this object
- * @param {function(): T[P]} factory a default value factory for the property
+ * @param {P} prop a property of this object 此对象的属性
+ * @param {function(): T[P]} factory a default value factory for the property 属性的默认值工厂
  * @returns {void}
  */
 const F = (obj, prop, factory) => {
+	// 如果配置项中没有配置指定 prop 的话，那么就执行方法来获取默认值
 	if (obj[prop] === undefined) {
-		obj[prop] = factory();
+		obj[prop] = factory();  
 	}
 };
 
@@ -114,16 +115,18 @@ const A = (obj, prop, factory) => {
 };
 
 /**
- * @param {WebpackOptions} options options to be modified
+ * 应用 webpack 基本选项默认值：context(上下文)、infrastructureLogging(应该是用来做日志输出的)
+ * @param {WebpackOptions} options options to be modified 要修改的选项
  * @returns {void}
  */
 const applyWebpackOptionsBaseDefaults = options => {
-	F(options, "context", () => process.cwd());
+	F(options, "context", () => process.cwd()); // 为 context 添加默认值(如果没有配置的话)
 	applyInfrastructureLoggingDefaults(options.infrastructureLogging);
 };
 
 /**
- * @param {WebpackOptions} options options to be modified
+ * 配置项添加默认值
+ * @param {WebpackOptions} options options to be modified 要修改的选项
  * @returns {void}
  */
 const applyWebpackOptionsDefaults = options => {
@@ -1290,7 +1293,7 @@ const getResolveLoaderDefaults = ({ cache }) => {
  * @returns {void}
  */
 const applyInfrastructureLoggingDefaults = infrastructureLogging => {
-	F(infrastructureLogging, "stream", () => process.stderr);
+	F(infrastructureLogging, "stream", () => process.stderr); // process.stderr：返回连接到 stderr (文件描述符 2) 的流。 --- http://nodejs.cn/api/process.html#processstderr
 	const tty =
 		/** @type {any} */ (infrastructureLogging.stream).isTTY &&
 		process.env.TERM !== "dumb";

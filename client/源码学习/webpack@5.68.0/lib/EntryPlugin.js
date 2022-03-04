@@ -17,7 +17,7 @@ class EntryPlugin {
    *
    * @param {string} context context path
    * @param {string} entry entry path
-   * @param {EntryOptions | string=} options entry options (passing a string is deprecated)
+   * @param {EntryOptions | string=} options entry options (passing a string is deprecated) 输入选项(传递字符串已被弃用)
    */
   constructor(context, entry, options) {
     this.context = context; // 上下文路径 -- webpack.options.context 配置
@@ -51,9 +51,9 @@ class EntryPlugin {
     compiler.hooks.make.tapAsync('EntryPlugin', (compilation, callback) => {
       // addEntry：为编译添加入口
       compilation.addEntry(
-        context, // 入口的上下文路径。
-        dep, // 入口依赖 - 包含着入口路径等信息
-        options, // 入口配置 - 包含着入口名称
+        context, // 项目上下文 - webpack.options.context 配置项
+        dep, // 入口依赖对象 - 包含着入口路径等信息
+        options, // 当前入口的配置项 -- EntryOptions
         (err) => {
           // 添加入口完成之后回调的函数。
           callback(err);
@@ -63,9 +63,9 @@ class EntryPlugin {
   }
 
   /**
-   * @param {string} entry entry request
-   * @param {EntryOptions | string} options entry options (passing string is deprecated)
-   * @returns {EntryDependency} the dependency
+   * @param {string} entry entry request 入口的请求
+   * @param {EntryOptions | string} options entry options (passing string is deprecated) 入口选项(传递字符串已弃用)
+   * @returns {EntryDependency} the dependency 入口依赖对象
    */
   static createDependency(entry, options) {
     const dep = new EntryDependency(entry);

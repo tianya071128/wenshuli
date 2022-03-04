@@ -14,8 +14,8 @@ const makeSerializable = require("./util/makeSerializable");
 
 class WebpackError extends Error {
 	/**
-	 * Creates an instance of WebpackError.
-	 * @param {string=} message error message
+	 * Creates an instance of WebpackError. 创建Webpack Error的实例
+	 * @param {string=} message error message 错误信息
 	 */
 	constructor(message) {
 		super(message);

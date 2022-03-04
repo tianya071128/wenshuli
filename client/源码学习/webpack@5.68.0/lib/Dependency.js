@@ -109,14 +109,14 @@ class Dependency {
 	}
 
 	/**
-	 * @returns {string} a display name for the type of dependency
+	 * @returns {string} a display name for the type of dependency 依赖项类型的显示名称
 	 */
 	get type() {
 		return "unknown";
 	}
 
 	/**
-	 * @returns {string} a dependency category, typical categories are "commonjs", "amd", "esm"
+	 * @returns {string} a dependency category, typical categories are "commonjs", "amd", "esm" 一个依赖类别，典型的类别是"commonjs"， "amd"， "esm"
 	 */
 	get category() {
 		return "unknown";

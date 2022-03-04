@@ -153,7 +153,7 @@ const mergeGlobalOptions = (globalOptions, type, localOptions) => {
 };
 
 // TODO webpack 6 remove
-const deprecationChangedHookMessage = (name, hook) => {
+const deprecationChangedHookMessage = (name /** 钩子名称 */, hook) => {
 	const names = hook.taps
 		.map(tapped => {
 			return tapped.name;
@@ -161,9 +161,9 @@ const deprecationChangedHookMessage = (name, hook) => {
 		.join(", ");
 
 	return (
-		`NormalModuleFactory.${name} (${names}) is no longer a waterfall hook, but a bailing hook instead. ` +
-		"Do not return the passed object, but modify it instead. " +
-		"Returning false will ignore the request and results in no module created."
+		`NormalModuleFactory.${name} (${names}) is no longer a waterfall hook, but a bailing hook instead. ` + // 不再是一个瀑布钩，而是一个舀水钩
+		"Do not return the passed object, but modify it instead. " + // 不返回传递的对象，而是修改它
+		"Returning false will ignore the request and results in no module created." // 返回false将忽略该请求并导致不创建任何模块
 	);
 };
 
@@ -203,15 +203,19 @@ class NormalModuleFactory extends ModuleFactory {
 	 * @param {boolean=} param.layers enable layers
 	 */
 	constructor({
-		context,
-		fs,
+		context, // webpack.options.contxt：路径上下文
+		fs, // 读取文件系统 - 封装 Node 的 fs 模块
 		resolverFactory,
-		options,
-		associatedObjectForCache,
+		options, // webpack.options.module 配置项 - 用来处理模块的配置
+		associatedObjectForCache, // 根编译器
 		layers = false
 	}) {
 		super();
 		this.hooks = Object.freeze({
+			/**
+			 * resolve 钩子：在请求被解析之前调用。可以通过返回 false 来忽略依赖项。返回一个模块实例将结束进程。否则，返回 undefined 以继续。
+			 * AsyncSeriesBailHook 钩子：异步串行，当钩子事件存在返回值后阻断执行
+			 */
 			/** @type {AsyncSeriesBailHook<[ResolveData], TODO>} */
 			resolve: new AsyncSeriesBailHook(["resolveData"]),
 			/** @type {HookMap<AsyncSeriesBailHook<[ResourceDataWithData, ResolveData], true | void>>} */
@@ -222,8 +226,17 @@ class NormalModuleFactory extends ModuleFactory {
 			resolveInScheme: new HookMap(
 				() => new AsyncSeriesBailHook(["resourceData", "resolveData"])
 			),
+			/**
+			 * factorize 钩子：在初始化解析之前调用。它应该返回 undefined 以继续。
+			 * AsyncSeriesBailHook 钩子：异步串行，当钩子事件存在返回值后阻断执行
+			 */
 			/** @type {AsyncSeriesBailHook<[ResolveData], TODO>} */
 			factorize: new AsyncSeriesBailHook(["resolveData"]),
+			/**
+			 * beforeResolve 钩子：当遇到新的依赖项请求时调用。可以通过返回 false 来忽略依赖项。否则，返回 undefined 以继续。
+			 * AsyncSeriesBailHook 钩子：异步串行，当钩子事件存在返回值后阻断执行
+			 * 可以在这个钩子中来忽略一些模块的构建
+			 */
 			/** @type {AsyncSeriesBailHook<[ResolveData], TODO>} */
 			beforeResolve: new AsyncSeriesBailHook(["resolveData"]),
 			/** @type {AsyncSeriesBailHook<[ResolveData], TODO>} */
@@ -272,8 +285,11 @@ class NormalModuleFactory extends ModuleFactory {
 				stage: 100
 			},
 			(resolveData, callback) => {
-				// 继续解析该模块，执行 NormalModuleFactory.resolve：在请求被解析之前调用。可以通过返回 false 来忽略依赖项。返回一个模块实例将结束进程。否则，返回 undefined 以继续。
-				// https://webpack.docschina.org/api/normalmodulefactory-hooks/#resolve
+				/**
+				 * resolve 钩子：在请求被解析之前调用。可以通过返回 false 来忽略依赖项。返回一个模块实例将结束进程。否则，返回 undefined 以继续。
+				 * AsyncSeriesBailHook 钩子：异步串行，当钩子事件存在返回值后阻断执行
+				 * 主要是在下面就会注册这个钩子事件，
+				 */
 				this.hooks.resolve.callAsync(resolveData, (err, result) => {
 					if (err) return callback(err);
 
@@ -290,6 +306,9 @@ class NormalModuleFactory extends ModuleFactory {
 						);
 					
 					// 执行 afterResolve 钩子：在请求解析后调用 -- webpack 内部没有注册这个钩子，直接执行回调
+					/**
+					 * afterResolve 钩子：
+					 */
 					this.hooks.afterResolve.callAsync(resolveData, (err, result) => {
 						if (err) return callback(err);
 
@@ -775,6 +794,10 @@ class NormalModuleFactory extends ModuleFactory {
 	 * --> 4. NormalModuleFactory.hooks.factorize 钩子事件执行完毕，执行这个钩子回调，就在 create 方法内部
 	 * --> 5. 初始化模块完毕，组装模块实例以及其他相关信息，执行 callback 回调跳出 cretae 方法，会回到 ./Compilation 的 _factorizeModule 的方法中
 	 */
+	/**
+	 * 例如：在入口文件中(./src/index.js 中)引用了 import { test, test2 } from './module/module01'
+	 * 		此时 dependencies 中就存在三个依赖，其中第一个是表示 './module/module01' 的，其他两个表示引用了该模块的 test、test2 方法，猜测用于 Tree Shaking 功能
+	 */
 	create(data, callback) {
 		// 依赖项 - 需要解析的模块
 		const dependencies = /** @type {ModuleDependency[]} */ (data.dependencies);
@@ -782,34 +805,37 @@ class NormalModuleFactory extends ModuleFactory {
 		const context = data.context || this.context;
 		const resolveOptions = data.resolveOptions || EMPTY_RESOLVE_OPTIONS;
 		// 当前需要解析的模块：在 dependencies 文件夹中处理各种模块，表示该模块的相关信息
-		const dependency = dependencies[0];
-		// 当前模块的请求路径 -- "./index.css"
-		const request = dependency.request;
+		const dependency = dependencies[0]; // 模块信息对象(描述该模块基本信息) - 依赖项第一项表示该模块的信息，其他项有其他作用
+		const request = dependency.request; // 模块请求路径 - 对示例而言，就是 './module/module01'
 		const assertions = dependency.assertions;
-		const contextInfo = data.contextInfo;
-		const fileDependencies = new LazySet();
+		const contextInfo = data.contextInfo; // 模块其他上下文信息
+		const fileDependencies = new LazySet(); 
 		const missingDependencies = new LazySet();
 		const contextDependencies = new LazySet();
+		 // 一个依赖类别，典型的类别是"commonjs"， "amd"， "esm"
 		const dependencyType =
 			(dependencies.length > 0 && dependencies[0].category) || "";
 		/** @type {ResolveData} */
 		// 当前模块的封装数据
 		const resolveData = {
-			contextInfo,
+			contextInfo, // 模块其他上下文信息
 			resolveOptions,
-			context,
-			request,
+			context, // 模块的上下文路径，用于解析模块路径
+			request, // 模块请求路径 - 对示例而言，就是 './module/module01'
 			assertions,
-			dependencies,
-			dependencyType,
+			dependencies, // 用于描述这个模块的依赖对象列表
+			dependencyType, // 一个依赖类别，典型的类别是"commonjs"， "amd"， "esm"
 			fileDependencies,
 			missingDependencies,
 			contextDependencies,
 			createData: {},
-			cacheable: true
+			cacheable: true // 是否缓存标识
 		};
-		// 触发 NormalModuleFactory.beforeResolve 钩子 -- 当遇到新的依赖项请求时调用。可以通过返回 false 来忽略依赖项。否则，返回 undefined 以继续。
-		// webpack 内部也没有这个钩子，直接执行回调内容
+		/**
+		 * beforeResolve 钩子：当遇到新的依赖项请求时调用。可以通过返回 false 来忽略依赖项。否则，返回 undefined 以继续。
+		 * AsyncSeriesBailHook 钩子：异步串行，当钩子事件存在返回值后阻断执行
+		 * 可以在这个钩子中来忽略一些模块的构建
+		 */
 		this.hooks.beforeResolve.callAsync(resolveData, (err, result) => {
 			// 出现错误，错误处理
 			if (err) {
@@ -831,7 +857,7 @@ class NormalModuleFactory extends ModuleFactory {
 				});
 			}
 
-			// 返回了 object 类型的话，抛出错误
+			// 返回了 object 类型的话，抛出错误，不允许返回 object 类型
 			if (typeof result === "object")
 				throw new Error(
 					deprecationChangedHookMessage(
@@ -840,7 +866,11 @@ class NormalModuleFactory extends ModuleFactory {
 					)
 				);
 
-			// NormalModuleFactory.factorize：在初始化解析之前调用 -- webpack 内部注册了这个钩子
+			/**
+			 * factorize 钩子：在初始化解析之前调用。它应该返回 undefined 以继续。
+			 * AsyncSeriesBailHook 钩子：异步串行，当钩子事件存在返回值后阻断执行
+			 * 主要是在最上面的构造器中会注册这个钩子，控制权转移在上方方法
+			 */
 			this.hooks.factorize.callAsync(resolveData, (err, module) => {
 				// 如果存在错误的话，返回构建模块失败信息
 				if (err) {

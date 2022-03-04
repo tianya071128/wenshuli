@@ -16,14 +16,14 @@ const getRawModule = memoize(() => require("../RawModule"));
 
 class ModuleDependency extends Dependency {
 	/**
-	 * @param {string} request request path which needs resolving
+	 * @param {string} request request path which needs resolving 需要解析的请求路径
 	 */
 	constructor(request) {
 		super();
 		this.request = request;
 		this.userRequest = request;
 		this.range = undefined;
-		// assertions must be serialized by subclasses that use it
+		// assertions must be serialized by subclasses that use it 断言必须由使用它的子类序列化
 		/** @type {Record<string, any> | undefined} */
 		this.assertions = undefined;
 	}

@@ -51,7 +51,7 @@ class EntryOptionPlugin {
         // 遍历 desc.import 数组 - 会被标准化为数组 -- 启动时加载的模块，最后一个是出口
         for (const entry of desc.import) {
           /**
-           * 每个入口的 import项 都会被视为依赖图的起点，这些起点都通过 EntryPlugin 插件来处理
+           * 每个入口的 import 项 都会被视为依赖图的起点，这些起点都通过 EntryPlugin 插件来处理
            * 在这个插件中，会通过 options 生成 EntryDependency 入口依赖对象，并注册 make 钩子，在这个钩子事件中，通过 compilation.addEntry 方法启动模块的构建
            */
           new EntryPlugin(context, entry, options).apply(compiler);

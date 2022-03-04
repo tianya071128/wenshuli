@@ -424,9 +424,9 @@ const unsafeCacheData = new WeakMap();
 
 class Compilation {
 	/**
-	 * Creates an instance of Compilation.
-	 * @param {Compiler} compiler the compiler which created the compilation
-	 * @param {CompilationParams} params the compilation parameters
+	 * Creates an instance of Compilation. 创建“编译”的实例
+	 * @param {Compiler} compiler the compiler which created the compilation 创建编译的编译器
+	 * @param {CompilationParams} params the compilation parameters 编译参数
 	 */
 	constructor(compiler, params) {
 		this._backCompat = compiler._backCompat;
@@ -869,13 +869,13 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			}
 		});
 		/** @type {string=} */
-		this.name = undefined;
+		this.name = undefined; // 当前 Compilation 的 name，由 webpack.options.name 配置 - 继承至创建这个 Compilation 的 Compiler
 		this.startTime = undefined;
 		this.endTime = undefined;
 		/** @type {Compiler} */
-		this.compiler = compiler;
+		this.compiler = compiler; // 引用 compiler 实例
 		this.resolverFactory = compiler.resolverFactory;
-		this.inputFileSystem = compiler.inputFileSystem;
+		this.inputFileSystem = compiler.inputFileSystem; // 读取文件系统 - 基于 Node 的 fs 模块
 		this.fileSystemInfo = new FileSystemInfo(this.inputFileSystem, {
 			managedPaths: compiler.managedPaths,
 			immutablePaths: compiler.immutablePaths,
@@ -903,7 +903,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		this.outputOptions = options && options.output;
 		/** @type {boolean} */
 		this.bail = (options && options.bail) || false;
-		/** @type {boolean} */
+		/** @type {boolean} 捕获一个应用程序"配置文件"，包括统计和提示，然后可以使用 Analyze 分析工具进行详细分析。 */
 		this.profile = (options && options.profile) || false;
 
 		this.params = params;
@@ -944,10 +944,11 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			processor: this._addModule.bind(this)
 		});
 		/** @type {AsyncQueue<FactorizeModuleOptions, string, Module | ModuleFactoryResult>} */
+		// 一种异步队列执行机制
 		this.factorizeQueue = new AsyncQueue({
-			name: "factorize",
-			parent: this.addModuleQueue,
-			processor: this._factorizeModule.bind(this)
+			name: "factorize", // 
+			parent: this.addModuleQueue, 
+			processor: this._factorizeModule.bind(this) // 队列执行器
 		});
 		/** @type {AsyncQueue<Module, Module, Module>} */
 		this.buildQueue = new AsyncQueue({
@@ -972,7 +973,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 
 		/** @type {Map<string, EntryData>} */
 		this.entries = new Map();
-		/** @type {EntryData} */
+		/** @type {EntryData} 全局入口相关数据 */
 		this.globalEntry = {
 			dependencies: [],
 			includeDependencies: [],
@@ -1480,7 +1481,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		const onDependenciesSorted = err => {
 			if (err) return callback(err);
 
-			// early exit without changing parallelism back and forth
+			// early exit without changing parallelism back and forth 在不来回改变并行度的情况下提前退出
 			if (sortedDependencies.length === 0 && inProgressTransitive === 1) {
 				return callback();
 			}
@@ -1771,10 +1772,10 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 	handleModuleCreation(
 		{
 			factory, // 该模块构造器
-			dependencies, // 依赖项
+			dependencies, // 依赖项 - 数组
 			originModule, // 导入该模块的模块(例如从 ./src/index.js 中 导入 ./test.js，此时就是 ./src/index.js 模块，已经处理好了的)，入口模块为 null
 			contextInfo,
-			context, // 上下文路径 - C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\02_loader - 入口模块需要，其他模块不需要
+			context, // 上下文路径 - 根模块需要，其他模块不需要 -  - C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\02_loader
 			recursive = true,
 			connectOrigin = recursive
 		},
@@ -1782,20 +1783,22 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 	) {
 		const moduleGraph = this.moduleGraph;
 
+		// 捕获一个应用程序"配置文件"，包括统计和提示，然后可以使用 Analyze 分析工具进行详细分析
+		// 模块信息统计
 		const currentProfile = this.profile ? new ModuleProfile() : undefined;
 
 		// 启动创建模块实例方法 -- 模块实例只要是提取出模块的相关信息，例如：loaders、parser、模块路径等信息
 		this.factorizeModule(
 			{
-				currentProfile,
+				currentProfile, // 是否统计模块信息
 				factory, // 模块构造器 - https://webpack.docschina.org/api/normalmodulefactory-hooks/
-				dependencies,
+				dependencies, // 依赖数组
 				factoryResult: true,
-				originModule,
+				originModule, // 导入该模块的模块(例如从 ./src/index.js 中 导入 ./test.js，此时就是 ./src/index.js 模块，已经处理好了的)，入口模块为 null
 				contextInfo,
-				context
+				context // 上下文路径 - 根模块需要，其他模块不需要 -  - C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\02_loader
 			},
-			// 模块创建结束，执行回调
+			// 模块实例创建结束，执行回调
 			(err, factoryResult) => {
 				const applyFactoryResultDependencies = () => {
 					const { fileDependencies, contextDependencies, missingDependencies } =
@@ -1825,6 +1828,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 				// 提取出创建的模块实例
 				const newModule = factoryResult.module;
 
+				// 此时可能是这个模块被忽略了，但是不会抛出错误
 				if (!newModule) {
 					applyFactoryResultDependencies();
 					return callback();
@@ -1993,13 +1997,13 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 	 */
 	_factorizeModule(
 		{
-			currentProfile,
+			currentProfile, // 是否统计模块信息
 			factory, // 该模块构造器(NormalModuleFactory) - https://webpack.docschina.org/api/normalmodulefactory-hooks/
 			dependencies, // 依赖项
 			originModule, // 导入该模块的模块(例如从 ./src/index.js 中 导入 ./test.js，此时就是 ./src/index.js 模块，已经处理好了的)，入口模块为 null
 			factoryResult, // 
-			contextInfo,
-			context // 上下文路径 - C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\02_loader - 入口模块需要，其他模块不需要
+			contextInfo, // 模块的上下文信息
+			context // 上下文路径 - C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\02_loader - 根模块需要，其他模块不需要
 		},
 		callback
 	) {
@@ -2021,7 +2025,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 					: originModule
 					? originModule.context
 					: this.compiler.context, // 上下文路径 - 如果传入则使用传入的，没有传入从导入模块的 context 取出
-				dependencies: dependencies
+				dependencies: dependencies // 依赖项数组
 			},
 			// 模式实例化结束
 			(err, result) => {
@@ -2087,6 +2091,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 	}
 
 	/**
+	 * 添加一个根模块 - 一般为入口模块，也可能是其他插件插入的根模块，总而言之，这是一个模块依赖图的起点
 	 * @param {Object} options options
 	 * @param {string} options.context context string path 上下文路径
 	 * @param {Dependency} options.dependency dependency used to create Module chain 用于创建模块链的依赖项
@@ -2095,7 +2100,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 	 * @returns {void} will throw if dependency instance is not a valid Dependency 如果依赖项实例不是有效的依赖项，将抛出
 	 */
 	addModuleTree({ context, dependency, contextInfo }, callback) {
-		// 如果当前依赖项不符合规范，直接返回错误
+		// 如果当前依赖不符合规范，直接返回错误
 		if (
 			typeof dependency !== "object" ||
 			dependency === null ||
@@ -2105,9 +2110,9 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 				new WebpackError("Parameter 'dependency' must be a Dependency") // 参数“dependency”必须是依赖项
 			);
 		}
-		const Dep = /** @type {DepConstructor} */ (dependency.constructor); // 当前依赖项对象的构造器
-		// 根据依赖项提取出对应的模块构造器 -- 一般而言为 NormalModuleFactory(./NormalModuleFactory.js) 或 ContextModuleFactory
-		const moduleFactory = this.dependencyFactories.get(Dep);
+		const Dep = /** @type {DepConstructor} */ (dependency.constructor); // 当前依赖对象的构造器 - 表示这个依赖的类型
+		// 根据依赖提取出这个依赖对应的模块构造器 -- 一般而言为 NormalModuleFactory(./NormalModuleFactory.js) 或 ContextModuleFactory
+		const moduleFactory = this.dependencyFactories.get(Dep); 
 		if (!moduleFactory) {
 			return callback(
 				new WebpackError(
@@ -2119,10 +2124,10 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		// 处理模块创建
 		this.handleModuleCreation(
 			{
-				factory: moduleFactory, // 该模块构造器
-				dependencies: [dependency], // 依赖项
-				originModule: null,
-				contextInfo,
+				factory: moduleFactory, // 模块构造器
+				dependencies: [dependency], // 依赖项 - 拼装成数组
+				originModule: null, // 源模块(引用该模块的模块)
+				contextInfo, // 模块的其他上下文信息
 				context // 上下文路径
 			},
 			(err, result) => {
@@ -2142,15 +2147,12 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 	}
 
 	/**
+	 * 模块构建启动处 -- 从入口点开始，分解每个请求，解析文件内容以查找进一步的请求，然后通过分解所有请求以及解析新的文件来爬取全部文件。
 	 * @param {string} context context path for entry 入口的的上下文路径 -- "C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\02_loader"
-	 * @param {Dependency} entry entry dependency that should be followed 应该遵循的入口依赖关系
-	 * @param {string | EntryOptions} optionsOrName options or deprecated name of entry 选项或不推荐使用的入口名称
+	 * @param {Dependency} entry entry dependency that should be followed 应该遵循的入口依赖关系（入口依赖对象 - 包含着入口路径等信息）
+	 * @param {string | EntryOptions} optionsOrName options or deprecated name of entry 选项或不推荐使用的入口名称（当前入口的配置项 -- EntryOptions）
 	 * @param {ModuleCallback} callback callback function 编译完成后执行回调
 	 * @returns {void} returns
-	 */
-	/**
-	 * 模块构建启动处 -- 从入口点开始，分解每个请求，解析文件内容以查找进一步的请求，然后通过分解所有请求以及解析新的文件来爬取全部文件。
-	 * 	1. 
 	 */
 	addEntry(context, entry, optionsOrName, callback) {
 		// TODO webpack 6 remove webpack 6 删除
@@ -2188,10 +2190,11 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 	 * @returns {void} returns
 	 */
 	_addEntryItem(context, entry, target, options, callback) {
-		const { name } = options; // 入口文件名称
+		const { name } = options; // 入口名称(webpack.options.entry 的 key，一般用来表示入口 name)
 		// 入口相关数据
 		let entryData =
 			name !== undefined ? this.entries.get(name) /** 应该是缓存相关 */ : this.globalEntry;
+		// 应该是跟多入口有关(或者插件直接调用 Compilation.addEntry 方法)或其他方法
 		if (entryData === undefined) {
 			entryData = {
 				dependencies: [],
@@ -2230,11 +2233,12 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		// addEntry 钩子 -- 既没有暴露给开发者，webpack 内部也没有使用
 		this.hooks.addEntry.call(entry, options);
 
+		// 接着流程交由 addModuleTree 方法
 		this.addModuleTree(
 			{
-				context,
-				dependency: entry,
-				contextInfo: entryData.options.layer
+				context, // 项目上下文 - webpack.options.context 配置项
+				dependency: entry, // 依赖
+				contextInfo: entryData.options.layer // 图层 - 似乎是实验功能
 					? { issuerLayer: entryData.options.layer }
 					: undefined
 			},
@@ -4768,9 +4772,9 @@ This prevents using hashes of each other and should be avoided.`);
 	}
 
 	/**
-	 * This function allows you to run another instance of webpack inside of webpack however as
-	 * a child with different settings and configurations (if desired) applied. It copies all hooks, plugins
-	 * from parent (or top level compiler) and creates a child Compilation
+	 * This function allows you to run another instance of webpack inside of webpack however as 这个函数允许你在webpack内部运行另一个webpack实例
+	 * a child with different settings and configurations (if desired) applied. It copies all hooks, plugins 具有不同设置和配置(如果需要)的子应用。它复制所有的钩子和插件
+	 * from parent (or top level compiler) and creates a child Compilation 从父编译器(或顶级编译器)创建一个子编译器
 	 *
 	 * @param {string} name name of the child compiler
 	 * @param {OutputOptions=} outputOptions // Need to convert config schema to types for this

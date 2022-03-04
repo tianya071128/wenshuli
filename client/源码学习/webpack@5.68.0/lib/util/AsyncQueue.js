@@ -36,8 +36,8 @@ class AsyncQueueEntry {
 	constructor(item, callback) {
 		this.item = item;
 		/** @type {typeof QUEUED_STATE | typeof PROCESSING_STATE | typeof DONE_STATE} */
-		this.state = QUEUED_STATE;
-		this.callback = callback;
+		this.state = QUEUED_STATE; // 状态
+		this.callback = callback; // 
 		/** @type {Callback<R>[] | undefined} */
 		this.callbacks = undefined;
 		this.result = undefined;
@@ -54,20 +54,20 @@ class AsyncQueueEntry {
 class AsyncQueue {
 	/**
 	 * @param {Object} options options object
-	 * @param {string=} options.name name of the queue
-	 * @param {number=} options.parallelism how many items should be processed at once
-	 * @param {AsyncQueue<any, any, any>=} options.parent parent queue, which will have priority over this queue and with shared parallelism
-	 * @param {function(T): K=} options.getKey extract key from item
-	 * @param {function(T, Callback<R>): void} options.processor async function to process items
+	 * @param {string=} options.name name of the queue 队列的名称
+	 * @param {number=} options.parallelism how many items should be processed at once 一次应该处理多少件物品
+	 * @param {AsyncQueue<any, any, any>=} options.parent parent queue, which will have priority over this queue and with shared parallelism 父队列，优先级高于此队列，并具有共享并行性
+	 * @param {function(T): K=} options.getKey extract key from item 从项目中提取关键字
+	 * @param {function(T, Callback<R>): void} options.processor async function to process items 处理项目的异步函数
 	 */
 	constructor({ name, parallelism, parent, processor, getKey }) {
-		this._name = name;
-		this._parallelism = parallelism || 1;
-		this._processor = processor;
+		this._name = name; // 异步队列名称
+		this._parallelism = parallelism || 1; // 并发处理数 - 默认为 1 个
+		this._processor = processor; // 队列执行器
 		this._getKey =
 			getKey || /** @type {(T) => K} */ (item => /** @type {any} */ (item));
 		/** @type {Map<K, AsyncQueueEntry<T, K, R>>} */
-		this._entries = new Map();
+		this._entries = new Map(); // 入口队列
 		/** @type {ArrayQueue<AsyncQueueEntry<T, K, R>>} */
 		this._queued = new ArrayQueue();
 		/** @type {AsyncQueue<any, any, any>[]} */
@@ -75,7 +75,7 @@ class AsyncQueue {
 		this._activeTasks = 0;
 		this._willEnsureProcessing = false;
 		this._needProcessing = false;
-		this._stopped = false;
+		this._stopped = false; // 队列停止标识
 		this._root = parent ? parent._root : this;
 		if (parent) {
 			if (this._root._children === undefined) {
@@ -102,13 +102,14 @@ class AsyncQueue {
 	}
 
 	/**
-	 * @param {T} item an item
-	 * @param {Callback<R>} callback callback function
+	 * @param {T} item an item 添加的项目 
+	 * @param {Callback<R>} callback callback function 执行完毕的状态
 	 * @returns {void}
 	 */
 	add(item, callback) {
-		if (this._stopped) return callback(new WebpackError("Queue was stopped"));
+		if (this._stopped) return callback(new WebpackError("Queue was stopped")); // 队列是停止状态
 		this.hooks.beforeAdd.callAsync(item, err => {
+			// 错误处理
 			if (err) {
 				callback(
 					makeWebpackError(err, `AsyncQueue(${this._name}).hooks.beforeAdd`)

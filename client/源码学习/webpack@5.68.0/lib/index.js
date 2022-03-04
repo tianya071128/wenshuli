@@ -47,14 +47,16 @@ const memoize = require("./util/memoize");
 /** @typedef {import("./stats/DefaultStatsFactoryPlugin").StatsProfile} StatsProfile */
 
 /**
+ * 封装传入的函数，惰性加载
  * @template {Function} T
- * @param {function(): T} factory factory function
- * @returns {T} function
+ * @param {function(): T} factory factory function 工厂函数
+ * @returns {T} function 惰性函数
  */
 const lazyFunction = factory => {
-	const fac = memoize(factory);
+	const fac = memoize(factory); // 封装 factory ，缓存 factory 调用结果
 	const f = /** @type {any} */ (
 		(...args) => {
+			/** fac 调用结果会返回 webpack.js 的输出，再次调用并传入参数，类似于 webpack(...args) */
 			return fac()(...args);
 		}
 	);
@@ -62,6 +64,7 @@ const lazyFunction = factory => {
 };
 
 /**
+ * 合并导出
  * @template A
  * @template B
  * @param {A} obj input a
@@ -69,33 +72,35 @@ const lazyFunction = factory => {
  * @returns {A & B} merged
  */
 const mergeExports = (obj, exports) => {
-	const descriptors = Object.getOwnPropertyDescriptors(exports);
+	const descriptors = Object.getOwnPropertyDescriptors(exports); // 获取 exports 所有属性的属性描述符
 	for (const name of Object.keys(descriptors)) {
-		const descriptor = descriptors[name];
-		if (descriptor.get) {
+		const descriptor = descriptors[name]; // 对应的属性描述符
+		if (descriptor.get /** 存在 getter 方法时 */) {
 			const fn = descriptor.get;
+			// 添加到 obj 中，并且只读属性
 			Object.defineProperty(obj, name, {
 				configurable: false,
 				enumerable: true,
-				get: memoize(fn)
+				get: memoize(fn) // 缓存调用结果
 			});
 		} else if (typeof descriptor.value === "object") {
 			Object.defineProperty(obj, name, {
-				configurable: false,
-				enumerable: true,
-				writable: false,
+				configurable: false, // 不可配置
+				enumerable: true, // 可枚举
+				writable: false, // 不可写入
 				value: mergeExports({}, descriptor.value)
 			});
 		} else {
 			throw new Error(
-				"Exposed values must be either a getter or an nested object"
+				"Exposed values must be either a getter or an nested object" // 公开的值必须是getter或嵌套对象
 			);
 		}
 	}
 	return /** @type {A & B} */ (Object.freeze(obj));
 };
 
-const fn = lazyFunction(() => require("./webpack"));
+const fn = lazyFunction(() => require("./webpack")); // 惰性加载 ./webpack，这样 webpack.js 就需要等到实际调用才会执行模块内容
+// 将第二个参数合并到 fn 上，这样导出的内容既可以函数调用，也可以对象属性访问
 module.exports = mergeExports(fn, {
 	get webpack() {
 		return require("./webpack");

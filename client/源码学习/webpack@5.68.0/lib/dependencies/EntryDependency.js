@@ -16,10 +16,12 @@ class EntryDependency extends ModuleDependency {
 		super(request);
 	}
 
+	// 依赖项类型的显示名称
 	get type() {
 		return "entry";
 	}
 
+	// 一个依赖类别，典型的类别是"commonjs"， "amd"， "esm" 
 	get category() {
 		return "esm";
 	}

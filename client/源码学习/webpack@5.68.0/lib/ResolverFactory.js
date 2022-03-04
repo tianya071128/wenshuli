@@ -69,10 +69,12 @@ const convertToResolveOptions = resolveOptionsWithDepType => {
  * @property {Map<string, ResolverWithOptions>} stringified
  */
 
-module.exports = class ResolverFactory {
+module.exports = class ResolverFactory /** 解析器工厂 */ {
 	constructor() {
 		this.hooks = Object.freeze({
 			/** @type {HookMap<SyncWaterfallHook<[ResolveOptionsWithDependencyType]>>} */
+			// HookMap 模块：可以动态的添加钩子，这些钩子是传入的工厂方法返回的
+			// SyncWaterfallHook：同步钩子，瀑布钩子会将上一个函数的返回值传递给下一个函数作为参数 
 			resolveOptions: new HookMap(
 				() => new SyncWaterfallHook(["resolveOptions"])
 			),

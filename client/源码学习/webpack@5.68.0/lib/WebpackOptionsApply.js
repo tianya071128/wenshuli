@@ -56,24 +56,29 @@ const { cleverMerge } = require('./util/cleverMerge');
 
 /** @typedef {import("../declarations/WebpackOptions").WebpackOptionsNormalized} WebpackOptions */
 /** @typedef {import("./Compiler")} Compiler */
-
 class WebpackOptionsApply extends OptionsApply {
   constructor() {
     super();
   }
 
   /**
-   * 根据相应的配置项注册对应的 webpack 插件
+   * 主要做了如下工作：
+   *  1. 根据配置项注册内部插件
+   *  2. 执行 Compiler.hooks.entryOption 钩子
+   *       内部插件注册了这个钩子，用于处理 entry
+   *  3. 执行 Compiler.hooks.afterPlugins 钩子
+   *  4. 执行 Compiler.hooks.afterResolvers 钩子
    * @param {WebpackOptions} options options object 配置项
    * @param {Compiler} compiler compiler object
    * @returns {WebpackOptions} options object
    */
   process(options, compiler) {
-    compiler.outputPath = options.output.path;
-    compiler.recordsInputPath = options.recordsInputPath || null;
-    compiler.recordsOutputPath = options.recordsOutputPath || null;
-    compiler.name = options.name;
+    compiler.outputPath = options.output.path; // 输出目录
+    compiler.recordsInputPath = options.recordsInputPath || null; // 指定读取最后一条记录的文件的名称。
+    compiler.recordsOutputPath = options.recordsOutputPath || null; // 指定记录要写入的位置。
+    compiler.name = options.name; // 配置名称 - https://webpack.docschina.org/configuration/other-options/#name
 
+    // _mark-externals -- (外部扩展)实现插件
     if (options.externals) {
       //@ts-expect-error https://github.com/microsoft/TypeScript/issues/41697
       const ExternalsPlugin = require('./ExternalsPlugin');
@@ -82,6 +87,7 @@ class WebpackOptionsApply extends OptionsApply {
       );
     }
 
+    // _mark-externalsPresets -- 为特定的 target 启用 externals 的 preset。
     if (options.externalsPresets.node) {
       const NodeTargetPlugin = require('./node/NodeTargetPlugin');
       new NodeTargetPlugin().apply(compiler);
@@ -261,6 +267,7 @@ class WebpackOptionsApply extends OptionsApply {
     if (!options.experiments.outputModule) {
       if (options.output.module) {
         throw new Error(
+          /** 'output.module: true'：只允许当'实验。输出模块'被启用 */
           "'output.module: true' is only allowed when 'experiments.outputModule' is enabled"
         );
       }
@@ -327,7 +334,7 @@ class WebpackOptionsApply extends OptionsApply {
       new HttpUriPlugin(httpOptions).apply(compiler);
     }
 
-    // 在这里注册的是处理 entry 的插件
+    // 处理 entry 的插件，处理逻辑见插件注释
     new EntryOptionPlugin().apply(compiler);
     /**
      * entryOption 钩子：在 webpack 选项中的 entry 被处理过之后调用
@@ -566,7 +573,11 @@ class WebpackOptionsApply extends OptionsApply {
       new SizeLimitsPlugin(options.performance).apply(compiler);
     }
 
-    new TemplatedPathPlugin().apply(compiler); // make - TemplatedPathPlugin
+    /**
+     * 用于替换模板字符串生成文件名：https://webpack.docschina.org/configuration/output/#template-strings
+     * 内部会注册 compilation.hooks.assetPath 钩子，每个资产文件都会经过这个插件来生成文件名，具体见插件注释
+     */
+    new TemplatedPathPlugin().apply(compiler);
 
     new RecordIdsPlugin({
       portableIds: options.optimization.portableRecords,
@@ -673,17 +684,25 @@ class WebpackOptionsApply extends OptionsApply {
       new IgnoreWarningsPlugin(options.ignoreWarnings).apply(compiler);
     }
 
+    /**
+     * afterPlugins 钩子：在初始化内部插件集合完成设置之后调用
+     * SyncHook 钩子：基础同步钩子，顺序执行钩子事件
+     */
     compiler.hooks.afterPlugins.call(compiler);
     if (!compiler.inputFileSystem) {
-      throw new Error('No input filesystem provided');
+      throw new Error('No input filesystem provided'); // 没有提供输入文件系统
     }
+    /**
+     * HookMap 模块：可以动态添加钩子，钩子类型就是 HookMap 参数工厂返回的钩子类型
+     */
     compiler.resolverFactory.hooks.resolveOptions
-      .for('normal')
-      .tap('WebpackOptionsApply', (resolveOptions) => {
+      .for('normal') /** 在这里就是，添加一个 normal 钩子，钩子类型是 SyncWaterfallHook 类型 */
+      .tap('WebpackOptionsApply', (resolveOptions) => { /** 并注册这个钩子 */
         resolveOptions = cleverMerge(options.resolve, resolveOptions);
         resolveOptions.fileSystem = compiler.inputFileSystem;
         return resolveOptions;
       });
+    // 同理，添加一个 context 钩子并注册钩子
     compiler.resolverFactory.hooks.resolveOptions
       .for('context')
       .tap('WebpackOptionsApply', (resolveOptions) => {
@@ -692,6 +711,7 @@ class WebpackOptionsApply extends OptionsApply {
         resolveOptions.resolveToContext = true;
         return resolveOptions;
       });
+    // 添加一个 loader 钩子并注册
     compiler.resolverFactory.hooks.resolveOptions
       .for('loader')
       .tap('WebpackOptionsApply', (resolveOptions) => {
@@ -699,6 +719,11 @@ class WebpackOptionsApply extends OptionsApply {
         resolveOptions.fileSystem = compiler.inputFileSystem;
         return resolveOptions;
       });
+    /**
+     * afterResolvers 钩子：resolver 设置完成之后触发。
+     * SyncHook 钩子：同步钩子，顺序执行
+     * webpack 内部没有注册这个钩子
+     */
     compiler.hooks.afterResolvers.call(compiler);
     return options;
   }
