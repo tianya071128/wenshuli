@@ -156,9 +156,9 @@ class Module extends DependenciesBlock {
 		/** @type {boolean} */
 		this.useSimpleSourceMap = false;
 
-		// Info from Build
+		// Info from Build 模块构建信息
 		/** @type {WebpackError[] | undefined} */
-		this._warnings = undefined;
+		this._warnings = undefined; // 模块输出警告列表
 		/** @type {WebpackError[] | undefined} */
 		this._errors = undefined;
 		/** @type {BuildMeta} */
@@ -523,6 +523,7 @@ class Module extends DependenciesBlock {
 	}
 
 	/**
+	 * 添加一个模块警告
 	 * @param {WebpackError} warning the warning
 	 * @returns {void}
 	 */
@@ -689,7 +690,7 @@ class Module extends DependenciesBlock {
 	}
 
 	/**
-	 * @param {NeedBuildContext} context context info
+	 * @param {NeedBuildContext} context context info 上下文信息
 	 * @param {function((WebpackError | null)=, boolean=): void} callback callback function, returns true, if the module needs a rebuild
 	 * @returns {void}
 	 */

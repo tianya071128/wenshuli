@@ -309,7 +309,7 @@ class Compiler {
     /** @type {boolean} */
     this.watchMode = false;
 
-    this._backCompat = this.options.experiments.backCompat !== false;
+    this._backCompat = this.options.experiments.backCompat !== false; // optinos.experiments.backCompat - 为许多 webpack 4 api 启用后向兼容层，并发出弃用警告。
 
     /** @type {Compilation} */
     this._lastCompilation = undefined; // 当前 Compiler 创建的 Compilation 实例 - 可能 Compiler 会被重用，此时就通过这个引用来做一些清除工作
@@ -326,7 +326,7 @@ class Compiler {
 
   /**
    * @param {string} name cache name
-   * @returns {CacheFacade} the cache facade instance
+   * @returns {CacheFacade} the cache facade instance 缓存外观实例
    */
   getCache(name) {
     return new CacheFacade(

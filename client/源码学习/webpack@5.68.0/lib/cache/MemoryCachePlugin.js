@@ -20,10 +20,11 @@ class MemoryCachePlugin {
 	 */
 	apply(compiler) {
 		/** @type {Map<string, { etag: Etag | null, data: any }>} */
-		const cache = new Map();
+		const cache = new Map(); // 缓存存储 - 定义一个变量就相当于在内存中进行缓存
 		compiler.cache.hooks.store.tap(
 			{ name: "MemoryCachePlugin", stage: Cache.STAGE_MEMORY },
 			(identifier, etag, data) => {
+				// 设置缓存值
 				cache.set(identifier, { etag, data });
 			}
 		);

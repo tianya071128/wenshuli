@@ -29,7 +29,7 @@ class ModuleDependency extends Dependency {
 	}
 
 	/**
-	 * @returns {string | null} an identifier to merge equal requests
+	 * @returns {string | null} an identifier to merge equal requests 合并相同请求的标识符
 	 */
 	getResourceIdentifier() {
 		let str = `module${this.request}`;

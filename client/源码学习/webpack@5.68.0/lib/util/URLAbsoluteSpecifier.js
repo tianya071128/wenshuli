@@ -22,11 +22,11 @@ const colonCharCode = ":".charCodeAt(0);
 const hashCharCode = "#".charCodeAt(0);
 const queryCharCode = "?".charCodeAt(0);
 /**
- * Get scheme if specifier is an absolute URL specifier
+ * Get scheme if specifier is an absolute URL specifier 如果指定符是绝对URL指定符，则获取方案
  * e.g. Absolute specifiers like 'file:///user/webpack/index.js'
  * https://tools.ietf.org/html/rfc3986#section-3.1
- * @param {string} specifier specifier
- * @returns {string|undefined} scheme if absolute URL specifier provided
+ * @param {string} specifier specifier 说明符
+ * @returns {string|undefined} scheme if absolute URL specifier provided 如果绝对URL指定符提供
  */
 function getScheme(specifier) {
 	const start = specifier.charCodeAt(0);

@@ -55,7 +55,7 @@ class EntryPlugin {
         dep, // 入口依赖对象 - 包含着入口路径等信息
         options, // 当前入口的配置项 -- EntryOptions
         (err) => {
-          // 添加入口完成之后回调的函数。
+          // 入口构建完成回调
           callback(err);
         }
       );

@@ -89,7 +89,7 @@ const getInvalidDependenciesModuleWarning = memoize(() =>
 );
 const getValidate = memoize(() => require("schema-utils").validate);
 
-const ABSOLUTE_PATH_REGEX = /^([a-zA-Z]:\\|\\\\|\/)/;
+const ABSOLUTE_PATH_REGEX = /^([a-zA-Z]:\\|\\\\|\/)/; // 检测是否为绝对路径
 
 /**
  * @typedef {Object} LoaderItem
@@ -216,8 +216,11 @@ class NormalModule extends Module {
 		// 如果该 compilation 没有创建过 hooks 的话，初次创建
 		if (hooks === undefined) {
 			hooks = {
+				// 初始化 loaderContext 后调用
 				loader: new SyncHook(["loaderContext", "module"]),
+				// 开始调用 laoders 构建前调用
 				beforeLoaders: new SyncHook(["loaders", "module", "loaderContext"]),
+				// 模块 parser 前调用
 				beforeParse: new SyncHook(["module"]),
 				beforeSnapshot: new SyncHook(["module"]),
 				// TODO webpack 6 deprecate
@@ -280,8 +283,8 @@ class NormalModule extends Module {
 		resourceResolveData,
 		context,
 		matchResource,
-		parser,
-		parserOptions,
+		parser, // parser 方法，用于 parser 这个模块的方法
+		parserOptions, // parser 配置项
 		generator,
 		generatorOptions,
 		resolveOptions
@@ -290,16 +293,16 @@ class NormalModule extends Module {
 
 		// Info from Factory
 		/** @type {string} */
-		this.request = request;
+		this.request = request; // 模块绝对路径(包含 loaders)
 		/** @type {string} */
-		this.userRequest = userRequest;
+		this.userRequest = userRequest; // 模块绝对路径(不包含 loaders)
 		/** @type {string} */
-		this.rawRequest = rawRequest;
+		this.rawRequest = rawRequest; // 模块请求时路径(例如：./src/index.js)
 		/** @type {boolean} */
-		this.binary = /^(asset|webassembly)\b/.test(type);
+		this.binary = /^(asset|webassembly)\b/.test(type); // 当模块类型为 asset 或 webassembly 时，模块资源以二进制形式存储
 		/** @type {Parser} */
-		this.parser = parser;
-		this.parserOptions = parserOptions;
+		this.parser = parser; // parser 方法，用于生成模块的 AST 方法
+		this.parserOptions = parserOptions; // parser 配置项
 		/** @type {Generator} */
 		this.generator = generator;
 		this.generatorOptions = generatorOptions;
@@ -315,18 +318,24 @@ class NormalModule extends Module {
 			this.resolveOptions = resolveOptions;
 		}
 
-		// Info from Build
+		// Info from Build 构建信息
 		/** @type {(WebpackError | null)=} */
-		this.error = null;
+		this.error = null; // 构建过程中出现错误
 		/** @private @type {Source=} */
-		this._source = null;
+		this._source = null; // 封装了 sourcemap(如果存在的话) 和 source 的对象
 		/** @private @type {Map<string, number> | undefined} **/
 		this._sourceSizes = undefined;
 		/** @private @type {Set<string>} */
 		this._sourceTypes = undefined;
 
-		// Cache
+		// Cache 缓存相关
 		this._lastSuccessfulBuildMeta = {};
+		/**
+		 * 是否强制重新构建
+		 * 	-> 初始时肯定需要资源构建
+		 * 	-> 在 build 启动构建后，会置为 false，此时引用了同一模块时，只需要构建一次
+		 *  -> 整个项目重新构建时，会重置为 true
+		 */
 		this._forceBuild = true;
 		this._isEvaluatingSideEffects = false;
 		/** @type {WeakSet<ModuleGraph> | undefined} */
@@ -676,7 +685,7 @@ class NormalModule extends Module {
 			fs: fs
 		};
 
-		Object.assign(loaderContext, options.loader);
+		Object.assign(loaderContext, options.loader /** 用户自定义的在 loader 上下文 中暴露自定义值 */);
 
 		// 构建完成 loaderContext 时调用钩子，在这里 webpack 会添加 importModule、loadModule 方法到 loaderContext 上下文
 		hooks.loader.call(loaderContext, this);
@@ -706,6 +715,7 @@ class NormalModule extends Module {
 	 * @returns {Source} the created source
 	 */
 	createSource(context, content, sourceMap, associatedObjectForCache) {
+		// 如果资源是 buffer 类型，直接返回原始源
 		if (Buffer.isBuffer(content)) {
 			return new RawSource(content);
 		}
@@ -722,11 +732,12 @@ class NormalModule extends Module {
 		if (this.useSourceMap && sourceMap) {
 			return new SourceMapSource(
 				content,
-				contextifySourceUrl(context, identifier, associatedObjectForCache), // 合成 sourceUrl 地址：
-				contextifySourceMap(context, sourceMap, associatedObjectForCache) // 将 sourceMap.sources(转换前的文件,该项是一个数组,表示可能存在多个文件合并) 转化为 'webpack://./src/index.js' 形式路径
+				contextifySourceUrl(context, identifier, associatedObjectForCache), // 合成 sourceUrl 地址
+				contextifySourceMap(context, sourceMap, associatedObjectForCache) // 
 			);
 		}
 
+		// 此时需要 sourceMap 但是没有返回 sourceMap，就使用合成 sourceUrl 地址，使用简单 sourceMap
 		if (this.useSourceMap || this.useSimpleSourceMap) {
 			return new OriginalSource(
 				content,
@@ -734,13 +745,14 @@ class NormalModule extends Module {
 			);
 		}
 
+		// 对原始内容进行进一步封装
 		return new RawSource(content);
 	}
 
 	/**
 	 * @param {WebpackOptions} options webpack options webpack 配置项
 	 * @param {Compilation} compilation the compilation compilation 实例
-	 * @param {ResolverWithOptions} resolver the resolver
+	 * @param {ResolverWithOptions} resolver the resolver 模块加载器(加载模块的)
 	 * @param {InputFileSystem} fs the file system 操作文件方法(类似于 Node 的 fs 模块)
 	 * @param {NormalModuleCompilationHooks} hooks the hooks 构建过程需要执行的钩子列表
 	 * @param {function((WebpackError | null)=): void} callback callback function 构建完成后回调
@@ -759,7 +771,7 @@ class NormalModule extends Module {
 
 		// 构建结束后回调 -- 统一调用
 		const processResult = (err, result) => {
-			// 出现构建错误时
+			// 出现构建错误时，进行处理
 			if (err) {
 				if (!(err instanceof Error)) {
 					err = new NonErrorEmittedError(err);
@@ -777,10 +789,11 @@ class NormalModule extends Module {
 
 			const source = result[0]; // 提取出构建后的资源
 			const sourceMap = result.length >= 1 ? result[1] : null; // 构建后的 sourcemap
+			// 可以返回一个 AST 结果，作为公共的 AST，从而避免 parse，提高性能
 			const extraInfo = result.length >= 2 ? result[2] : null; // 会被 webpack 忽略，可以是任何东西（例如一些元数据） -- https://webpack.docschina.org/api/loaders/#thiscallback
 
+			// 构建结果既不是 Buffer，也不是 string，此时构建结果错误
 			if (!Buffer.isBuffer(source) && typeof source !== "string") {
-				// 构建结果既不是 Buffer，也不是 string，此时构建结果错误
 				const currentLoader = this.getCurrentLoader(loaderContext, 0);
 				const err = new Error(
 					`Final loader (${ // 最终 loader
@@ -795,16 +808,19 @@ class NormalModule extends Module {
 				return callback(error);
 			}
 
-			// 组装一下 sourcemap 信息，结合 sourcemap、source 信息生成一个对象
-			// 并且将这个生成的对象赋值到 NormalModule._source 上，这样这个模块实例就通过 loader 编译后的内容就存储在模块实例上
+			/**
+			 * 对 source 和 sourcemap 进一步封装并赋值到 _source 属性上
+			 */
 			this._source = this.createSource(
 				options.context, // 项目上下文 -- context
 				this.binary ? asBuffer(source) /** 转化为 Buffer */ : asString(source) /** 转化为 string */,
 				sourceMap, // sourceMap
-				compilation.compiler.root
+				compilation.compiler.root // 根 Compiler -- 如果存在子编译器的话，会指向根 Compiler
 			);
-			if (this._sourceSizes !== undefined) this._sourceSizes.clear();
-			// 解析这个模块的 ast -- 如果希望在 loader 之间共享公共的 AST，可以将抽象语法树 AST（例如 ESTree）作为第四个参数（meta）传递，以加快构建时间。
+
+			if (this._sourceSizes !== undefined) this._sourceSizes.clear(); 
+
+			// 如果 loaders 中共享了 AST 的话 -- 如果希望在 loader 之间共享公共的 AST，可以将抽象语法树 AST（例如 ESTree）作为第四个参数（meta）传递，以加快构建时间。
 			this._ast =
 				typeof extraInfo === "object" &&
 				extraInfo !== null &&
@@ -829,7 +845,7 @@ class NormalModule extends Module {
 		}
 
 		if (this.loaders.length > 0) {
-			// 存在执行 loaders 时。。。
+			// 存在 loaders 时，初始化 buildDependencies，表示模块构建依赖项(一般为loader)
 			this.buildInfo.buildDependencies = new LazySet();
 		}
 
@@ -871,14 +887,14 @@ class NormalModule extends Module {
 						null
 					);
 				}
-				this.buildInfo.fileDependencies.addAll(result.fileDependencies);
-				this.buildInfo.contextDependencies.addAll(result.contextDependencies);
+				this.buildInfo.fileDependencies.addAll(result.fileDependencies); // 文件依赖列表
+				this.buildInfo.contextDependencies.addAll(result.contextDependencies); // 目录依赖列表
 				this.buildInfo.missingDependencies.addAll(result.missingDependencies);
 				for (const loader of this.loaders) {
-					this.buildInfo.buildDependencies.add(loader.loader); // 存储下这个模块需要执行的 loader 列表
+					this.buildInfo.buildDependencies.add(loader.loader); // 将 loader 推入到模块构建依赖列表
 				}
 				this.buildInfo.cacheable = this.buildInfo.cacheable && result.cacheable; // 是否缓存构建结果
-				processResult(err, result.result);
+				processResult(err, result.result); // 处理 loaders 构建结果
 			}
 		);
 	}
@@ -894,52 +910,56 @@ class NormalModule extends Module {
 		this.addError(error);
 	}
 
+	// 对模块是否进行 parse 检查 -- webpack.options.module.noParse
 	applyNoParseRule(rule, content) {
-		// must start with "rule" if rule is a string
-		if (typeof rule === "string") {
+		// must start with "rule" if rule is a string 如果规则是字符串，必须以“规则”开头
+		if (typeof rule === "string") { // 字符串形式检查
 			return content.startsWith(rule);
 		}
 
-		if (typeof rule === "function") {
+		if (typeof rule === "function") { // 函数检查
 			return rule(content);
 		}
-		// we assume rule is a regexp
-		return rule.test(content);
+		// we assume rule is a regexp 我们假设rule是regexp
+		return rule.test(content); // 正则检查
 	}
 
-	// check if module should not be parsed
-	// returns "true" if the module should !not! be parsed
-	// returns "false" if the module !must! be parsed
+	// check if module should not be parsed 检查模块是否不应该被解析
+	// returns "true" if the module should !not! be parsed  如果模块应该，则返回"true" !被解析
+	// returns "false" if the module !must! be parsed 如果模块!must!返回"false"被解析
+	// 返回 true，不进行 parse | 返回 false，进行 parse
 	shouldPreventParsing(noParseRule, request) {
-		// if no noParseRule exists, return false
-		// the module !must! be parsed.
+		// if no noParseRule exists, return false 如果不存在任何解析规则，返回false
+		// the module !must! be parsed. 该模块必须!被解析
 		if (!noParseRule) {
 			return false;
 		}
 
-		// we only have one rule to check
+		// we only have one rule to check 我们只需要检查一条规则
 		if (!Array.isArray(noParseRule)) {
-			// returns "true" if the module is !not! to be parsed
+			// returns "true" if the module is !not! to be parsed 如果模块为 !not! 要解析
 			return this.applyNoParseRule(noParseRule, request);
 		}
 
+		// 数组形式下，遍历
 		for (let i = 0; i < noParseRule.length; i++) {
 			const rule = noParseRule[i];
-			// early exit on first truthy match
-			// this module is !not! to be parsed
+			// early exit on first truthy match 在第一场真实比赛中提前出局
+			// this module is !not! to be parsed 这个模块是!不是!要解析
 			if (this.applyNoParseRule(rule, request)) {
 				return true;
 			}
 		}
-		// no match found, so this module !should! be parsed
+		// no match found, so this module !should! be parsed 没有找到匹配，所以这个模块!应该!被解析
 		return false;
 	}
 
 	// 初始化这个模块的 hash 值
 	_initBuildHash(compilation) {
-		const hash = createHash(compilation.outputOptions.hashFunction);
-		if (this._source) {
+		const hash = createHash(compilation.outputOptions.hashFunction); // 散列算法。
+		if (this._source) { // 如果模块存在源码，表示构建成功
 			hash.update("source");
+			// 用表示的源代码的内容更新所提供的哈希对象
 			this._source.updateHash(hash);
 		}
 		hash.update("meta");
@@ -982,8 +1002,8 @@ class NormalModule extends Module {
 	 * 				5. 最后回到 _doBuild 执行完毕回调中，即 build 方法调用 _doBuild 传入的回调
 	 * 2. _doBuild 方法处理好了构建的模块，将其存储在模块实例的 _source 中，执行
  	 */
-	build(options, compilation, resolver, fs, callback) {
-		this._forceBuild = false;
+	build(options/** webpack 配置项 */, compilation, /** compilation 实例 */ resolver, /** 模块路径解析器 */ fs, /** 读取文件系统 */ callback) {
+		this._forceBuild = false; // 强制构建标识置为 false
 		this._source = null;
 		if (this._sourceSizes !== undefined) this._sourceSizes.clear();
 		this._sourceTypes = undefined;
@@ -992,15 +1012,16 @@ class NormalModule extends Module {
 		this.clearWarningsAndErrors(); // 在新构建模块的时候删除之前的模块警告和错误
 		this.clearDependenciesAndBlocks(); // 删除所有依赖项和块
 		this.buildMeta = {};
-		this.buildInfo = { // 模块信息
+		// 模块构建相关信息
+		this.buildInfo = {
 			cacheable: false, // 是否可以缓存
-			parsed: true,
-			fileDependencies: undefined,
-			contextDependencies: undefined,
+			parsed: true, // 是否需要对模块进行 parser -- 可由 options.module.noParse 配置
+			fileDependencies: undefined, // 该模块依赖的文件列表 -- 加入一个文件作为产生 loader 结果的依赖，使它们的任何变化可以被监听到。
+			contextDependencies: undefined, // 该模块依赖的目录列表
 			missingDependencies: undefined,
-			buildDependencies: undefined,
+			buildDependencies: undefined, // 该模块构建依赖 -- 一般为构建这个模块应用的 loader
 			valueDependencies: undefined,
-			hash: undefined,
+			hash: undefined, // 模块对应的 hash
 			assets: undefined,
 			assetsInfo: undefined
 		};
@@ -1026,13 +1047,15 @@ class NormalModule extends Module {
 					contextify(options.context, item.loader, compilation.compiler.root)
 				);
 				const error = new ModuleParseError(source, e, loaders, this.type);
-				this.markModuleAsErrored(error);
-				this._initBuildHash(compilation);
-				return callback();
+				this.markModuleAsErrored(error); // 将模块标记为退出
+				this._initBuildHash(compilation); 
+				return callback(); //
 			};
 
 			// 解析模块为 AST 过程完成
 			const handleParseResult = result => {
+				// 在生成 ast 过程中，模块的依赖项(引用模块)以及导出项等等都会生成依赖存储在 dependencies 中
+				// 对 dependencies 依赖项数组进行排序
 				this.dependencies.sort(
 					concatComparators(
 						compareSelect(a => a.loc, compareLocations),
@@ -1041,33 +1064,46 @@ class NormalModule extends Module {
 				);
 				this._initBuildHash(compilation); // 构建模块的 hash -- 存储在 this.buildInfo.hash: 'fb3946de651534a6717ed3745bd94032'
 				this._lastSuccessfulBuildMeta = this.buildMeta;
-				return handleBuildDone();
+				return handleBuildDone(); // 构建完成回调
 			};
 
 			// 模块最终构建完毕：处理了 loader 编译、soucemap 处理、解析 ast、
 			const handleBuildDone = () => {
 				try {
-					hooks.beforeSnapshot.call(this); // 钩子执行
+					hooks.beforeSnapshot.call(this); // beforeSnapshot 钩子执行
 				} catch (err) {
 					this.markModuleAsErrored(err);
 					return callback();
 				}
 
+				/**
+				 * options.snapshot 配置项决定文件系统是如何创建和无效快照
+				 * options.snapshot.module 构建模块的快照，判断模块是否无效的
+				 * options.snapshot.module.hash 比较内容哈希以判断无效。（比 timestamp 更昂贵，需要读取文件内容，但更改的频率较低）。
+				 * options.snapshot.module.timestamp 比较时间戳以确定无效。默认值
+				 */
 				const snapshotOptions = compilation.options.snapshot.module;
+				// 如果模块不需要进行缓存 || 配置了 options.snapshot.module 为 false，此时不需要进行文件系统
 				if (!this.buildInfo.cacheable || !snapshotOptions) {
 					return callback();
 				}
-				// add warning for all non-absolute paths in fileDependencies, etc 为fileDependencies等中的所有非绝对路径添加警告
+				// add warning for all non-absolute paths in fileDependencies, etc 为 fileDependencies 等中的所有非绝对路径添加警告
 				// This makes it easier to find problems with watching and/or caching 这使得查找监视和/或缓存问题变得更容易
 				let nonAbsoluteDependencies = undefined;
 				const checkDependencies = deps => {
 					for (const dep of deps) {
+						// dep：C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\src\\index.js
+						// 检测是否为绝对路径
 						if (!ABSOLUTE_PATH_REGEX.test(dep)) {
+							// 检测到不是绝对路径，此时初始化 nonAbsoluteDependencies 为 Set 类型
 							if (nonAbsoluteDependencies === undefined)
 								nonAbsoluteDependencies = new Set();
+							// 添加这个错误依赖
 							nonAbsoluteDependencies.add(dep);
+							// 从依赖项中删除这个依赖路径
 							deps.delete(dep);
 							try {
+								// 下面似乎是对这个路径做一些补全尝试
 								const depWithoutGlob = dep.replace(/[\\/]?\*.*$/, "");
 								const absolute = join(
 									compilation.fileSystemInfo.fs,
@@ -1086,17 +1122,25 @@ class NormalModule extends Module {
 						}
 					}
 				};
-				checkDependencies(this.buildInfo.fileDependencies);
-				checkDependencies(this.buildInfo.missingDependencies);
-				checkDependencies(this.buildInfo.contextDependencies);
+				checkDependencies(this.buildInfo.fileDependencies); // 对 fileDependencies 列表进行路径检测
+				checkDependencies(this.buildInfo.missingDependencies); // 对 missingDependencies 列表进行路径检测
+				checkDependencies(this.buildInfo.contextDependencies); // 对 contextDependencies 列表进行路径检测
+				// 如果检测到了存在非绝对路径的话，就需要发出警告
 				if (nonAbsoluteDependencies !== undefined) {
 					const InvalidDependenciesModuleWarning =
 						getInvalidDependenciesModuleWarning();
+					// 添加一个模块警告
 					this.addWarning(
+						// 警告类
 						new InvalidDependenciesModuleWarning(this, nonAbsoluteDependencies)
 					);
 				}
+
 				// convert file/context/missingDependencies into filesystem snapshot 将 file/context/missingDependencies 转换为文件系统快照
+				/**
+				 * 生成模块 snapshot(快照)，应该是用来做缓存相关处理
+				 * 猜测：在构建这个模块时，会尝试从缓存中(内存或文件系统)提取构建的模块，就需要对这个快照进行比较，如果快照没有改变的话，就可以重用构建的模块，否则就需要重新构建
+				 */
 				compilation.fileSystemInfo.createSnapshot(
 					startTime,
 					this.buildInfo.fileDependencies,
@@ -1118,7 +1162,8 @@ class NormalModule extends Module {
 			};
 
 			try {
-				hooks.beforeParse.call(this); // 开始解析模块内容钩子
+				// 开始解析模块内容钩子
+				hooks.beforeParse.call(this);
 			} catch (err) {
 				this.markModuleAsErrored(err);
 				this._initBuildHash(compilation);
@@ -1127,9 +1172,11 @@ class NormalModule extends Module {
 
 			// check if this module should !not! be parsed. 检查此模块是否应该 !not! 不被解析。
 			// if so, exit here; 如果是的话，从这里退出；
+			// options.module.noParse：防止 webpack 解析那些任何与给定正则表达式相匹配的文件。忽略的文件中 不应该含有 import, require, define 的调用，或任何其他导入机制。
+			// 也就是忽略掉不需要 parse 的文件，这些文件中不应该存在 import require define 的调用
 			const noParseRule = options.module && options.module.noParse; // options.module.noParse：防止 webpack 解析那些任何与给定正则表达式相匹配的文件。忽略的文件中 不应该含有 import, require, define 的调用，或任何其他导入机制 -- https://webpack.docschina.org/configuration/module/#modulenoparse
 			if (this.shouldPreventParsing(noParseRule, this.request)) {
-				// We assume that we need module and exports
+				// We assume that we need module and exports 我们假设我们需要模块和导出
 				this.buildInfo.parsed = false;
 				this._initBuildHash(compilation);
 				return handleBuildDone();
@@ -1139,16 +1186,17 @@ class NormalModule extends Module {
 			try {
 				const source = this._source.source(); // 模块解析后的资源(内容)
 				result = this.parser.parse(this._ast || source, {
-					source,
-					current: this,
-					module: this,
+					source, // 源码内容
+					current: this, // 当前解析模块
+					module: this, // 模块内容
 					compilation: compilation,
-					options: options
+					options: options // webpack 配置项
 				});
 			} catch (e) {
-				handleParseError(e);
+				handleParseError(e); // 解析 ast 过程中出现错误
 				return;
 			}
+			// 对模块进行 parse 后，得到 ast(抽象语法树)
 			handleParseResult(result);
 		});
 	}
@@ -1296,20 +1344,23 @@ class NormalModule extends Module {
 	}
 
 	/**
-	 * @param {NeedBuildContext} context context info
-	 * @param {function((WebpackError | null)=, boolean=): void} callback callback function, returns true, if the module needs a rebuild
+	 * @param {NeedBuildContext} context context info 上下文信息
+	 * @param {function((WebpackError | null)=, boolean=): void} callback callback function, returns true, if the module needs a rebuild 回调函数，如果模块需要重新构建，则返回true
 	 * @returns {void}
 	 */
 	needBuild(context, callback) {
-		const { fileSystemInfo, compilation, valueCacheVersions } = context;
+		const { fileSystemInfo, // Compilation 实例
+						compilation, // 文件读取系统
+						 valueCacheVersions // 
+		} = context;
 		// build if enforced 如果强制执行，则构建
-		if (this._forceBuild) return callback(null, true);
+		if (this._forceBuild) return callback(null, true); // 强制重新构建时，重新构建
 
 		// always try to build in case of an error 始终尝试构建以防出现错误
-		if (this.error) return callback(null, true);
+		if (this.error) return callback(null, true); // 之前出现了构建错误时，重新构建
 
 		// always build when module is not cacheable 始终在模块不可缓存时生成
-		if (!this.buildInfo.cacheable) return callback(null, true);
+		if (!this.buildInfo.cacheable) return callback(null, true); // 设置了模块不可缓存的话，那么就需要重新构建
 
 		// build when there is no snapshot to check 没有要检查的快照时生成
 		if (!this.buildInfo.snapshot) return callback(null, true);
@@ -1334,7 +1385,7 @@ class NormalModule extends Module {
 			}
 		}
 
-		// check snapshot for validity
+		// check snapshot for validity 检查快照的有效性
 		fileSystemInfo.checkSnapshotValid(this.buildInfo.snapshot, (err, valid) => {
 			if (err) return callback(err);
 			if (!valid) return callback(null, true);

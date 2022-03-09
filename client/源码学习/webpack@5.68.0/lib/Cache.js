@@ -65,18 +65,21 @@ class Cache {
 
 	/**
 	 * @template T
-	 * @param {string} identifier the cache identifier
+	 * @param {string} identifier the cache identifier 缓存的标识符
 	 * @param {Etag | null} etag the etag
-	 * @param {CallbackCache<T>} callback signals when the value is retrieved
+	 * @param {CallbackCache<T>} callback signals when the value is retrieved 在检索值时发出信号
 	 * @returns {void}
 	 */
 	get(identifier, etag, callback) {
-		const gotHandlers = [];
+		const gotHandlers = []; // 
+		// 猜测:在提取缓存前的钩子
 		this.hooks.get.callAsync(identifier, etag, gotHandlers, (err, result) => {
+			// 出现错误,抛出错误
 			if (err) {
 				callback(makeWebpackError(err, "Cache.hooks.get"));
 				return;
 			}
+			// 没有提取出缓存值
 			if (result === null) {
 				result = undefined;
 			}
@@ -97,10 +100,10 @@ class Cache {
 
 	/**
 	 * @template T
-	 * @param {string} identifier the cache identifier
+	 * @param {string} identifier the cache identifier 缓存的标识符
 	 * @param {Etag | null} etag the etag
-	 * @param {T} data the value to store
-	 * @param {CallbackCache<void>} callback signals when the value is stored
+	 * @param {T} data the value to store 要存储的值
+	 * @param {CallbackCache<void>} callback signals when the value is stored 在存储值时发出信号
 	 * @returns {void}
 	 */
 	store(identifier, etag, data, callback) {

@@ -3283,8 +3283,8 @@ class JavascriptParser extends Parser {
 	}
 
 	/**
-	 * @param {string | Buffer | PreparsedAst} source the source to parse
-	 * @param {ParserState} state the parser state
+	 * @param {string | Buffer | PreparsedAst} source the source to parse 要解析的源文件
+	 * @param {ParserState} state the parser state 解析器的状态
 	 * @returns {ParserState} the parser state
 	 */
 	parse(source, state) {
@@ -3292,11 +3292,12 @@ class JavascriptParser extends Parser {
 		let comments;
 		const semicolons = new Set();
 		if (source === null) {
-			throw new Error("source must not be null");
+			throw new Error("source must not be null"); // 源不能为空
 		}
 		if (Buffer.isBuffer(source)) {
-			source = source.toString("utf-8");
+			source = source.toString("utf-8"); // 如果是 buffer 数据，转化为 string
 		}
+		// 如果 source 是对象，表示这个 loader 返回的 ast，在这里就不需要重新生成 ast
 		if (typeof source === "object") {
 			ast = /** @type {ProgramNode} */ (source);
 			comments = source.comments;

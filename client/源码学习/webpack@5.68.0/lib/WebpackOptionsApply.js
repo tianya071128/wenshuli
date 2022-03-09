@@ -711,12 +711,13 @@ class WebpackOptionsApply extends OptionsApply {
         resolveOptions.resolveToContext = true;
         return resolveOptions;
       });
-    // 添加一个 loader 钩子并注册
+    // 添加一个 loader 钩子并注册 - 在生成 loader 解析器时调用，用于合并 loader 解析器的配置项，配置了如何解析 loader
     compiler.resolverFactory.hooks.resolveOptions
       .for('loader')
       .tap('WebpackOptionsApply', (resolveOptions) => {
+        // 合并 options.resolveLoader 和 resolveOptions(额外配置项) 配置项
         resolveOptions = cleverMerge(options.resolveLoader, resolveOptions);
-        resolveOptions.fileSystem = compiler.inputFileSystem;
+        resolveOptions.fileSystem = compiler.inputFileSystem; // 额外添加一个读取文件系统
         return resolveOptions;
       });
     /**

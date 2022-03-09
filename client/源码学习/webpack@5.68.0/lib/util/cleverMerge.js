@@ -242,9 +242,9 @@ const getValueType = value => {
 };
 
 /**
- * Merges two objects. Objects are deeply clever merged.
- * Arrays might reference the old value with "...".
- * Non-object values take preference over object values.
+ * Merges two objects. Objects are deeply clever merged. 合并两个对象。对象被巧妙地融合在一起
+ * Arrays might reference the old value with "...". 数组可以使用"…"引用旧值。
+ * Non-object values take preference over object values. 非对象值优先于对象值
  * @template T
  * @template O
  * @param {T} first first object

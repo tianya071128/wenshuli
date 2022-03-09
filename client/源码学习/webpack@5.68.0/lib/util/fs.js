@@ -179,7 +179,7 @@ const join = (fs, rootPath, filename) => {
 		return path.win32.join(rootPath, filename);
 	} else {
 		throw new Error(
-			`${rootPath} is neither a posix nor a windows path, and there is no 'join' method defined in the file system`
+			`${rootPath} is neither a posix nor a windows path, and there is no 'join' method defined in the file system` // 既不是posix也不是Windows路径，并且在文件系统中没有定义'join'方法
 		);
 	}
 };

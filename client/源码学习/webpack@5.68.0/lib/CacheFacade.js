@@ -243,6 +243,7 @@ class CacheFacade {
 	}
 
 	/**
+	 * 从全局缓存系统中获取缓存
 	 * @template T
 	 * @param {string} identifier the cache identifier
 	 * @param {Etag | null} etag the etag
@@ -272,11 +273,12 @@ class CacheFacade {
 	}
 
 	/**
+	 * 从全局缓存系统中设置缓存
 	 * @template T
-	 * @param {string} identifier the cache identifier
+	 * @param {string} identifier the cache identifier 缓存的标识符
 	 * @param {Etag | null} etag the etag
-	 * @param {T} data the value to store
-	 * @param {CallbackCache<void>} callback signals when the value is stored
+	 * @param {T} data the value to store 要存储的值
+	 * @param {CallbackCache<void>} callback signals when the value is stored 在存储值时发出信号
 	 * @returns {void}
 	 */
 	store(identifier, etag, data, callback) {

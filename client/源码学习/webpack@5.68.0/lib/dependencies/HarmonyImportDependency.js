@@ -61,6 +61,7 @@ class HarmonyImportDependency extends ModuleDependency {
 		this.assertions = assertions;
 	}
 
+	// 模块类型
 	get category() {
 		return "esm";
 	}

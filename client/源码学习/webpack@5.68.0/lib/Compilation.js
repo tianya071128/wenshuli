@@ -429,7 +429,7 @@ class Compilation {
 	 * @param {CompilationParams} params the compilation parameters 编译参数
 	 */
 	constructor(compiler, params) {
-		this._backCompat = compiler._backCompat;
+		this._backCompat = compiler._backCompat; // optinos.experiments.backCompat - 为许多 webpack 4 api 启用后向兼容层，并发出弃用警告。
 
 		const getNormalModuleLoader = () => deprecatedNormalModuleLoaderHook(this);
 		/** @typedef {{ additionalAssets?: true | Function }} ProcessAssetsAdditionalOptions */
@@ -617,8 +617,10 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			/** @type {SyncHook<[Dependency, EntryOptions]>} */
 			addEntry: new SyncHook(["entry", "options"]),
 			/** @type {SyncHook<[Dependency, EntryOptions, Error]>} */
+			// 入口构建失败
 			failedEntry: new SyncHook(["entry", "options", "error"]),
 			/** @type {SyncHook<[Dependency, EntryOptions, Module]>} */
+			// 入口构建成功
 			succeedEntry: new SyncHook(["entry", "options", "module"]),
 
 			/** @type {SyncWaterfallHook<[(string[] | ReferencedExport)[], Dependency, RuntimeSpec]>} */
@@ -972,7 +974,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		this.creatingModuleDuringBuild = new WeakMap();
 
 		/** @type {Map<string, EntryData>} */
-		this.entries = new Map();
+		this.entries = new Map(); // 入口对象集合
 		/** @type {EntryData} 全局入口相关数据 */
 		this.globalEntry = {
 			dependencies: [],
@@ -994,13 +996,13 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		/** @type {Map<string, Chunk>} */
 		this.namedChunks = new Map();
 		/** @type {Set<Module>} */
-		this.modules = new Set();
+		this.modules = new Set(); // 该 Compilation 所有的构建的模块
 		if (this._backCompat) {
 			arrayToSetDeprecation(this.chunks, "Compilation.chunks");
 			arrayToSetDeprecation(this.modules, "Compilation.modules");
 		}
 		/** @private @type {Map<string, Module>} */
-		this._modules = new Map();
+		this._modules = new Map(); // 模块缓存 -- 根据模块标识符缓存的模块实例
 		this.records = null;
 		/** @type {string[]} */
 		this.additionalChunkAssets = [];
@@ -1048,10 +1050,13 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		/** @type {Set<string>} */
 		this.comparedForEmitAssets = new Set();
 		/** @type {LazySet<string>} */
+		// 应该是与 loader.addDependency() 方法类似，能够监听这些文件列表的变动 - 当添加了 watch 选项时会产生作用
 		this.fileDependencies = new LazySet();
 		/** @type {LazySet<string>} */
+		// 应该是与 loader.addContextDependency() 方法类似，能够监听这些目录列表的变动 - 当添加了 watch 选项时会产生作用
 		this.contextDependencies = new LazySet();
 		/** @type {LazySet<string>} */
+		// 那么这个是用来监视什么的？
 		this.missingDependencies = new LazySet();
 		/** @type {LazySet<string>} */
 		this.buildDependencies = new LazySet();
@@ -1059,19 +1064,19 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		this.compilationDependencies = {
 			add: util.deprecate(
 				item => this.fileDependencies.add(item),
-				"Compilation.compilationDependencies is deprecated (used Compilation.fileDependencies instead)",
+				"Compilation.compilationDependencies is deprecated (used Compilation.fileDependencies instead)", // 依赖已被弃用(使用 Compilation.fileDependencies 的依赖关系)
 				"DEP_WEBPACK_COMPILATION_COMPILATION_DEPENDENCIES"
 			)
 		};
 
-		this._modulesCache = this.getCache("Compilation/modules");
+		this._modulesCache = this.getCache("Compilation/modules"); // 全局模块缓存系统 - 会被缓存在全局缓存系统中(根据 options.cache 配置缓存在不同地方)
 		this._assetsCache = this.getCache("Compilation/assets");
 		this._codeGenerationCache = this.getCache("Compilation/codeGeneration");
 
-		const unsafeCache = options.module.unsafeCache;
-		this._unsafeCache = !!unsafeCache;
+		const unsafeCache = options.module.unsafeCache; // 缓存模块请求的解析， -- webpack.options.module.unsafeCache
+		this._unsafeCache = !!unsafeCache; // // 缓存模块请求的解析， -- webpack.options.module.unsafeCache
 		this._unsafeCachePredicate =
-			typeof unsafeCache === "function" ? unsafeCache : () => true;
+			typeof unsafeCache === "function" ? unsafeCache : () => true; // webpack.options.module.unsafeCache 如果为函数的话
 	}
 
 	getStats() {
@@ -1124,8 +1129,8 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 	}
 
 	/**
-	 * @param {string} name cache name
-	 * @returns {CacheFacade} the cache facade instance
+	 * @param {string} name cache name 缓存名称
+	 * @returns {CacheFacade} the cache facade instance 缓存系统实例
 	 */
 	getCache(name) {
 		return this.compiler.getCache(name);
@@ -1287,26 +1292,32 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			currentProfile.markRestoringStart();
 		}
 
-		// 缓存操作 - 。。。
+		/**
+		 * 从全局缓存系统中提取缓存(会根据 Compilation/modules 和 identifier 等信息生成一个唯一标识符) - 通过 optinos.cache 配置缓存在内存中还是文件系统中
+		 * 这是从全局缓存系统中提取，此时可能存在以下情况；
+		 * 	1. 多配置情况下，就会生成多个 Compilation，就可以借助全局缓存来缓存模式实例，并且对同一模块只构建一次
+		 * 	2. 猜测：在 watch 模式下，应该会使用多次 Compilation
+		 * 	3. 使用了文件缓存的话，就可以多次构建时使用同一缓存实例
+		 */
 		this._modulesCache.get(identifier, null, (err, cacheModule) => {
-			if (err) return callback(new ModuleRestoreError(module, err));
-
+			if (err) return callback(new ModuleRestoreError(module, err)); // 出错，抛出错误
+			// 统计模块信息
 			if (currentProfile !== undefined) {
 				currentProfile.markRestoringEnd();
 				currentProfile.markIntegrationStart();
 			}
-
+			// 如果存在缓存模块的话
 			if (cacheModule) {
 				cacheModule.updateCacheModule(module);
 
 				module = cacheModule;
 			}
-			// 将该模块进行缓存
+			// 将该模块进行缓存，这个缓存只是在同一 Compilation 层面上的
 			this._modules.set(identifier, module);
 			// 将该模块推入 modules 集合中
 			this.modules.add(module);
-			if (this._backCompat)
-				ModuleGraph.setModuleGraphForModule(module, this.moduleGraph); // 。。。
+			if (this._backCompat) // optinos.experiments.backCompat - 为许多 webpack 4 api 启用后向兼容层，并发出弃用警告。
+				ModuleGraph.setModuleGraphForModule(module, this.moduleGraph);
 			if (currentProfile !== undefined) {
 				currentProfile.markIntegrationEnd();
 			}
@@ -1347,7 +1358,13 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 
 	/**
 	 * Builds the module object 构建模块对象
-	 *
+	 *	1. 调用 module.needBuild 判断模块是否可以重用
+	 *			--> 如果已经在缓存中并且快照有效的话，说明可以重用，后续就不需要构建模块流程
+	 *  2. 调用 module.build 启动模块构建
+	 * 			--> 通过 loaders 编译模块(编译结果在 module._source)
+	 * 			--> 对模块进行 parser 生成 ast 解析出模块的依赖(module.dependencies)，这些依赖包含导入模块，导入模块的某一些方法，导出方法等等，后面会递归解析这些依赖
+	 * 			--> 对模块生成 snapshot(快照) 用于缓存确认(module.buildInfo.snapshot)等等工作
+	 *  3. 调用 this._modulesCache.store 方法将构建的模块进行全局缓存
 	 * @param {Module} module module to be built 将要建造的模块
 	 * @param {ModuleCallback} callback the callback
 	 * @returns {void}
@@ -1361,18 +1378,18 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			currentProfile.markBuildingStart();
 		}
 
-		// 调用模块实例的 needBuild 方法 - 这个方法似乎是用来检测模块是否可以重用，此时不需要构建
+		// 调用模块实例的 needBuild 方法 - 这个方法用来检测是否需要构建
 		module.needBuild(
 			{
-				compilation: this,
-				fileSystemInfo: this.fileSystemInfo,
+				compilation: this, // Compilation 实例
+				fileSystemInfo: this.fileSystemInfo, // 文件读取系统
 				valueCacheVersions: this.valueCacheVersions
 			},
 			(err, needBuild) => {
 				// 出现错误
 				if (err) return callback(err);
 
-				// 模块可以重用，此时不需要构建
+				// 模块可以重用，此时不需要构建 - 模块的编译的源码存放在模块实例上的
 				if (!needBuild) {
 					if (currentProfile !== undefined) {
 						currentProfile.markBuildingEnd();
@@ -1381,35 +1398,53 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 					return callback();
 				}
 
-				// 在模块构建开始之前触发，可以用来修改模块 - 传入模块实例
-				// 如果需要生成 source-map 的话，会注入一个插件 -- module.useSourceMap = true; 给模块实例打上一个标识
-				this.hooks.buildModule.call(module);  
+				/**
+				 * buildModule：在模块构建开始之前触发，可以用来修改模块。
+				 * 例如：如果需要生成 source-map 的话，会注入一个插件 -- module.useSourceMap = true; 给模块实例打上一个标识
+				 */
+				this.hooks.buildModule.call(module); 
+
 				this.builtModules.add(module); // 将该模块添加至 builtModules 集合中 - 包含了该构建流程中所有模块
-				// 通过模块实例的 build 启动构建
+
+				// 通过模块实例的 build 启动构建模块的过程
 				module.build(
 					this.options, // webpack 配置项
 					this, // compilation 实例
-					this.resolverFactory.get("normal", module.resolveOptions),
-					this.inputFileSystem, // 文件操作方法
+					this.resolverFactory.get("normal", module.resolveOptions), // 模块路径解析器
+					this.inputFileSystem, // 读取文件系统
 					err => {
+						/**
+						 * 模块构建完成，主要完成以下工作
+						 * 	通过 loaders 编译模块(编译结果在 module._source)
+						 * 	对模块进行 parser 生成 ast 解析出模块的依赖(module.dependencies)
+						 * 	对模块生成 snapshot(快照) 用于缓存确认(module.buildInfo.snapshot)等等工作
+						 */
+
+						// 对模块进行统计信息
 						if (currentProfile !== undefined) {
 							currentProfile.markBuildingEnd();
 						}
+						// 构建过程中出现错误
 						if (err) {
 							this.hooks.failedModule.call(module, err);
 							return callback(err);
 						}
+						// 对模块进行统计信息
 						if (currentProfile !== undefined) {
 							currentProfile.markStoringStart();
 						}
+						// 模块构建完毕后，在全局缓存系统中进行缓存处理
 						this._modulesCache.store(module.identifier(), null, module, err => {
+							// 对模块进行统计信息
 							if (currentProfile !== undefined) {
 								currentProfile.markStoringEnd();
 							}
+							// 缓存模块出错
 							if (err) {
 								this.hooks.failedModule.call(module, err);
 								return callback(new ModuleStoreError(module, err));
 							}
+							// succeedModule：模块构建成功时执行。
 							this.hooks.succeedModule.call(module);
 							return callback();
 						});
@@ -1449,13 +1484,14 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 	}
 
 	/**
-	 * @param {Module} module to be processed for deps
-	 * @param {ModuleCallback} callback callback to be triggered
+	 * 递归处理模块的依赖
+	 * @param {Module} module to be processed for deps 处理依赖项的模块
+	 * @param {ModuleCallback} callback callback to be triggered 被触发的回调
 	 * @returns {void}
 	 */
 	_processModuleDependencies(module, callback) {
 		/** @type {Array<{factory: ModuleFactory, dependencies: Dependency[], originModule: Module|null}>} */
-		const sortedDependencies = [];
+		const sortedDependencies = []; // 排好序的依赖关系
 
 		/** @type {DependenciesBlock} */
 		let currentBlock;
@@ -1478,6 +1514,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		let inProgressSorting = 1;
 		let inProgressTransitive = 1;
 
+		// 将排序好的依赖通过 handleModuleCreation 启动构建(创建模块实例、构建模块、处理模块的依赖)
 		const onDependenciesSorted = err => {
 			if (err) return callback(err);
 
@@ -1486,15 +1523,15 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 				return callback();
 			}
 
-			// This is nested so we need to allow one additional task
+			// This is nested so we need to allow one additional task 这是嵌套的，所以我们需要允许一个额外的任务
 			this.processDependenciesQueue.increaseParallelism();
 
 			for (const item of sortedDependencies) {
 				inProgressTransitive++;
 				this.handleModuleCreation(item, err => {
-					// In V8, the Error objects keep a reference to the functions on the stack. These warnings &
-					// errors are created inside closures that keep a reference to the Compilation, so errors are
-					// leaking the Compilation object.
+					// In V8, the Error objects keep a reference to the functions on the stack. These warnings & 在V8中，Error对象保留了对栈上函数的引用。这些警告&
+					// errors are created inside closures that keep a reference to the Compilation, so errors are 错误是在闭包中创建的，这些闭包保留了对编译的引用，所以错误也是
+					// leaking the Compilation object. 泄漏编译对象
 					if (err && this.bail) {
 						if (inProgressTransitive <= 0) return;
 						inProgressTransitive = -1;
@@ -1503,26 +1540,29 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 						onTransitiveTasksFinished(err);
 						return;
 					}
+					// 如果已经处理了当前模块的全部模块，则完成模块依赖的构建
 					if (--inProgressTransitive === 0) onTransitiveTasksFinished();
 				});
 			}
 			if (--inProgressTransitive === 0) onTransitiveTasksFinished();
 		};
 
+		// 模块依赖已经全部完成回调
 		const onTransitiveTasksFinished = err => {
 			if (err) return callback(err);
 			this.processDependenciesQueue.decreaseParallelism();
 
-			return callback();
+			return callback(); // 完成回调
 		};
 
 		/**
+		 * 开始处理依赖
 		 * @param {Dependency} dep dependency
 		 * @param {number} index index in block
 		 * @returns {void}
 		 */
 		const processDependency = (dep, index) => {
-			this.moduleGraph.setParents(dep, currentBlock, module, index);
+			this.moduleGraph.setParents(dep, currentBlock, module, index); // 构建模块依赖图关系
 			if (this._unsafeCache) {
 				try {
 					const unsafeCachedModule = unsafeCacheDependencies.get(dep);
@@ -1622,6 +1662,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 					console.error(e);
 				}
 			}
+			// 交由 processDependencyForResolving 方法
 			processDependencyForResolving(dep);
 		};
 
@@ -1645,7 +1686,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 					const factory = this.dependencyFactories.get(constructor);
 					if (factory === undefined) {
 						throw new Error(
-							`No module factory available for dependency type: ${constructor.name}`
+							`No module factory available for dependency type: ${constructor.name}` // 有可用于依赖类型的模块工厂
 						);
 					}
 					if (factoryCacheKey2 === factory) {
@@ -1673,9 +1714,9 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 						factoryCacheKey2 = factory;
 					}
 				}
-				// Here webpack is using heuristic that assumes
-				// mostly esm dependencies would be used
-				// so we don't allocate extra string for them
+				// Here webpack is using heuristic that assumes 这里webpack使用启发式方法，假设
+				// mostly esm dependencies would be used 大多数esm依赖项会被使用
+				// so we don't allocate extra string for them 所以我们不会为它们分配额外的字符串
 				const cacheKey =
 					category === esmDependencyCategory
 						? resourceIdent
@@ -1697,16 +1738,33 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		};
 
 		try {
+			/**
+			 * 例如模块为：
+			 * import { test, test2 } from 'babel-loader!./module/module01';
+			 * import './module/module02';
+			 * console.log('全流程构建', test, test2);
+			 * import('./chunk/chunk01').then(function (_ref) {  var chunk = _ref.chunk;  chunk();});
+			 * export function exportTest() {  console.log('导出一个模块试试');}
+			 */
 			/** @type {DependenciesBlock[]} */
-			const queue = [module];
+			const queue = [module]; // 初始排序队列为当前模块
 			do {
-				const block = queue.pop();
+				const block = queue.pop(); // 从数组中移除最后一个元素并返回它
+				/**
+				 * block.dependencies：保存着模块同步的依赖，例如模块导入(包括模块方法导入也会生成一个依赖)、方法导出等
+				 * 
+				 * 	HarmonImportSideEffectDependency -- 表示导入的模块(例如 import './module/module02';)
+				 * 	HarmonyImportSpecifierDependency -- 表示导入的方法(例如 import { test } from './module/module01';)
+				 * 	HarmonyExportSpecifierDependency -- 表示导出的方法
+				 */
 				if (block.dependencies) {
-					currentBlock = block;
+					// 模块存在同步依赖的话
+					currentBlock = block; // 当前处理的模块
 					let i = 0;
 					for (const dep of block.dependencies) processDependency(dep, i++);
 				}
 				if (block.blocks) {
+					// 存在异步块的话，将其视为一个独立模块处理？
 					for (const b of block.blocks) queue.push(b);
 				}
 			} while (queue.length !== 0);
@@ -1763,11 +1821,10 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 	 * @returns {void}
 	 */
 	/**
-	 * 启动初始构建模块的工作:
-	 * 	1. 执行 factorizeModule 方法，在方法内部通过一种运行机制，最终会调用 _factorizeModule 方法进而启动创建流程
-	 * 	2. 启动 _factorizeModule 方法，通过 factory.create 方法创建模块实例 -- factory：表示模块创建工厂方法，一般为 NormalModuleFactory，少数为 ContextModuleFactory
-	 * 		 -->  factory.create 执行完毕后，执行 factory.create方法回调，处理一下返回的模块实例信息，最后执行 callback 回调，将模块实例传递给 handleModuleCreation(本方法)
-	 * 	3. 执行 this.factorizeModule 方法回调，处理一下模块信息，
+	 * 启动初始构建模块的工作: 都在这个方法中
+	 * 	1. this.factorizeModule：启动构建模块实例
+	 * 	2. this.addModule：尝试从缓存中提取值
+	 * 	3. this._handleModuleBuildAndDependencies：启动模块构建并递归构建模块的依赖
 	 */
 	handleModuleCreation(
 		{
@@ -1787,7 +1844,17 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		// 模块信息统计
 		const currentProfile = this.profile ? new ModuleProfile() : undefined;
 
-		// 启动创建模块实例方法 -- 模块实例只要是提取出模块的相关信息，例如：loaders、parser、模块路径等信息
+		/**
+		 * 启动构建模块实例：
+		 * 	1. 生成模块的相关数据：
+		 * 			主要如下属性：
+		 * 				parser：主要作用是为该 module 提供 parser，用于解析模块为 ast。
+		 * 				generator：主要作用是为该 module 提供 generator，用于模版生成时提供方法。
+		 * 				loaders：该模块需要运用的 loader
+  	 * 				request: 模块解析路径(结合了 loader 的路径) -- "C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\node_modules\\babel-loader\\lib\\index.js??ruleSet[1].rules[1].use!C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\node_modules\\eslint-loader\\dist\\cjs.js??ruleSet[1].rules[0]!C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\src\\index.js"
+		 * 				resource: 模块的绝对路径(不包含 loader) -- "C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\src\\index.js"
+		 * 	2. 使用相关数据生成模块实例
+		 */
 		this.factorizeModule(
 			{
 				currentProfile, // 是否统计模块信息
@@ -1834,13 +1901,19 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 					return callback();
 				}
 
+				// 统计模块信息
 				if (currentProfile !== undefined) {
 					moduleGraph.setProfile(newModule, currentProfile);
 				}
 
-				// 大致应该是尝试从缓存系统中提取模块，如果存在缓存则使用缓存模块
-				// 不存在缓存，将该 module 推入到 _modules 和 modules 集合中，返回模块
-				// 当然还有其他的一些工作。。。
+				/**
+				 * 从缓存系统中提取值：提取的是模式实例，还是需要经过 _handleModuleBuildAndDependencies 方法进行模块的构建
+				 *  1. 从 Compilation 层面提取缓存：从 this._modules 缓存中提取，这是最新的
+				 * 	2. 从全局层面提取缓存：根据 options.cache 配置缓存位置(内存和文件系统)，
+				 * 			如果是内存，可以跨 Compilation 共享模块实例，
+				 * 			如果是文件系统，更可以在每次打包中共享模块实例
+				 *  3. 如果都不存在缓存时，将其推入到 this._modules 缓存中，从 Compilation 层面进行缓存
+				 */
 				this.addModule(newModule, (err, module) => {
 					// 如果存在错误的话，处理错误
 					if (err) {
@@ -1854,10 +1927,12 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 					}
 
 					if (
-						this._unsafeCache &&
-						factoryResult.cacheable !== false &&
+						this._unsafeCache && // 缓存模块请求的解析， -- webpack.options.module.unsafeCache
+						factoryResult.cacheable !== false && // 缓存标识？
 						/** @type {any} */ (module).restoreFromUnsafeCache &&
-						this._unsafeCachePredicate(module)
+						// webpack.options.module.unsafeCache 当为函数时，会调用
+						// 如果用户没有定义的话,默认值是一个函数,函数回去判断模块是否来自 node_modules,如果是的话,返回 true
+						this._unsafeCachePredicate(module) 
 					) {
 						const unsafeCacheableModule =
 							/** @type {Module & { restoreFromUnsafeCache: Function }} */ (
@@ -1879,7 +1954,6 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 							);
 						}
 					} else {
-						// 应该是用来处理一下哪些模块依赖了这个模块，可以用来建立依赖关系。。。
 						applyFactoryResultDependencies();
 						for (let i = 0; i < dependencies.length; i++) {
 							const dependency = dependencies[i];
@@ -1891,11 +1965,13 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 						}
 					}
 
+					// 模块图
 					moduleGraph.setIssuerIfUnset(
 						module,
 						originModule !== undefined ? originModule : null
 					);
-					// 如果存在缓存模块，并且与该模块不同，那么可能是重建？
+
+					// 如果存在缓存模块实例，做一些工作
 					if (module !== newModule) {
 						if (currentProfile !== undefined) {
 							const otherProfile = moduleGraph.getProfile(module);
@@ -1907,9 +1983,20 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 						}
 					}
 
-					// 启动构建模块的方法
+					/**
+				   * 启动 buildModule 方法：构建模块对象
+				   *		1. 调用 module.needBuild 判断模块是否可以重用
+				   *				--> 如果已经在缓存中并且快照有效的话，说明可以重用，后续就不需要构建模块流程
+				   *  	2. 调用 module.build 启动模块构建
+				   * 				--> 通过 loaders 编译模块(编译结果在 module._source)
+				   * 				--> 对模块进行 parser 生成 ast 解析出模块的依赖(module.dependencies)，这些依赖包含导入模块，导入模块的某一些方法，导出方法等等，后面会递归解析这些依赖
+				   * 				--> 对模块生成 snapshot(快照) 用于缓存确认(module.buildInfo.snapshot)等等工作
+				   *  	3. 调用 this._modulesCache.store 方法将构建的模块进行全局缓存
+				   * 启动 processModuleDependencies 方法：递归构建模块依赖
+				   * 		会将模块构建过程中收集的依赖进行处理后，递归调用 handleModuleCreation 方法重复模块构建的过程，直到所有的模块都构建成功后调用回调
+				   */
 					this._handleModuleBuildAndDependencies(
-						originModule, // 引用该模块的模块实例
+						originModule, // 引用模块(引用该模块的模块实例)
 						module, // 模块实例
 						recursive,
 						callback // 构建完毕后的回调
@@ -1919,11 +2006,24 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		);
 	}
 
+	/**
+	 * 启动 buildModule 方法：构建模块对象
+	 *		1. 调用 module.needBuild 判断模块是否可以重用
+	 *				--> 如果已经在缓存中并且快照有效的话，说明可以重用，后续就不需要构建模块流程
+	 *  	2. 调用 module.build 启动模块构建
+	 * 				--> 通过 loaders 编译模块(编译结果在 module._source)
+	 * 				--> 对模块进行 parser 生成 ast 解析出模块的依赖(module.dependencies)，这些依赖包含导入模块，导入模块的某一些方法，导出方法等等，后面会递归解析这些依赖
+	 * 				--> 对模块生成 snapshot(快照) 用于缓存确认(module.buildInfo.snapshot)等等工作
+	 *  	3. 调用 this._modulesCache.store 方法将构建的模块进行全局缓存
+	 * 启动 processModuleDependencies 方法：递归构建模块依赖
+	 * 		会将模块构建过程中收集的依赖进行处理后，递归调用 handleModuleCreation 方法重复模块构建的过程，直到所有的模块都构建成功后调用回调
+	 */
 	_handleModuleBuildAndDependencies(originModule, module, recursive, callback) {
 		// Check for cycles when build is trigger inside another build 检查生成在另一个生成中触发时的周期
 		let creatingModuleDuringBuildSet = undefined;
+		// ？？？
 		if (!recursive && this.buildQueue.isProcessing(originModule)) {
-			// Track build dependency
+			// Track build dependency 跟踪建立依赖关系
 			creatingModuleDuringBuildSet =
 				this.creatingModuleDuringBuild.get(originModule);
 			if (creatingModuleDuringBuildSet === undefined) {
@@ -1955,16 +2055,19 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			}
 		}
 
-		// 启动构建模块
+		/**
+		 * 构建模块对象：具体流程见上方注释或方法注释
+		 */
 		this.buildModule(module, err => {
 			if (creatingModuleDuringBuildSet !== undefined) {
 				creatingModuleDuringBuildSet.delete(module);
 			}
+			// 模块构建出错
 			if (err) {
 				if (!err.module) {
 					err.module = module;
 				}
-				this.errors.push(err);
+				this.errors.push(err); // 将错误推入到错误集合中
 
 				return callback(err);
 			}
@@ -1975,15 +2078,19 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 				return;
 			}
 
-			// This avoids deadlocks for circular dependencies
+			// This avoids deadlocks for circular dependencies 这避免了循环依赖的死锁
 			if (this.processDependenciesQueue.isProcessing(module)) {
 				return callback();
 			}
 
+			/**
+			 * 递归解析模块依赖：在递归构建了这个模块的依赖之后，会在内部存在一个依赖图保存着这些模块的依赖关系
+			 */
 			this.processModuleDependencies(module, err => {
 				if (err) {
 					return callback(err);
 				}
+				// 模块全部构建成功
 				callback(null, module);
 			});
 		});
@@ -2010,7 +2117,17 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		if (currentProfile !== undefined) {
 			currentProfile.markFactoryStart();
 		}
-		// 通过 factory.create 启动创建模块实例
+		/**
+		 * 启动构建模块实例：
+		 * 	1. 生成模块的相关数据：
+		 * 			主要如下属性：
+		 * 				parser：主要作用是为该 module 提供 parser，用于解析模块为 ast。
+		 * 				generator：主要作用是为该 module 提供 generator，用于模版生成时提供方法。
+		 * 				loaders：该模块需要运用的 loader
+  	 * 				request: 模块解析路径(结合了 loader 的路径) -- "C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\node_modules\\babel-loader\\lib\\index.js??ruleSet[1].rules[1].use!C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\node_modules\\eslint-loader\\dist\\cjs.js??ruleSet[1].rules[0]!C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\src\\index.js"
+		 * 				resource: 模块的绝对路径(不包含 loader) -- "C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\src\\index.js"
+		 * 	2. 使用相关数据生成模块实例
+		 */
 		factory.create(
 			{
 				contextInfo: {
@@ -2027,12 +2144,12 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 					: this.compiler.context, // 上下文路径 - 如果传入则使用传入的，没有传入从导入模块的 context 取出
 				dependencies: dependencies // 依赖项数组
 			},
-			// 模式实例化结束
+			// 创建模块实例化结束
 			(err, result) => {
 				if (result) {
 					// TODO webpack 6: remove
 					// For backward-compat
-					// 如果返回值只是一个 module 实例的话，重组 result 值
+					// 如果返回值只是一个 module 实例的话，重组 result 值 -- 应该是兼容旧版本
 					if (result.module === undefined && result instanceof Module) {
 						result = {
 							module: result
@@ -2066,11 +2183,12 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 					);
 					return callback(notFoundError, factoryResult ? result : undefined);
 				}
-				// 如果不存在返回值的话，直接 callback
+				// 如果不存在返回值的话，直接 callback -- 可能是忽略这个模块构建
 				if (!result) {
 					return callback();
 				}
 
+				// 统计模块信息
 				if (currentProfile !== undefined) {
 					currentProfile.markFactoryEnd();
 				}
@@ -2121,7 +2239,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			);
 		}
 
-		// 处理模块创建
+		// 启动根模块的构建，完成根模块下所有依赖的模块构建完成
 		this.handleModuleCreation(
 			{
 				factory: moduleFactory, // 模块构造器
@@ -2132,12 +2250,14 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			},
 			(err, result) => {
 				if (err && this.bail) {
+					// 构建过程中出现错误，抛出错误，停止模块的构建过程
 					callback(err);
 					this.buildQueue.stop();
 					this.rebuildQueue.stop();
 					this.processDependenciesQueue.stop();
 					this.factorizeQueue.stop();
 				} else if (!err && result) {
+					// 没有出错并且存在返回值(根模块实例)
 					callback(null, result);
 				} else {
 					callback();
@@ -2233,7 +2353,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		// addEntry 钩子 -- 既没有暴露给开发者，webpack 内部也没有使用
 		this.hooks.addEntry.call(entry, options);
 
-		// 接着流程交由 addModuleTree 方法
+		// 接着流程交由 addModuleTree 方法，完成入口模块的构建，并递归触摸所有的依赖进行构建，构建完毕后执行回调
 		this.addModuleTree(
 			{
 				context, // 项目上下文 - webpack.options.context 配置项
@@ -2244,9 +2364,11 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			},
 			(err, module) => {
 				if (err) {
+					// 如果出错，执行 failedEntry 钩子：入口构建失败
 					this.hooks.failedEntry.call(entry, options, err);
 					return callback(err);
 				}
+				// 成功执行 succeedEntry 钩子；入口构建成功
 				this.hooks.succeedEntry.call(entry, options, module);
 				return callback(null, module);
 			}

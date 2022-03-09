@@ -254,7 +254,7 @@ class NormalModuleFactory extends ModuleFactory {
 				() => new SyncHook(["generator", "generatorOptions"])
 			)
 		});
-		this.resolverFactory = resolverFactory;
+		this.resolverFactory = resolverFactory; // 解析器工厂方法
 		this.ruleSet = ruleSetCompiler.compile([
 			{
 				rules: options.defaultRules
@@ -263,14 +263,14 @@ class NormalModuleFactory extends ModuleFactory {
 				rules: options.rules
 			}
 		]);
-		this.context = context || "";
+		this.context = context || ""; // 
 		this.fs = fs;
 		this._globalParserOptions = options.parser;
 		this._globalGeneratorOptions = options.generator;
 		/** @type {Map<string, WeakMap<Object, TODO>>} */
-		this.parserCache = new Map();
+		this.parserCache = new Map(); // parser(解析模块为 ast)的缓存
 		/** @type {Map<string, WeakMap<Object, Generator>>} */
-		this.generatorCache = new Map();
+		this.generatorCache = new Map(); // generator(模版生成时提供方法)的缓存
 		/** @type {Set<Module>} */
 		this._restoredUnsafeCacheEntries = new Set();
 
@@ -288,7 +288,11 @@ class NormalModuleFactory extends ModuleFactory {
 				/**
 				 * resolve 钩子：在请求被解析之前调用。可以通过返回 false 来忽略依赖项。返回一个模块实例将结束进程。否则，返回 undefined 以继续。
 				 * AsyncSeriesBailHook 钩子：异步串行，当钩子事件存在返回值后阻断执行
-				 * 主要是在下面就会注册这个钩子事件，
+				 * 主要是在下面就会注册这个钩子事件，在下面的钩子事件中，会对模块进行初步解析，生成创建模块实例的所需数据，
+				 * 生成对象在 resolveData.createData 中，主要如下属性：
+				 * 	parser：主要作用是为该 module 提供 parser，用于解析模块为 ast。
+				 * 	generator：主要作用是为该 module 提供 generator，用于模版生成时提供方法。
+				 * 	loaders：该模块需要运用的 loader
 				 */
 				this.hooks.resolve.callAsync(resolveData, (err, result) => {
 					if (err) return callback(err);
@@ -305,9 +309,8 @@ class NormalModuleFactory extends ModuleFactory {
 								" Returning a Module object will result in this module used as result." // 返回模块对象将导致此模块用作结果
 						);
 					
-					// 执行 afterResolve 钩子：在请求解析后调用 -- webpack 内部没有注册这个钩子，直接执行回调
 					/**
-					 * afterResolve 钩子：
+					 * afterResolve 钩子：在请求解析后调用。
 					 */
 					this.hooks.afterResolve.callAsync(resolveData, (err, result) => {
 						if (err) return callback(err);
@@ -324,7 +327,15 @@ class NormalModuleFactory extends ModuleFactory {
 						// Ignored 返回 false，忽略这个模块
 						if (result === false) return callback();
 
-						// 该模块的相关信息，为创建模块实例提供各种必备的环境条件
+						/**
+						 * 该模块的相关信息，为创建模块实例提供各种必备的环境条件，在 hooks.resolve 钩子事件(在下方)中会解析出来
+						 * 主要如下属性：
+				 		 * 	parser：主要作用是为该 module 提供 parser，用于解析模块为 ast。
+				 		 * 	generator：主要作用是为该 module 提供 generator，用于模版生成时提供方法。
+				 		 * 	loaders：该模块需要运用的 loader
+						 *  request: 模块解析路径(结合了 loader 的路径) -- "C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\node_modules\\babel-loader\\lib\\index.js??ruleSet[1].rules[1].use!C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\node_modules\\eslint-loader\\dist\\cjs.js??ruleSet[1].rules[0]!C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\src\\index.js"
+						 * 	resource: 模块的绝对路径(不包含 loader) -- "C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\00_process\\src\\index.js"
+						 */
 						const createData = resolveData.createData;
 
 						// createModule：在创建 NormalModule 实例之前调用 -- 内部没有注册这个钩子
@@ -343,10 +354,10 @@ class NormalModuleFactory extends ModuleFactory {
 									createdModule = new NormalModule(createData);
 								}
 
-								// module 钩子：在创建 NormalModule 实例后调用 -- webpack 中用于处理模块其他问题，这里常规模块不会使用
+								// module 钩子：在创建 NormalModule 实例后调用。
 								createdModule = this.hooks.module.call(
-									createdModule,
-									createData,
+									createdModule, // 模块实例
+									createData, // 创建模块的数据
 									resolveData
 								);
 								
@@ -374,18 +385,18 @@ class NormalModuleFactory extends ModuleFactory {
 			(data, callback) => {
 				// 提取这个模块的数据
 				const {
-					contextInfo,
-					context,
-					dependencies,
-					dependencyType,
-					request,
+					contextInfo, // 模块其他上下文信息
+					context, // 模块的上下文路径，用于解析模块路径
+					dependencies, // 用于描述这个模块的依赖对象列表
+					dependencyType, // 一个依赖类别，典型的类别是"commonjs"， "amd"， "esm"
+					request, // 模块请求路径 - 对示例而言，就是 './module/module01'
 					assertions,
-					resolveOptions,
+					resolveOptions, // 加载配置项
 					fileDependencies,
 					missingDependencies,
 					contextDependencies
 				} = data;
-				// ？
+				// 获取 loader 的解析器：用于解析 loader
 				const loaderResolver = this.getResolver("loader");
 
 				/** @type {ResourceData | undefined} */
@@ -888,7 +899,7 @@ class NormalModuleFactory extends ModuleFactory {
 					fileDependencies,
 					missingDependencies,
 					contextDependencies,
-					cacheable: resolveData.cacheable
+					cacheable: resolveData.cacheable // 是否缓存模块
 				};
 
 				// 初始化模块完毕，执行 callback 回调跳出 cretae 方法
@@ -1118,17 +1129,19 @@ If changing the source code is not an option there is also a resolve options cal
 		);
 	}
 
+	// 获取指定类型(例如：javascript/auto等)的 parser(用于解析模块为 ast)
 	getParser(type, parserOptions = EMPTY_PARSER_OPTIONS) {
-		let cache = this.parserCache.get(type);
+		let cache = this.parserCache.get(type); // 根据类型 type 提取缓存
 
 		if (cache === undefined) {
 			cache = new WeakMap();
-			this.parserCache.set(type, cache);
+			this.parserCache.set(type, cache); // 不存在缓存的话，先初始化 type 类型缓存
 		}
 
-		let parser = cache.get(parserOptions);
+		let parser = cache.get(parserOptions); // 从类型缓存中提取出对应 parserOptions 的配置项
 
 		if (parser === undefined) {
+			// 不存在缓存，创建 parser
 			parser = this.createParser(type, parserOptions);
 			cache.set(parserOptions, parser);
 		}
@@ -1137,6 +1150,7 @@ If changing the source code is not an option there is also a resolve options cal
 	}
 
 	/**
+	 * 创建 parser 解析器，用于生成模块 ast
 	 * @param {string} type type
 	 * @param {{[k: string]: any}} parserOptions parser options
 	 * @returns {Parser} parser
@@ -1155,6 +1169,7 @@ If changing the source code is not an option there is also a resolve options cal
 		return parser;
 	}
 
+	// 获取指定类型(例如：javascript/auto等)的 generator(用于模版生成时提供方法。)
 	getGenerator(type, generatorOptions = EMPTY_GENERATOR_OPTIONS) {
 		let cache = this.generatorCache.get(type);
 
@@ -1172,7 +1187,7 @@ If changing the source code is not an option there is also a resolve options cal
 
 		return generator;
 	}
-
+	// 创建 generator 解析器，用于模版生成时提供方法。
 	createGenerator(type, generatorOptions = {}) {
 		generatorOptions = mergeGlobalOptions(
 			this._globalGeneratorOptions,
@@ -1189,6 +1204,7 @@ If changing the source code is not an option there is also a resolve options cal
 		return generator;
 	}
 
+	// 获取指定类型(loader、模块)的解析器
 	getResolver(type, resolveOptions) {
 		return this.resolverFactory.get(type, resolveOptions);
 	}

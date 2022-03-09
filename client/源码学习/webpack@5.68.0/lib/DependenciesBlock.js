@@ -19,10 +19,13 @@ const makeSerializable = require("./util/makeSerializable");
 class DependenciesBlock {
 	constructor() {
 		/** @type {Dependency[]} */
+		// 模块的各个同步依赖(例如：导入一个模块，导入一个模块的某个方法，导出一个方法都会生成对应的依赖)
 		this.dependencies = [];
 		/** @type {AsyncDependenciesBlock[]} */
+		// 模块的异步依赖
 		this.blocks = [];
 		/** @type {DependenciesBlock} */
+		// 模块的父模块
 		this.parent = undefined;
 	}
 

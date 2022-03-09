@@ -49,10 +49,10 @@ const convertToResolveOptions = resolveOptionsWithDepType => {
 
 	if (!partialOptions.fileSystem) {
 		throw new Error(
-			"fileSystem is missing in resolveOptions, but it's required for enhanced-resolve"
+			"fileSystem is missing in resolveOptions, but it's required for enhanced-resolve" // 文件系统在resolve选项中缺失，但它需要增强的解析
 		);
 	}
-	// These weird types validate that we checked all non-optional properties
+	// These weird types validate that we checked all non-optional properties 这些奇怪的类型验证了我们检查了所有非可选属性
 	const options =
 		/** @type {Partial<ResolveOptions> & Pick<ResolveOptions, "fileSystem">} */ (
 			partialOptions
@@ -84,48 +84,60 @@ module.exports = class ResolverFactory /** 解析器工厂 */ {
 			)
 		});
 		/** @type {Map<string, ResolverCache>} */
-		this.cache = new Map();
+		this.cache = new Map(); 
 	}
 
 	/**
-	 * @param {string} type type of resolver
+	 * @param {string} type type of resolver 需要哪种类型的解析器
 	 * @param {ResolveOptionsWithDependencyType=} resolveOptions options
-	 * @returns {ResolverWithOptions} the resolver
+	 * @returns {ResolverWithOptions} the resolver 返回解析器
 	 */
 	get(type, resolveOptions = EMPTY_RESOLVE_OPTIONS) {
-		let typedCaches = this.cache.get(type);
+		/** 
+		 * 缓存系统：首先根据 type 类型进行缓存(例如：loader等等)
+		 * 					在根据 resolveOptions 进行缓存(因为加载配置项不同，解析结果也会不同)
+		 */
+		let typedCaches = this.cache.get(type); // 尝试从缓存中提取
+		// 不存在缓存的话
 		if (!typedCaches) {
 			typedCaches = {
 				direct: new WeakMap(),
 				stringified: new Map()
 			};
-			this.cache.set(type, typedCaches);
+			this.cache.set(type, typedCaches); // 进行缓存
 		}
-		const cachedResolver = typedCaches.direct.get(resolveOptions);
+		const cachedResolver = typedCaches.direct.get(resolveOptions); // 根据解析配置项提取这个类型(type)的缓存
 		if (cachedResolver) {
+			// 存在缓存则直接返回缓存内容
 			return cachedResolver;
 		}
-		const ident = JSON.stringify(resolveOptions);
-		const resolver = typedCaches.stringified.get(ident);
+		const ident = JSON.stringify(resolveOptions); // 进行序列化
+		const resolver = typedCaches.stringified.get(ident); // 根据配置项序列化提取出这个类型(type)的缓存
 		if (resolver) {
+			// 存在缓存的话，将其缓存添加到 direct 项
 			typedCaches.direct.set(resolveOptions, resolver);
+			// 并返回缓存
 			return resolver;
 		}
+		/** 缓存系统 end */
+
+		// 不存在缓存，则初始化
 		const newResolver = this._create(type, resolveOptions);
-		typedCaches.direct.set(resolveOptions, newResolver);
+		typedCaches.direct.set(resolveOptions, newResolver); // 并将生成的解析器进行缓存
 		typedCaches.stringified.set(ident, newResolver);
 		return newResolver;
 	}
 
 	/**
-	 * @param {string} type type of resolver
+	 * @param {string} type type of resolver 需要创建解析器的类型
 	 * @param {ResolveOptionsWithDependencyType} resolveOptionsWithDepType options
 	 * @returns {ResolverWithOptions} the resolver
 	 */
 	_create(type, resolveOptionsWithDepType) {
 		/** @type {ResolveOptionsWithDependencyType} */
-		const originalResolveOptions = { ...resolveOptionsWithDepType };
+		const originalResolveOptions = { ...resolveOptionsWithDepType }; // 源解析器配置项
 
+		// 综合 webpack.options[type] 配置项和 resolveOptionsWithDepType 配置项生成解析器配置项
 		const resolveOptions = convertToResolveOptions(
 			this.hooks.resolveOptions.for(type).call(resolveOptionsWithDepType)
 		);
@@ -133,8 +145,8 @@ module.exports = class ResolverFactory /** 解析器工厂 */ {
 			Factory.createResolver(resolveOptions)
 		);
 		if (!resolver) {
-			throw new Error("No resolver created");
-		}
+			throw new Error("No resolver created"); // 没有创建解析器
+		} 
 		/** @type {WeakMap<Partial<ResolveOptionsWithDependencyType>, ResolverWithOptions>} */
 		const childCache = new WeakMap();
 		resolver.withOptions = options => {
