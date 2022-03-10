@@ -76,6 +76,23 @@ export default {
           ],
         },
         {
+          title: 'vue',
+          children: [
+            {
+              name: 'Vetur',
+              describe: 'Vetur 官网 - 基于 vue 的编辑器扩展',
+              link: 'https://vuejs.github.io/vetur/',
+              img: 'https://cn.vuejs.org/images/logo.svg',
+            },
+            {
+              name: 'eslint-plugin-vue',
+              describe: 'eslint-plugin-vue 官网 - 基于 vue 的 eslint 插件',
+              link: 'https://eslint.vuejs.org/',
+              img: 'https://cn.vuejs.org/images/logo.svg',
+            },
+          ],
+        },
+        {
           title: '前端工程化',
           children: [
             {
@@ -95,11 +112,6 @@ export default {
               img: 'https://www.prettier.cn/icon.png',
               describe: 'Prettier 中文网 - 代码格式化程序',
               link: 'https://www.prettier.cn/',
-            },
-            {
-              name: 'Vetur',
-              describe: 'Vetur 官网 - 基于 vue 的编辑器扩展',
-              link: 'https://vuejs.github.io/vetur/',
             },
           ],
         },
@@ -139,6 +151,11 @@ export default {
               describe:
                 '忽略文件的规范，适用于前端工具，例如：ESLint、Prettier等',
               link: 'http://git-scm.com/docs/gitignore',
+            },
+            {
+              name: 'AST 在线生成',
+              describe: 'AST 在线生成',
+              link: 'https://astexplorer.net/',
             },
           ],
         },
