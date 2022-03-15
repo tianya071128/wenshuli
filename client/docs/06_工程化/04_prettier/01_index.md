@@ -1,9 +1,9 @@
 ---
-title: prettier
+title: Prettier
 date: 2021-10-21 15:00:00
-permalink: /vscode/prettier
+permalink: /prettier/
 categories: -- 工程化
-  -- vscode
+  -- Prettier
 tags:
   - null
 ---
@@ -29,15 +29,15 @@ Prettier 是一个 opinionated(表示可配置项很少) 的代码格式化程�
 
 ## Prettier 与 Linter 区别
 
-Prettier 与 Linter（eslint、TSlint等）比较：
+Prettier 与 Linter（eslint、TSlint 等）比较：
 
 Linter 主要有两类规则：
 
-* 格式规则：例如：[max-len](https://eslint.org/docs/rules/max-len)、[no-mixed-spaces-and-tabs](https://eslint.org/docs/rules/no-mixed-spaces-and-tabs)、[keyword-spacing](https://eslint.org/docs/rules/keyword-spacing)、[comma-style](https://eslint.org/docs/rules/comma-style) ...
+- 格式规则：例如：[max-len](https://eslint.org/docs/rules/max-len)、[no-mixed-spaces-and-tabs](https://eslint.org/docs/rules/no-mixed-spaces-and-tabs)、[keyword-spacing](https://eslint.org/docs/rules/keyword-spacing)、[comma-style](https://eslint.org/docs/rules/comma-style) ...
 
   对于这类规则，Prettier 能够减轻对这一套规则的配置需求，能够较好的工作
 
-* **代码质量规则**：例如[no-unused-vars](https://eslint.org/docs/rules/no-unused-vars)、[no-extra-bind](https://eslint.org/docs/rules/no-extra-bind)、[no-implicit-globals](https://eslint.org/docs/rules/no-implicit-globals)、[prefer-promise-reject-errors](https://eslint.org/docs/rules/prefer-promise-reject-errors) ...
+- **代码质量规则**：例如[no-unused-vars](https://eslint.org/docs/rules/no-unused-vars)、[no-extra-bind](https://eslint.org/docs/rules/no-extra-bind)、[no-implicit-globals](https://eslint.org/docs/rules/no-implicit-globals)、[prefer-promise-reject-errors](https://eslint.org/docs/rules/prefer-promise-reject-errors) ...
 
   **对于这类规则，Prettier 没有办法做到。这也是 Linter 主要的工作范围**
 
@@ -86,7 +86,7 @@ module.exports = {
   bracketSpacing: true, // 在对象，数组括号与文字之间加空格 "{ foo: bar }"
   bracketSameLine: true, // 文档显示为 html 结束标签不另起一行, 不起作用, 记录一下...(因为 vscode Prettier 插件不支持)
   jsxBracketSameLine: true,
-  htmlWhitespaceSensitivity: 'ignore' // 解决包裹文字时候结束标签的结尾尖括号掉到了下一行 -- 虽然并没有碰到这个问题, 记录一下
+  htmlWhitespaceSensitivity: 'ignore', // 解决包裹文字时候结束标签的结尾尖括号掉到了下一行 -- 虽然并没有碰到这个问题, 记录一下
 };
 ```
 
@@ -96,6 +96,5 @@ module.exports = {
 
 ## 参考
 
-* [知乎-Prettier](https://zhuanlan.zhihu.com/p/81764012?from_voters_page=true)
-* [官方文档](https://prettier.io/docs/en/index.html)
-
+- [知乎-Prettier](https://zhuanlan.zhihu.com/p/81764012?from_voters_page=true)
+- [官方文档](https://prettier.io/docs/en/index.html)

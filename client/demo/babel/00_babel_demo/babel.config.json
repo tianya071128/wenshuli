@@ -1,0 +1,26 @@
+{
+  // "presets": [
+  //   [
+  //     "@babel/preset-env",
+  //     {
+  //       "useBuiltIns": "usage",
+  //       "corejs": "3.6.5",
+  //       "targets": {
+  //         // "edge": "17",
+  //         // "firefox": "60",
+  //         // "chrome": "90",
+  //         // "safari": "11.1"
+  //         // "ie": "7",
+  //         "esmodules": true
+  //         // "browsers": ["last 2 Chrome versions"]
+  //       },
+  //       "modules": false
+  //     }
+  //   ]
+  // ]
+  "targets": {
+    "esmodules": true
+  },
+  "plugins": ["@babel/plugin-transform-modules-commonjs"]
+  // "plugins": ["@babel/plugin-transform-arrow-functions"]
+}

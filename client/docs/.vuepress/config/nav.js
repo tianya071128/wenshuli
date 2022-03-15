@@ -16,9 +16,11 @@ module.exports = [
   {
     text: '工程化',
     items: [
-      { text: 'vscode', link: '/vscode/' },
+      { text: 'babel', link: '/babel/' },
       { text: 'ESLint', link: '/eslint/' },
       { text: 'webpack', link: '/webpack/' },
+      { text: 'vscode', link: '/vscode/' },
+      { text: 'prettier', link: '/prettier/' },
     ],
   },
   {
