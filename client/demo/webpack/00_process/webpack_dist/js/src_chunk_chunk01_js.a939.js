@@ -13,9 +13,9 @@
 /*!******************************!*\
   !*** ./src/chunk/chunk01.js ***!
   \******************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"chunk\": () => (/* binding */ chunk)\n/* harmony export */ });\nfunction chunk() {\n  console.log('我是一个 chunk');\n}\n\n//# sourceURL=webpack://00_process/./src/chunk/chunk01.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"chunk\": function() { return /* binding */ chunk; }\n/* harmony export */ });\nfunction chunk() {\n  console.log('我是一个 chunk');\n}\n\n//# sourceURL=webpack://00_process/./src/chunk/chunk01.js?");
 
 /***/ })
 

@@ -29,5 +29,8 @@
     "async-validator": "^1.11.5",
     "axios": "^0.24.0",
     "element-ui": "^2.15.6"
-  }
+  },
+  "browserslist": [
+    "IE 11"
+  ]
 }

@@ -158,7 +158,13 @@ module.exports = {
       title: 'babel', // 分组标题
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['01_index', '02_配置文件', '03_配置选项'],
+      children: [
+        '01_index',
+        '02_配置文件',
+        '03_配置选项',
+        '04_预设',
+        '05_preset-env预设',
+      ],
     },
   ],
   '/07_参考/': ['01.index'],
