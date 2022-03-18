@@ -216,5 +216,8 @@ tags:
 * `exclude`：始终排除/删除的插件数组。
 * [其他选项](https://babel.docschina.org/docs/en/babel-preset-env/)
 
-## 
+## @babel/plugin-transform-runtime：提取 babel 辅助方法
 
+这个插件是帮我们把一些babel的辅助方法由直接写入代码专为按需引入模块的方式引用
+
+[见官网文档](https://babel.docschina.org/docs/en/babel-plugin-transform-runtime/)
