@@ -114,6 +114,9 @@ export default {
 </script>
 
 <style scoped>
+.test {
+  margin: 15px 0;
+}
 .http-test {
   margin: 15px 0;
 }
