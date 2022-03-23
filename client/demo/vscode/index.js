@@ -13,3 +13,9 @@ test(1, 2);
 test(1, 2);
 
 test;
+
+const aa = 123;
+console.log(aa);
+
+for (const element of array) {
+}
