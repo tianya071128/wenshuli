@@ -221,3 +221,5 @@ tags:
 这个插件是帮我们把一些babel的辅助方法由直接写入代码专为按需引入模块的方式引用
 
 [见官网文档](https://babel.docschina.org/docs/en/babel-plugin-transform-runtime/)
+
+这个插件会有一些问题，见[Babel 插件通关秘籍-babel7 的问题](https://juejin.cn/book/6946117847848321055/section/6947175741821812768)

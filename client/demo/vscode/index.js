@@ -1,21 +1,23 @@
-/**
- * 测试一下
- * @param {number} a 这是参数 a
- * @param {number} b 这是参数 b
- * @returns number
- */
-export function test(a, b) {
-  return a + b;
-}
+// /**
+//  * 测试一下
+//  * @param {number} a 这是参数 a
+//  * @param {number} b 这是参数 b
+//  * @returns number
+//  */
+// export function test(a, b) {
+//   return a + b;
+// }
 
-test(1, 2);
+// test(1, 2);
 
-test(1, 2);
+// test(1, 2);
 
-test;
+// test;
 
-const aa = 123;
-console.log(aa);
+// const aa = 123;
+// console.log(aa);
 
-for (const element of array) {
-}
+// for (const element of array) {
+// }
+
+console.log(111);
