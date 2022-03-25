@@ -267,9 +267,9 @@ class Compiler {
     this.recordsOutputPath = null;
     this.records = {};
     /** @type {Set<string | RegExp>} */
-    this.managedPaths = new Set();
+    this.managedPaths = new Set(); // 由包管理器管理的路径数组，可以信任它不会被修改 -- https://webpack.docschina.org/configuration/other-options/#managedpaths
     /** @type {Set<string | RegExp>} */
-    this.immutablePaths = new Set();
+    this.immutablePaths = new Set(); // 由包管理器管理的路径数组，在其路径中包含一个版本或哈希，以便所有文件都是不可变的（immutable） -- https://webpack.docschina.org/configuration/other-options/#immutable-paths
 
     /** @type {ReadonlySet<string>} */
     this.modifiedFiles = undefined;
@@ -293,7 +293,7 @@ class Compiler {
 
     this.requestShortener = new RequestShortener(context, this.root);
 
-    this.cache = new Cache();
+    this.cache = new Cache(); // Compiler 缓存类 -- 用来操作 Compiler 级别缓存 -- 缓存着各式各样的内容(模块实例。。。)
 
     /** @type {Map<Module, { buildInfo: object, references: WeakMap<Dependency, Module>, memCache: WeakTupleMap }> | undefined} */
     this.moduleMemCaches = undefined;
@@ -304,7 +304,7 @@ class Compiler {
     this.running = false;
 
     /** @type {boolean} */
-    this.idle = false;
+    this.idle = false; // Compiler 是否闲置标识
 
     /** @type {boolean} */
     this.watchMode = false;
@@ -588,7 +588,7 @@ class Compiler {
       this.cache.endIdle((err) => {
         if (err) return finalCallback(err);
 
-        this.idle = false;
+        this.idle = false; // 表示 Compiler 开始运行，不再闲置
         run();
       });
     } else {
@@ -1308,7 +1308,7 @@ ${other}`);
   }
 
   /**
-   * @param {Callback<void>} callback signals when the compiler closes
+   * @param {Callback<void>} callback signals when the compiler closes 当编译器关闭时发出信号
    * @returns {void}
    */
   close(callback) {

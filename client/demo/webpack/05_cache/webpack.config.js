@@ -1,0 +1,19 @@
+const path = require('path');
+
+module.exports = {
+  mode: 'development',
+  entry: './src/index.js',
+  context: __dirname,
+  output: {
+    filename: 'js/[name].[fullhash:4].js',
+    path: path.resolve(__dirname, 'webpack_dist'),
+    clean: true,
+  },
+  name: 'wenshuli',
+  module: {
+    rules: [],
+  },
+  // cache: {
+  //   type: 'filesystem',
+  // },
+};

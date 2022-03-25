@@ -18,9 +18,9 @@ module.exports = [
     items: [
       { text: 'babel', link: '/babel/' },
       { text: 'ESLint', link: '/eslint/' },
-      { text: 'webpack', link: '/webpack/' },
       { text: 'vscode', link: '/vscode/' },
       { text: 'prettier', link: '/prettier/' },
+      { text: 'webpack', link: '/webpack/' },
     ],
   },
   {

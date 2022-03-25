@@ -585,28 +585,38 @@ class WebpackOptionsApply extends OptionsApply {
 
     new WarnCaseSensitiveModulesPlugin().apply(compiler);
 
+    // 这个插件是处理 options.snapshot.managedPaths 和 immutablePaths 的，并没有做其他注册工作
     const AddManagedPathsPlugin = require('./cache/AddManagedPathsPlugin');
     new AddManagedPathsPlugin(
       options.snapshot.managedPaths,
       options.snapshot.immutablePaths
     ).apply(compiler);
 
+    // 注册缓存相关插件
     if (options.cache && typeof options.cache === 'object') {
-      const cacheOptions = options.cache;
+      const cacheOptions = options.cache; // 缓存配置项
       switch (cacheOptions.type) {
         case 'memory': {
-          if (isFinite(cacheOptions.maxGenerations)) {
+          // 内存模式缓存
+          /**
+           * maxGenerations：定义内存缓存中未使用的缓存项的生命周期
+           *  cache.maxGenerations: 1: 在一次编译中未使用的缓存被删除 => 数量对应着编译次数
+           *  cache.maxGenerations: Infinity: 缓存将永远保存。
+           */
+          if (isFinite(cacheOptions.maxGenerations) /** maxGenerations 是一个有限数值 */) {
             //@ts-expect-error https://github.com/microsoft/TypeScript/issues/41697
+            // 与不考虑缓存失效相比，多了一层根据构建次数来判断缓存失效的逻辑
             const MemoryWithGcCachePlugin = require('./cache/MemoryWithGcCachePlugin');
             new MemoryWithGcCachePlugin({
               maxGenerations: cacheOptions.maxGenerations,
             }).apply(compiler);
           } else {
             //@ts-expect-error https://github.com/microsoft/TypeScript/issues/41697
+            // 不考虑缓存失效时，使用插件
             const MemoryCachePlugin = require('./cache/MemoryCachePlugin');
             new MemoryCachePlugin().apply(compiler);
           }
-          if (cacheOptions.cacheUnaffected) {
+          if (cacheOptions.cacheUnaffected) { 
             if (!options.experiments.cacheUnaffected) {
               throw new Error(
                 "'cache.cacheUnaffected: true' is only allowed when 'experiments.cacheUnaffected' is enabled"
@@ -622,6 +632,11 @@ class WebpackOptionsApply extends OptionsApply {
             const list = cacheOptions.buildDependencies[key];
             new AddBuildDependenciesPlugin(list).apply(compiler);
           }
+          /**
+           * cacheOptions.maxMemoryGenerations：定义内存缓存中未使用的缓存项的生命周期 -- https://webpack.docschina.org/configuration/other-options/#cachemaxmemorygenerations-cachemaxmemorygenerations
+           *  cache.maxMemoryGenerations: 0: 持久化缓存不会使用额外的内存缓存。它只将项目缓存到内存中，直到它们被序列化到磁盘。一旦序列化，下一次读取将再次从磁盘反序列化它们。这种模式将最小化内存使用，但会带来性能成本。
+           *  不为 0 时，就跟内存缓存一样，需要注册 MemoryCachePlugin 或 MemoryWithGcCachePlugin 插件
+           */
           if (!isFinite(cacheOptions.maxMemoryGenerations)) {
             //@ts-expect-error https://github.com/microsoft/TypeScript/issues/41697
             const MemoryCachePlugin = require('./cache/MemoryCachePlugin');
@@ -633,35 +648,39 @@ class WebpackOptionsApply extends OptionsApply {
               maxGenerations: cacheOptions.maxMemoryGenerations,
             }).apply(compiler);
           }
+          // 实验性质功能
           if (cacheOptions.memoryCacheUnaffected) {
             if (!options.experiments.cacheUnaffected) {
               throw new Error(
-                "'cache.memoryCacheUnaffected: true' is only allowed when 'experiments.cacheUnaffected' is enabled"
+                "'cache.memoryCacheUnaffected: true' is only allowed when 'experiments.cacheUnaffected' is enabled" // “只有当”实验时才允许。启用了“cache unchanged”
               );
             }
             compiler.moduleMemCaches = new Map();
           }
           switch (cacheOptions.store) {
+            // cacheOptions.store：告诉 webpack 什么时候将数据存放在文件系统中。目前只支持 pack
+            // 当编译器闲置时候，将缓存数据都存放在一个文件中
             case 'pack': {
+              // 文件系统缓存，插件实现
               const IdleFileCachePlugin = require('./cache/IdleFileCachePlugin');
               const PackFileCacheStrategy = require('./cache/PackFileCacheStrategy');
               new IdleFileCachePlugin(
                 new PackFileCacheStrategy({
-                  compiler,
-                  fs: compiler.intermediateFileSystem,
-                  context: options.context,
-                  cacheLocation: cacheOptions.cacheLocation,
-                  version: cacheOptions.version,
+                  compiler, // compiler 实例
+                  fs: compiler.intermediateFileSystem, // 文件系统
+                  context: options.context, // 项目上下文
+                  cacheLocation: cacheOptions.cacheLocation, // 缓存的路径。
+                  version: cacheOptions.version, // 缓存数据的版本。不同版本不会允许重用缓存和重载当前的内容。当配置以一种无法重用缓存的方式改变时，要更新缓存的版本。这会让缓存失效。
                   logger: compiler.getInfrastructureLogger(
                     'webpack.cache.PackFileCacheStrategy'
-                  ),
-                  snapshot: options.snapshot,
-                  maxAge: cacheOptions.maxAge,
-                  profile: cacheOptions.profile,
-                  allowCollectingMemory: cacheOptions.allowCollectingMemory,
-                  compression: cacheOptions.compression,
+                  ), // 打印类
+                  snapshot: options.snapshot, // 快照配置
+                  maxAge: cacheOptions.maxAge, // 允许未使用的缓存留在文件系统缓存中的时间（以毫秒为单位）；
+                  profile: cacheOptions.profile, // 跟踪并记录各个 'filesystem' 缓存项的详细时间信息。
+                  allowCollectingMemory: cacheOptions.allowCollectingMemory, // 收集在反序列化期间分配的未使用的内存
+                  compression: cacheOptions.compression, // 压缩类型
                 }),
-                cacheOptions.idleTimeout,
+                cacheOptions.idleTimeout, // 时间以毫秒为单位。cache.idleTimeout 表示缓存存储发生的时间间隔。
                 cacheOptions.idleTimeoutForInitialStore,
                 cacheOptions.idleTimeoutAfterLargeChanges
               ).apply(compiler);
@@ -674,6 +693,7 @@ class WebpackOptionsApply extends OptionsApply {
         }
         default:
           // @ts-expect-error Property 'type' does not exist on type 'never'. ts(2339)
+          // 其他类型不支持
           throw new Error(`Unknown cache type ${cacheOptions.type}`);
       }
     }

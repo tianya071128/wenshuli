@@ -1,0 +1,22 @@
+{
+  "name": "00_process",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:cache": "webpack --config ./05_cache/webpack.config.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.17.5",
+    "@babel/plugin-proposal-object-rest-spread": "^7.17.3",
+    "@babel/preset-env": "^7.16.11",
+    "babel-loader": "^8.2.3",
+    "eslint": "^6.8.0",
+    "eslint-loader": "^4.0.2",
+    "webpack": "^5.68.0",
+    "webpack-cli": "^4.9.2"
+  }
+}

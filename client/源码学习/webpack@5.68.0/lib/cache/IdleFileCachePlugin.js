@@ -14,13 +14,13 @@ const BUILD_DEPENDENCIES_KEY = Symbol();
 
 class IdleFileCachePlugin {
 	/**
-	 * @param {TODO} strategy cache strategy
+	 * @param {TODO} strategy cache strategy 高速缓存策略
 	 * @param {number} idleTimeout timeout
 	 * @param {number} idleTimeoutForInitialStore initial timeout
 	 * @param {number} idleTimeoutAfterLargeChanges timeout after changes
 	 */
 	constructor(
-		strategy,
+		strategy, // 缓存策略(什么时候将数据存放在文件系统中。) - 目前只支持 PackFileCacheStrategy 插件(当编译器闲置时候)
 		idleTimeout,
 		idleTimeoutForInitialStore,
 		idleTimeoutAfterLargeChanges
@@ -32,7 +32,7 @@ class IdleFileCachePlugin {
 	}
 
 	/**
-	 * Apply the plugin
+	 * Apply the plugin 注册插件
 	 * @param {Compiler} compiler the compiler instance
 	 * @returns {void}
 	 */
@@ -51,8 +51,9 @@ class IdleFileCachePlugin {
 		let avgTimeSpendInStore = 0;
 
 		/** @type {Map<string | typeof BUILD_DEPENDENCIES_KEY, () => Promise>} */
-		const pendingIdleTasks = new Map();
-
+		const pendingIdleTasks = new Map(); // 
+		
+		// 保存缓存时触发
 		compiler.cache.hooks.store.tap(
 			{ name: "IdleFileCachePlugin", stage: Cache.STAGE_DISK },
 			(identifier, etag, data) => {
@@ -62,6 +63,7 @@ class IdleFileCachePlugin {
 			}
 		);
 
+		// 获取缓存时触发
 		compiler.cache.hooks.get.tapPromise(
 			{ name: "IdleFileCachePlugin", stage: Cache.STAGE_DISK },
 			(identifier, etag, gotHandlers) => {
@@ -97,7 +99,8 @@ class IdleFileCachePlugin {
 				);
 			}
 		);
-
+		
+		// 清除缓存时触发(即 Compiler 编译器关闭时触发)
 		compiler.cache.hooks.shutdown.tapPromise(
 			{ name: "IdleFileCachePlugin", stage: Cache.STAGE_DISK },
 			() => {
@@ -172,6 +175,7 @@ class IdleFileCachePlugin {
 			}
 		};
 		let idleTimer = undefined;
+		// 编译器开始闲置时触发
 		compiler.cache.hooks.beginIdle.tap(
 			{ name: "IdleFileCachePlugin", stage: Cache.STAGE_DISK },
 			() => {
@@ -206,6 +210,7 @@ class IdleFileCachePlugin {
 				idleTimer.unref();
 			}
 		);
+		// 编译器结束闲置时触发
 		compiler.cache.hooks.endIdle.tap(
 			{ name: "IdleFileCachePlugin", stage: Cache.STAGE_DISK },
 			() => {
@@ -216,8 +221,9 @@ class IdleFileCachePlugin {
 				isIdle = false;
 			}
 		);
+		// 在 compilation 完成时执行。
 		compiler.hooks.done.tap("IdleFileCachePlugin", stats => {
-			// 10% build overhead is ignored, as it's not cacheable
+			// 10% build overhead is ignored, as it's not cacheable 10% 的构建开销被忽略，因为它是不可缓存的
 			timeSpendInBuild *= 0.9;
 			timeSpendInBuild += stats.endTime - stats.startTime;
 		});

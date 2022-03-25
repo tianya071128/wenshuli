@@ -300,7 +300,7 @@ class NormalModuleFactory extends ModuleFactory {
 					// Ignored 可以通过返回 false 来忽略依赖项。
 					if (result === false) return callback();
 
-					// direct module 返回一个模块实例将结束进程。
+					// direct module 返回一个模块实例将结束进程 -- 如果能够缓存，会尝试从缓存中提取，此时直接取缓存值即可
 					if (result instanceof Module) return callback(null, result);
 
 					if (typeof result === "object")

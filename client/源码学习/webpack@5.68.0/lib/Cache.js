@@ -116,7 +116,7 @@ class Cache {
 	}
 
 	/**
-	 * After this method has succeeded the cache can only be restored when build dependencies are
+	 * After this method has succeeded the cache can only be restored when build dependencies are 此方法成功后，仅当生成依赖项被删除时，才能恢复缓存
 	 * @param {Iterable<string>} dependencies list of all build dependencies
 	 * @param {CallbackCache<void>} callback signals when the dependencies are stored
 	 * @returns {void}
@@ -129,6 +129,7 @@ class Cache {
 	}
 
 	/**
+	 * Compiler 开始闲置时触发
 	 * @returns {void}
 	 */
 	beginIdle() {
@@ -136,7 +137,8 @@ class Cache {
 	}
 
 	/**
-	 * @param {CallbackCache<void>} callback signals when the call finishes
+	 * Compiler 结束闲置时触发(此时 Compiler 开始构建)
+	 * @param {CallbackCache<void>} callback signals when the call finishes 调用结束时发出的信号
 	 * @returns {void}
 	 */
 	endIdle(callback) {
@@ -146,12 +148,14 @@ class Cache {
 	}
 
 	/**
-	 * @param {CallbackCache<void>} callback signals when the call finishes
+	 * 当 Compiler 编译器关闭会调用方法
+	 * @param {CallbackCache<void>} callback signals when the call finishes 调用结束时发出的信号
 	 * @returns {void}
 	 */
 	shutdown(callback) {
+		// 清除缓存
 		this.hooks.shutdown.callAsync(
-			makeWebpackErrorCallback(callback, "Cache.hooks.shutdown")
+			makeWebpackErrorCallback(callback, "Cache.hooks.shutdown") // 返回一个封装处理 err 的方法，内部会处理错误
 		);
 	}
 }

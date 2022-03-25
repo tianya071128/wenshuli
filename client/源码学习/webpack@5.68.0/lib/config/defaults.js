@@ -45,7 +45,7 @@ const {
 const NODE_MODULES_REGEXP = /[\\/]node_modules[\\/]/i;
 
 /**
- * Sets a constant default value when undefined
+ * Sets a constant default value when undefined 当未定义时，设置一个常量的默认值
  * @template T
  * @template {keyof T} P
  * @param {T} obj an object
@@ -144,7 +144,7 @@ const applyWebpackOptionsDefaults = options => {
 			? getTargetProperties(target, options.context)
 			: getTargetsProperties(target, options.context);
 
-	const development = mode === "development";
+	const development = mode === "development"; // 模式是否为开发环境
 	const production = mode === "production" || !mode;
 
 	if (typeof options.entry !== "function") {
@@ -172,14 +172,16 @@ const applyWebpackOptionsDefaults = options => {
 
 	const futureDefaults = options.experiments.futureDefaults;
 
+	// 给 cache 配置项添加默认值，在开发环境下，默认为 momory 缓存，生产环境禁用缓存
 	F(options, "cache", () =>
 		development ? { type: /** @type {"memory"} */ ("memory") } : false
 	);
+	// 继续给缓存项添加其他配置项(除了配置缓存类型，还有其他配置项需要配置)
 	applyCacheDefaults(options.cache, {
-		name: name || "default",
-		mode: mode || "production",
-		development,
-		cacheUnaffected: options.experiments.cacheUnaffected
+		name: name || "default", // 配置的名称(用于标识当前 Compiler)
+		mode: mode || "production", // 模式
+		development, // 是否为开发环境标识
+		cacheUnaffected: options.experiments.cacheUnaffected // 实验性质功能
 	});
 	const cache = !!options.cache;
 
@@ -307,22 +309,25 @@ const applyExperimentsDefaults = (
 };
 
 /**
+ * 用于给 webpack.options.cache 配置选项
  * @param {CacheOptions} cache options
  * @param {Object} options options
- * @param {string} options.name name
- * @param {string} options.mode mode
- * @param {boolean} options.development is development mode
- * @param {boolean} options.cacheUnaffected the cacheUnaffected experiment is enabled
+ * @param {string} options.name name 
+ * @param {string} options.mode mode 模式
+ * @param {boolean} options.development is development mode 是否为开发环境标识
+ * @param {boolean} options.cacheUnaffected the cacheUnaffected experiment is enabled 
  * @returns {void}
  */
 const applyCacheDefaults = (
 	cache,
 	{ name, mode, development, cacheUnaffected }
 ) => {
-	if (cache === false) return;
+	if (cache === false) return; // 如果禁用缓存，那么什么都不做
+	// 根据不同缓存类型来设置值
 	switch (cache.type) {
 		case "filesystem":
-			F(cache, "name", () => name + "-" + mode);
+			// 缓存类型为文件系统
+			F(cache, "name", () => name + "-" + mode); 
 			D(cache, "version", "");
 			F(cache, "cacheDirectory", () => {
 				const cwd = process.cwd();
@@ -368,6 +373,7 @@ const applyCacheDefaults = (
 			]);
 			break;
 		case "memory":
+			// 如果缓存类型为内存模块的话，配置项就会比较少
 			D(cache, "maxGenerations", Infinity);
 			D(cache, "cacheUnaffected", development && cacheUnaffected);
 			break;

@@ -976,30 +976,31 @@ class PackFileCacheStrategy {
 	 * @param {number} options.maxAge max age of cache items
 	 * @param {boolean} options.profile track and log detailed timing information for individual cache items
 	 * @param {boolean} options.allowCollectingMemory allow to collect unused memory created during deserialization
-	 * @param {false | "gzip" | "brotli"} options.compression compression used
+	 * @param {false | "gzip" | "brotli"} options.compression compression used 压缩类型
 	 */
 	constructor({
-		compiler,
-		fs,
-		context,
-		cacheLocation,
-		version,
-		logger,
-		snapshot,
-		maxAge,
-		profile,
-		allowCollectingMemory,
-		compression
+		compiler, // compiler 实例
+		fs, // 文件系统
+		context, // 项目上下文
+		cacheLocation, // 缓存的路径。
+		version, // 缓存数据的版本。不同版本不会允许重用缓存和重载当前的内容。当配置以一种无法重用缓存的方式改变时，要更新缓存的版本。这会让缓存失效。
+		logger, // 打印类
+		snapshot, // 快照配置
+		maxAge, // 允许未使用的缓存留在文件系统缓存中的时间（以毫秒为单位）；
+		profile, // 跟踪并记录各个 'filesystem' 缓存项的详细时间信息。
+		allowCollectingMemory, // 收集在反序列化期间分配的未使用的内存
+		compression // 压缩类型
 	}) {
 		this.fileSerializer = createFileSerializer(
 			fs,
-			compiler.options.output.hashFunction
+			compiler.options.output.hashFunction // 散列算法。
 		);
+		
 		this.fileSystemInfo = new FileSystemInfo(fs, {
-			managedPaths: snapshot.managedPaths,
-			immutablePaths: snapshot.immutablePaths,
-			logger: logger.getChildLogger("webpack.FileSystemInfo"),
-			hashFunction: compiler.options.output.hashFunction
+			managedPaths: snapshot.managedPaths, // 由包管理器管理的路径数组，可以信任它不会被修改。
+			immutablePaths: snapshot.immutablePaths, // 由包管理器管理的路径数组，在其路径中包含一个版本或哈希，以便所有文件都是不可变的（immutable）。
+			logger: logger.getChildLogger("webpack.FileSystemInfo"), // 打印类
+			hashFunction: compiler.options.output.hashFunction // 散列算法。
 		});
 		this.compiler = compiler;
 		this.context = context;
@@ -1227,7 +1228,7 @@ class PackFileCacheStrategy {
 			.catch(err => {
 				if (err && err.code !== "ENOENT") {
 					this.logger.warn(
-						`Restoring failed for ${identifier} from pack: ${err}`
+						`Restoring failed for ${identifier} from pack: ${err}` // 恢复失败的
 					);
 					this.logger.debug(err.stack);
 				}

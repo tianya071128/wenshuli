@@ -142,6 +142,7 @@ module.exports = {
         '03_loader',
         '02_sourceMap',
         '06_library',
+        '07_其他',
       ],
     },
   ],
