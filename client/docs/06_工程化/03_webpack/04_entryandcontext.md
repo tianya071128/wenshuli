@@ -3,7 +3,7 @@ title: 入口和上下文
 date: 2021-10-21 15:00:00
 permalink: /webpack/entryandcontext
 categories: -- 工程化
-  -- 入口和上下文
+  -- webpack
 tags:
   - null
 ---

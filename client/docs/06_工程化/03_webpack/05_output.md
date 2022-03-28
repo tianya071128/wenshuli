@@ -3,7 +3,7 @@ title: output
 date: 2021-10-21 15:00:00
 permalink: /webpack/output
 categories: -- 工程化
-  -- 输出
+  -- webpack
 tags:
   - null
 ---
@@ -63,7 +63,7 @@ background-image: url(/assets/spinner.gif);
 
 注意：
 
-* 示例配置：
+- 示例配置：
 
   ```js
   module.exports = {
@@ -77,11 +77,11 @@ background-image: url(/assets/spinner.gif);
       publicPath: 'assets/', // 相对于 HTML 页面
       publicPath: '../assets/', // 相对于 HTML 页面
       publicPath: '', // 相对于 HTML 页面（目录相同）
-    }
+    },
   };
   ```
 
-* 在编写 loader、plugin 时，在编译时(compile time)无法知道输出文件的 `publicPath` 的情况下，可以留空，然后在入口文件(entry file)处使用[自由变量(free variable)](https://stackoverflow.com/questions/12934929/what-are-free-variables) `__webpack_public_path__`，以便在运行时(runtime)进行动态设置。
+- 在编写 loader、plugin 时，在编译时(compile time)无法知道输出文件的 `publicPath` 的情况下，可以留空，然后在入口文件(entry file)处使用[自由变量(free variable)](https://stackoverflow.com/questions/12934929/what-are-free-variables) `__webpack_public_path__`，以便在运行时(runtime)进行动态设置。
 
 ## 文件名配置
 
@@ -98,20 +98,20 @@ background-image: url(/assets/spinner.gif);
    ```js
    module.exports = {
      filename: '[name].[contenthash].js',
-   }
+   };
    ```
 
 2. 可以使用像 `'js/[name].[contenthash].js'` 这样的文件夹结构。这样就是输出到一个文件夹 `js` 中
 
 3. **注意：**它只影响最初加载的输出文件
 
-   * 对于「按需加载 chunk」的输出文件，请使用 [`output.chunkFilename`](https://webpack.docschina.org/configuration/output/#outputchunkfilename) 选项来控制输出。
+   - 对于「按需加载 chunk」的输出文件，请使用 [`output.chunkFilename`](https://webpack.docschina.org/configuration/output/#outputchunkfilename) 选项来控制输出。
 
      但是默认会使用 `output.filename` 配置
 
-   * 对于 loader 创建的文件也不受影响，必须尝试 loader 特定的可用选项。
+   - 对于 loader 创建的文件也不受影响，必须尝试 loader 特定的可用选项。
 
-   * 对于一些 plugin 生成的文件，则需要具体根据 plugin 选项
+   - 对于一些 plugin 生成的文件，则需要具体根据 plugin 选项
 
 ### chunkFilename：异步文件名
 
@@ -132,8 +132,8 @@ background-image: url(/assets/spinner.gif);
 
 注意：
 
-* 仅在 `devtool` 设置生成 `map` 文件时有效
-* 可以使用 [#output-filename](https://webpack.docschina.org/configuration/output/#output-filename) 中的 `[name]`, `[id]`, `[hash]` 和 `[chunkhash]` 替换符号。除此之外，还可以使用 [Template strings](https://webpack.docschina.org/configuration/output/#template-strings) 在 Filename-level 下替换。
+- 仅在 `devtool` 设置生成 `map` 文件时有效
+- 可以使用 [#output-filename](https://webpack.docschina.org/configuration/output/#output-filename) 中的 `[name]`, `[id]`, `[hash]` 和 `[chunkhash]` 替换符号。除此之外，还可以使用 [Template strings](https://webpack.docschina.org/configuration/output/#template-strings) 在 Filename-level 下替换。
 
 ### assetModuleFilename：资源文件名
 
@@ -154,7 +154,10 @@ script.timeout = 120; // 兼容性不高，后面还会使用 setTimeout 兼容
 script.src = url;
 
 // 同时使用定时器兼容
-var timeout = setTimeout(onScriptComplete.bind(null, undefined, { type: 'timeout', target: script }), 120000);
+var timeout = setTimeout(
+  onScriptComplete.bind(null, undefined, { type: 'timeout', target: script }),
+  120000
+);
 ```
 
 ### chunkLoadingGlobal：用于加载 chunk 的全局变量。
@@ -178,43 +181,55 @@ module.exports = {
 ```js
 /* jsonp 方式大致如下 */
 __webpack_require__.l = (url, done, key, chunkId) => {
-	if(inProgress[url]) { inProgress[url].push(done); return; }
-	var script, needAttach;
-	if(key !== undefined) {
-		var scripts = document.getElementsByTagName("script");
-		for(var i = 0; i < scripts.length; i++) {
-			var s = scripts[i];
-			if(s.getAttribute("src") == url || s.getAttribute("data-webpack") == dataWebpackPrefix + key) { script = s; break; }
-		}
-	}
-	if(!script) {
-		needAttach = true;
-		script = document.createElement('script');
-/******/ 		
-		script.charset = 'utf-8';
-		script.timeout = 60;
-		if (__webpack_require__.nc) {
-			script.setAttribute("nonce", __webpack_require__.nc);
-		}
-		script.setAttribute("data-webpack", dataWebpackPrefix + key);
-		script.src = url;
-	}
-	inProgress[url] = [done];
-	var onScriptComplete = (prev, event) => {
-		// avoid mem leaks in IE.
-		script.onerror = script.onload = null;
-		clearTimeout(timeout);
-		var doneFns = inProgress[url];
-		delete inProgress[url];
-		script.parentNode && script.parentNode.removeChild(script);
-		doneFns && doneFns.forEach((fn) => (fn(event)));
-		if(prev) return prev(event);
-	}
-	;
-	var timeout = setTimeout(onScriptComplete.bind(null, undefined, { type: 'timeout', target: script }), 60000);
-	script.onerror = onScriptComplete.bind(null, script.onerror);
-	script.onload = onScriptComplete.bind(null, script.onload);
-	needAttach && document.head.appendChild(script);
+  if (inProgress[url]) {
+    inProgress[url].push(done);
+    return;
+  }
+  var script, needAttach;
+  if (key !== undefined) {
+    var scripts = document.getElementsByTagName('script');
+    for (var i = 0; i < scripts.length; i++) {
+      var s = scripts[i];
+      if (
+        s.getAttribute('src') == url ||
+        s.getAttribute('data-webpack') == dataWebpackPrefix + key
+      ) {
+        script = s;
+        break;
+      }
+    }
+  }
+  if (!script) {
+    needAttach = true;
+    script = document.createElement('script');
+    /******/
+
+    script.charset = 'utf-8';
+    script.timeout = 60;
+    if (__webpack_require__.nc) {
+      script.setAttribute('nonce', __webpack_require__.nc);
+    }
+    script.setAttribute('data-webpack', dataWebpackPrefix + key);
+    script.src = url;
+  }
+  inProgress[url] = [done];
+  var onScriptComplete = (prev, event) => {
+    // avoid mem leaks in IE.
+    script.onerror = script.onload = null;
+    clearTimeout(timeout);
+    var doneFns = inProgress[url];
+    delete inProgress[url];
+    script.parentNode && script.parentNode.removeChild(script);
+    doneFns && doneFns.forEach((fn) => fn(event));
+    if (prev) return prev(event);
+  };
+  var timeout = setTimeout(
+    onScriptComplete.bind(null, undefined, { type: 'timeout', target: script }),
+    60000
+  );
+  script.onerror = onScriptComplete.bind(null, script.onerror);
+  script.onload = onScriptComplete.bind(null, script.onload);
+  needAttach && document.head.appendChild(script);
 };
 ```
 
@@ -230,7 +245,7 @@ __webpack_require__.l = (url, done, key, chunkId) => {
 
 ![image-20220301095140787](/img/76.png)
 
-### devtoolNamespace：source map 的 [namespace] 
+### devtoolNamespace：source map 的 [namespace]
 
 `string`
 
@@ -289,7 +304,6 @@ module.exports = {
     },
   },
 };
-
 ```
 
 ## 次要配置项
@@ -310,7 +324,7 @@ module.exports = {
 
 ```js
 /* 生成文件中请求 chunk 时，使用 jsonp 方式，添加 charset 属性 */
-script = document.createElement('script');	
+script = document.createElement('script');
 script.charset = 'utf-8';
 // ...
 script.src = url;

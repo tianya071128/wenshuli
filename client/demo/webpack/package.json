@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "webpack --config ./00_process/webpack.config.js",
     "build:cache": "webpack --config ./05_cache/webpack.config.js"
   },
   "keywords": [],

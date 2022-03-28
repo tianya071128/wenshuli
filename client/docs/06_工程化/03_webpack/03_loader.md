@@ -3,7 +3,7 @@ title: loader
 date: 2021-10-21 15:00:00
 permalink: /webpack/loader
 categories: -- 工程化
-  -- loader
+  -- webpack
 tags:
   - null
 ---
@@ -38,21 +38,21 @@ module: {
 },
 ```
 
-* 条件(condition)：决定着该模块是否被匹配
+- 条件(condition)：决定着该模块是否被匹配
 
   条件有两种输入值：例如从 `app.js` `导入 './style.css'`
 
-  * resource：资源文件的绝对路径。它已经根据 [`resolve` 规则](https://webpack.docschina.org/configuration/resolve)解析。resource 是 `/path/to/style.css`，表示需要解析的文件
+  - resource：资源文件的绝对路径。它已经根据 [`resolve` 规则](https://webpack.docschina.org/configuration/resolve)解析。resource 是 `/path/to/style.css`，表示需要解析的文件
 
     属性 [`test`](https://webpack.docschina.org/configuration/module/#rule-test), [`include`](https://webpack.docschina.org/configuration/module/#rule-include), [`exclude`](https://webpack.docschina.org/configuration/module/#rule-exclude) 和 [`resource`](https://webpack.docschina.org/configuration/module/#rule-resource) 对 resource 匹配
 
-  * issuer: 请求者的文件绝对路径。是导入时的位置。issuer 是 `/path/to/app.js`，表示导入模块的文件
+  - issuer: 请求者的文件绝对路径。是导入时的位置。issuer 是 `/path/to/app.js`，表示导入模块的文件
 
     属性 [`issuer`](https://webpack.docschina.org/configuration/module/#rule-issuer) 对 issuer 匹配。
 
-* 结果(result)：在条件匹配时应用的 loader 或 Parser 选项
+- 结果(result)：在条件匹配时应用的 loader 或 Parser 选项
 
-  * 应用的 loader：应用在 resource(资源) 上的 loader 数组。
+  - 应用的 loader：应用在 resource(资源) 上的 loader 数组。
 
     > 这些属性会影响 loader：[`loader`](https://webpack.docschina.org/configuration/module/#rule-loader), [`options`](https://webpack.docschina.org/configuration/module/#rule-options-rule-query), [`use`](https://webpack.docschina.org/configuration/module/#rule-use)。
     >
@@ -60,11 +60,11 @@ module: {
     >
     > [`enforce`](https://webpack.docschina.org/configuration/module/#rule-enforce) 属性会影响 loader 种类。不论是普通的，前置的，后置的 loader。
 
-  * Parser 选项：用于为模块创建解析器的选项对象。
+  - Parser 选项：用于为模块创建解析器的选项对象。
 
-    [`parser`](https://webpack.docschina.org/configuration/module/#rule-parser) 属性会影响 parser 选项。这一部分参考[资源模块指南](https://webpack.docschina.org/guides/asset-modules/) 
+    [`parser`](https://webpack.docschina.org/configuration/module/#rule-parser) 属性会影响 parser 选项。这一部分参考[资源模块指南](https://webpack.docschina.org/guides/asset-modules/)
 
-* 嵌套规则(nested rule)：在父规则匹配情况下，还可能存在嵌套规则，需要继续匹配嵌套规则
+- 嵌套规则(nested rule)：在父规则匹配情况下，还可能存在嵌套规则，需要继续匹配嵌套规则
 
   当匹配了某一个规则时，可能还存在嵌套规则，此时被解析的顺序基于一下规则：
 
@@ -81,7 +81,7 @@ module: {
           // oneOf: 只应用第一个匹配的规则 -- 嵌套规则
           oneOf: [
             {
-              resourceQuery: /inline/, // foo.css?inline 
+              resourceQuery: /inline/, // foo.css?inline
               use: 'url-loader',
             },
             {
@@ -89,7 +89,7 @@ module: {
               use: 'file-loader',
             },
           ],
-          // 嵌套规则  
+          // 嵌套规则
           rules: [
             {...}
           ]
@@ -98,15 +98,13 @@ module: {
     },
   ```
 
-  
-
 ## loader 的种类和调用顺序
 
 loader 通过在 `module.rules.enforce` 配置中指定 loader 种类：
 
-* 普通 loader：没有值表示是普通 loader。
-* 后置 loader：`post` 表示后置 loader，在最后调用
-* 前置 loader：`pre` 表示前置 loader，最先调用。
+- 普通 loader：没有值表示是普通 loader。
+- 后置 loader：`post` 表示后置 loader，在最后调用
+- 前置 loader：`pre` 表示前置 loader，最先调用。
 
 以及还有一个额外的种类"行内 loader"，loader 被应用在 import/require 行内。
 
@@ -147,9 +145,9 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 
 ## 简单 loader 库源码解读
 
-* [url-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/url-loader@4.1.1/index.js)
-* [file-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/file-loader@6.2.0/index.js)
-* [eslint-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/eslint-loader@4.0.2/index.js)
+- [url-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/url-loader@4.1.1/index.js)
+- [file-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/file-loader@6.2.0/index.js)
+- [eslint-loader](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/loaders/eslint-loader@4.0.2/index.js)
 
 ## 浅析 webpack 调用 loader 构建模块流程
 
@@ -165,14 +163,17 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 
    ```js
    // 注册 compiler.make(compilation 结束之前执行) 钩子
-   compiler.hooks.make.tapAsync("EntryPlugin", (compilation, callback) => {
-   	// addEntry：为编译添加入口
-   	compilation.addEntry(context, // 入口的上下文路径。
-   		dep, // 入口依赖 - 包含着入口路径等信息
-   		options, // 入口配置 - 包含着入口名称
-   		err => { // 添加入口完成之后回调的函数。
-   			callback(err);
-   		});
+   compiler.hooks.make.tapAsync('EntryPlugin', (compilation, callback) => {
+     // addEntry：为编译添加入口
+     compilation.addEntry(
+       context, // 入口的上下文路径。
+       dep, // 入口依赖 - 包含着入口路径等信息
+       options, // 入口配置 - 包含着入口名称
+       (err) => {
+         // 添加入口完成之后回调的函数。
+         callback(err);
+       }
+     );
    });
    ```
 
@@ -316,15 +317,13 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
    Compilation.prototype.factorizeModule = /** @type {{
    	(options: FactorizeModuleOptions & { factoryResult?: false }, callback: ModuleCallback): void;
    	(options: FactorizeModuleOptions & { factoryResult: true }, callback: ModuleFactoryResultCallback): void;
-   }} */ (
-   	function (options, callback) {
-       // webpack 一种执行机制，略过，直接查看执行 _factorizeModule 方法
-   		this.factorizeQueue.add(options, callback);
-   	}
-   );
+   }} */ (function(options, callback) {
+     // webpack 一种执行机制，略过，直接查看执行 _factorizeModule 方法
+     this.factorizeQueue.add(options, callback);
+   });
    ```
 
-   上述方法在内部通过一种运行机制，最终会调用 _factorizeModule 方法进而启动创建流程
+   上述方法在内部通过一种运行机制，最终会调用 \_factorizeModule 方法进而启动创建流程
 
    ```js
    _factorizeModule(
@@ -333,7 +332,7 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
    		factory, // 该模块构造器(NormalModuleFactory) - https://webpack.docschina.org/api/normalmodulefactory-hooks/
    		dependencies, // 依赖项
    		originModule, // 导入该模块的模块(例如从 ./src/index.js 中 导入 ./test.js，此时就是 ./src/index.js 模块，已经处理好了
-   		factoryResult, // 
+   		factoryResult, //
    		contextInfo,
    		context // 上下文路径 - C:\\Users\\Administrator\\Desktop\\wenshuli\\client\\demo\\webpack\\02_loader - 入口模块需要
    	},
@@ -370,33 +369,33 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 
    这个方法具体执行流程可参考 `NormalModuleFactory.create` [源码解读](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/lib/NormalModuleFactory.js)，总而言之，大致就是：
 
-   * 解析 `inline loader` 和 `resource` 和项目配置的 `loader`，然后根据配置对其进行合并，排序，得到一个 `loaders` 数组
-   * 调用 `getParser` 和 `getGenerator` 得到 `module` 对应的 `parser` 和 `generator`，用于后面的 `ast` 解析及模板生成。
-   * 结合其他数据，`new NormalModule(createData)` 生成一个模块实例，最终跳出 `create` 方法将这个模块实例 `module` 返回给 `Compilation` 调用地方
-   
+   - 解析 `inline loader` 和 `resource` 和项目配置的 `loader`，然后根据配置对其进行合并，排序，得到一个 `loaders` 数组
+   - 调用 `getParser` 和 `getGenerator` 得到 `module` 对应的 `parser` 和 `generator`，用于后面的 `ast` 解析及模板生成。
+   - 结合其他数据，`new NormalModule(createData)` 生成一个模块实例，最终跳出 `create` 方法将这个模块实例 `module` 返回给 `Compilation` 调用地方
+
    `webpack/lib/NormalModuleFactory.js` 的 `create` 方法流程大致如下：
-   
+
    ```js
-   	/**
-   	 * 最终在这里启动创建模块实例 -- 会从入口点开始解析，递归解析所有的依赖文件，最后会将每个依赖项都生成一个模块实例
-   	 * 大致流程为解析模块信息，解析需要的 loaders、parser 等信息，new NormalModule 构造模块实例，以及其他模块相关信息，将其返回
-   	 * 
-   	 * --> 1. 在 ./Compilation 的 _factorizeModule 的方法中调用 factory.create() 启动构建这个模块
-   	 * --> 2. 封装一些数据后，执行 NormalModuleFactory.hooks.beforeResolve 钩子 -- webpack 主要流程中没有注册这个钩子，直接执行回调
-   	 * --> 3. 在 beforeResolve 钩子回调中，执行 NormalModuleFactory.hooks.factorize 钩子 -- 在初始化 NormalModuleFactory 时注册了这个钩子(在 constructor 初始化 NormalModuleFactory  时)
-   	 * 	--> 3.1. 在 hooks.factorize 钩子事件中，直接执行 NormalModuleFactory.hooks.resolve 钩子 -- 在初始化 NormalModuleFactory 时注册了这个钩子(在上方 constructor 初始化时)
-   	 * 		--> 3.1.1 在 resolve 钩子事件中(即 constructor 初始化注册的事件)，提取出会处理该模块的相关信息，为创建模块实例提供各种必备的环境条件(loaders：使用的 loader 集合、parser：用于解析模块为 ast -- 后续解析模块使用、generator：用于模版生成时提供方法 -- 后续解析模块使用。。。)
-   	 * 	--> 3.2 resolve 钩子事件执行完毕，提取出模块相关信息，接着执行 NormalModuleFactory.hooks.resolve 钩子的回调
-   	 * 		--> 3.2.1 在 resolve 钩子回调中，接着执行 NormalModuleFactory.hooks.afterResolve 钩子 -- webpack 内部没有注册这个钩子，直接执行回调
-   	 * 		--> 3.2.2 在 afterResolve 钩子回调中，执行 NormalModuleFactory.hooks.createModule -- webpack 内部没有注册这个钩子，直接执行回调
-   	 * 		--> 3.2.3 在 createModule 钩子回调中，根据第四步 resolve 钩子中提取的模块信息，调用 new NormalModule(createData) 生成模块信息，在这里只是初始化一些模块信息
-   	 * 							 接着执行 NormalModuleFactory.hooks.module 钩子 -- webpack 中用于处理模块其他问题，这里常规模块不会使用
-   	 * 		--> 3.2.4 至此，我们根据模块信息创建了模块实例，将这个模块实例通过 callback 跳出第 3 步注册的 factorize 事件(即 constructor 初始化注册的事件)
-   	 * --> 4. NormalModuleFactory.hooks.factorize 钩子事件执行完毕，执行这个钩子回调，就在 create 方法内部
-   	 * --> 5. 初始化模块完毕，组装模块实例以及其他相关信息，执行 callback 回调跳出 cretae 方法，会回到 ./Compilation 的 _factorizeModule 的方法中
-   	 */
+   /**
+    * 最终在这里启动创建模块实例 -- 会从入口点开始解析，递归解析所有的依赖文件，最后会将每个依赖项都生成一个模块实例
+    * 大致流程为解析模块信息，解析需要的 loaders、parser 等信息，new NormalModule 构造模块实例，以及其他模块相关信息，将其返回
+    *
+    * --> 1. 在 ./Compilation 的 _factorizeModule 的方法中调用 factory.create() 启动构建这个模块
+    * --> 2. 封装一些数据后，执行 NormalModuleFactory.hooks.beforeResolve 钩子 -- webpack 主要流程中没有注册这个钩子，直接执行回调
+    * --> 3. 在 beforeResolve 钩子回调中，执行 NormalModuleFactory.hooks.factorize 钩子 -- 在初始化 NormalModuleFactory 时注册了这个钩子(在 constructor 初始化 NormalModuleFactory  时)
+    * 	--> 3.1. 在 hooks.factorize 钩子事件中，直接执行 NormalModuleFactory.hooks.resolve 钩子 -- 在初始化 NormalModuleFactory 时注册了这个钩子(在上方 constructor 初始化时)
+    * 		--> 3.1.1 在 resolve 钩子事件中(即 constructor 初始化注册的事件)，提取出会处理该模块的相关信息，为创建模块实例提供各种必备的环境条件(loaders：使用的 loader 集合、parser：用于解析模块为 ast -- 后续解析模块使用、generator：用于模版生成时提供方法 -- 后续解析模块使用。。。)
+    * 	--> 3.2 resolve 钩子事件执行完毕，提取出模块相关信息，接着执行 NormalModuleFactory.hooks.resolve 钩子的回调
+    * 		--> 3.2.1 在 resolve 钩子回调中，接着执行 NormalModuleFactory.hooks.afterResolve 钩子 -- webpack 内部没有注册这个钩子，直接执行回调
+    * 		--> 3.2.2 在 afterResolve 钩子回调中，执行 NormalModuleFactory.hooks.createModule -- webpack 内部没有注册这个钩子，直接执行回调
+    * 		--> 3.2.3 在 createModule 钩子回调中，根据第四步 resolve 钩子中提取的模块信息，调用 new NormalModule(createData) 生成模块信息，在这里只是初始化一些模块信息
+    * 							 接着执行 NormalModuleFactory.hooks.module 钩子 -- webpack 中用于处理模块其他问题，这里常规模块不会使用
+    * 		--> 3.2.4 至此，我们根据模块信息创建了模块实例，将这个模块实例通过 callback 跳出第 3 步注册的 factorize 事件(即 constructor 初始化注册的事件)
+    * --> 4. NormalModuleFactory.hooks.factorize 钩子事件执行完毕，执行这个钩子回调，就在 create 方法内部
+    * --> 5. 初始化模块完毕，组装模块实例以及其他相关信息，执行 callback 回调跳出 cretae 方法，会回到 ./Compilation 的 _factorizeModule 的方法中
+    */
    ```
-   
+
 3. 调用 `NormalModuleFactory.create` 方法结束后，回到 `webpack/lib/Compilation.js` 的 `_factorizeModule` 方法调用 `factory.create` 回调中，做一些模块，在调用回调函数回到
 
    ```js
@@ -406,7 +405,7 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
    	// 模式实例化结束回调
    	(err, result) => {
    		// 。。。 做一些模块方面的处理
-     	
+
    		// 将其模块实例抛出给上一个调用栈
    		callback(null, factoryResult ? result : result.module);
    	}
@@ -421,13 +420,13 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
    	callback
    ) {
    	...
-     // 启动创建模块实例的方法  
+     // 启动创建模块实例的方法
    	this.factorizeModule(
    		...,
    		// 模块实例创建结束，执行回调
    		(err, factoryResult) => {
    			... // 做一些模块方面的处理
-         
+
    			// 大致应该是尝试从缓存系统中提取模块，如果存在缓存则使用缓存模块
    			// 不存在缓存，将该 module 推入到 _modules 和 modules 集合中，返回模块
    			// 当然还有其他的一些工作。。。
@@ -457,7 +456,7 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
    	this.buildModule(module, err => {
    	});
    }
-   
+
    // 计划模块对象的生成
    buildModule(module /* 将要建造的模块 */, callback) {
    	// 通过一种执行机制，最终会调用下面的 _buildModule 来构建模块
@@ -481,7 +480,7 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
    			if (!needBuild) { ... }
    			// 在模块构建开始之前触发，可以用来修改模块 - 传入模块实例
    			// 如果需要生成 source-map 的话，会注入一个插件 -- module.useSourceMap = true; 给模块实例打上一
-   			this.hooks.buildModule.call(module);  
+   			this.hooks.buildModule.call(module);
    			this.builtModules.add(module); // 将该模块添加至 builtModules 集合中 - 包含了该构建流程中所有模
    			// 通过模块实例的 build 启动构建
    			module.build(
@@ -496,40 +495,40 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
    	);
    }
    ```
-   
+
 2. 调用 `module.build`，实际上流程转到了 `webpack/lib/NormalModule.js` 的 `build` 方法，在这个方法中，执行 `loaders` 的 `pitch` 阶段、`normal` 阶段，最终得到一个结果[(包含编译后的资源、sourcemap?、meta?)](https://webpack.docschina.org/api/loaders/#thiscallback)，在根据这个编译结果，生成一个对象赋值到 `NormalModule(模块实例)._source` 中。
 
    大致流程如下，[具体可参考](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack@5.68.0/lib/NormalModule.js)：
 
    ```js
-   	/**
-   	 * 启动模块构建过程：调用此方法地方在 ./Compilation.js 的 _buildModule 方法中
-   	 * 1. build 方法：设置了一些模块属性，调用 _doBuild 方法实现构建模块
-   	 * 			--> _doBuild 方法：
-   	 * 				1. 调用 _createLoaderContext 方法创建 loader 执行时的上下文：https://webpack.docschina.org/api/loaders/#example-for-the-loader-context
-   	 * 					 这里不会做具体逻辑，只是创建一个对象作为 laoderContext
-   	 * 				2. 执行 hooks.beforeLoaders 钩子
-   	 * 				3. 执行 runLoaders 方法，启动 loader 构建过程
-   	 * 					 --> runLoaders 方法：启动 loader 构建模块 -- loader 的方法在另一个库中(loader-runner)
-    	 * 							 1. 在这个方法中，主要是初始化 loaderContext 的属性，最后执行 iteratePitchingLoaders 方法启动 loaders 的 pitch 阶段
-    	 * 							 2. iteratePitchingLoaders 方法执行 loaders 的 pitch 阶段 -- 从 loaders 开始到末尾顺序执行
-    	 * 							 	  --> 1. 加载 loader 模块，提取出 loader 数据(normal 阶段执行方法、pitch 阶段执行方法、raw 标识)
-    	 * 							 	  --> 2. 执行 pitch 阶段，如果 pitch 阶段返回了数据的话，那么跳过剩下的 loader，直接反过来执行 loader 的 normal 阶段
-    	 * 							 		--> 3. 没有返回数据的话，继续执行下一个 loader 的 pitch 方法
-    	 *  						 	  --> 4. 当所有的 loader 的 pitch 阶段执行完毕，那么启动 processResource 方法
-    	 * 							 3. processResource 方法：提取出模块资源(提取为 Buffer)
-    	 *  						 4. iterateNormalLoaders 方法 -- 从 loaders 末尾到开始顺序执行
-    	 * 							 		--> 1. 根据 raw 标识，传入模块资源 Buffer 或 string 给 loader 处理
-    	 * 							 		--> 2. 执行 loader 的 normal 方法，每个 loader 返回如下信息(content: string | Buffer、sourceMap?: SourceMap、meta?: any) -- https://webpack.docschina.org/api/loaders/#thiscallback
-    	 * 							 		--> 3. 将上一个 loader 的结果返回给下一个需要执行的 loader(所有 soucemap 需要每个 laoder 都生成，最后合并成一个 soucemap)，最后执行完毕所有的 loader
-    	 * 							 		--. 4. 最终会得到一个结果 result(Array<content: string | Buffer,sourceMap?: SourceMap,meta?: any>)
-    	 *  						 5. 回到 iteratePitchingLoaders 执行完毕回调中，处理模块的构建结果，并调用 callback 返回启动位置(NormalModule._doBuild)
-   	 * 			  4. loader 处理完毕后，回到 runLoaders 方法的回调中，获取到处理的 result，组装一下 sourcemap 信息，结合 sourcemap、source 信息生成一个对象
-   	 * 					 并且将这个生成的对象赋值到 NormalModule._source 上，这样这个模块实例就通过 loader 编译后的内容就存储在模块实例上
-   	 * 				5. 最后回到 _doBuild 执行完毕回调中，即 build 方法调用 _doBuild 传入的回调
-   	 * 2. _doBuild 方法处理好了构建的模块，将其存储在模块实例的 _source 中，执行 _doBuild 方法的回调，在这里通过 ast 分析模块依赖关系，生成 buildHash 模块 hash(存储在 this.buildInfo.hash: 'fb3946de651534a6717ed3745bd94032')
-   	 * 		最后调用 callback 回到 ./Compilation.js 的 module.build 的回调中
-    	 */
+   /**
+    * 启动模块构建过程：调用此方法地方在 ./Compilation.js 的 _buildModule 方法中
+    * 1. build 方法：设置了一些模块属性，调用 _doBuild 方法实现构建模块
+    * 			--> _doBuild 方法：
+    * 				1. 调用 _createLoaderContext 方法创建 loader 执行时的上下文：https://webpack.docschina.org/api/loaders/#example-for-the-loader-context
+    * 					 这里不会做具体逻辑，只是创建一个对象作为 laoderContext
+    * 				2. 执行 hooks.beforeLoaders 钩子
+    * 				3. 执行 runLoaders 方法，启动 loader 构建过程
+    * 					 --> runLoaders 方法：启动 loader 构建模块 -- loader 的方法在另一个库中(loader-runner)
+    * 							 1. 在这个方法中，主要是初始化 loaderContext 的属性，最后执行 iteratePitchingLoaders 方法启动 loaders 的 pitch 阶段
+    * 							 2. iteratePitchingLoaders 方法执行 loaders 的 pitch 阶段 -- 从 loaders 开始到末尾顺序执行
+    * 							 	  --> 1. 加载 loader 模块，提取出 loader 数据(normal 阶段执行方法、pitch 阶段执行方法、raw 标识)
+    * 							 	  --> 2. 执行 pitch 阶段，如果 pitch 阶段返回了数据的话，那么跳过剩下的 loader，直接反过来执行 loader 的 normal 阶段
+    * 							 		--> 3. 没有返回数据的话，继续执行下一个 loader 的 pitch 方法
+    *  						 	  --> 4. 当所有的 loader 的 pitch 阶段执行完毕，那么启动 processResource 方法
+    * 							 3. processResource 方法：提取出模块资源(提取为 Buffer)
+    *  						 4. iterateNormalLoaders 方法 -- 从 loaders 末尾到开始顺序执行
+    * 							 		--> 1. 根据 raw 标识，传入模块资源 Buffer 或 string 给 loader 处理
+    * 							 		--> 2. 执行 loader 的 normal 方法，每个 loader 返回如下信息(content: string | Buffer、sourceMap?: SourceMap、meta?: any) -- https://webpack.docschina.org/api/loaders/#thiscallback
+    * 							 		--> 3. 将上一个 loader 的结果返回给下一个需要执行的 loader(所有 soucemap 需要每个 laoder 都生成，最后合并成一个 soucemap)，最后执行完毕所有的 loader
+    * 							 		--. 4. 最终会得到一个结果 result(Array<content: string | Buffer,sourceMap?: SourceMap,meta?: any>)
+    *  						 5. 回到 iteratePitchingLoaders 执行完毕回调中，处理模块的构建结果，并调用 callback 返回启动位置(NormalModule._doBuild)
+    * 			  4. loader 处理完毕后，回到 runLoaders 方法的回调中，获取到处理的 result，组装一下 sourcemap 信息，结合 sourcemap、source 信息生成一个对象
+    * 					 并且将这个生成的对象赋值到 NormalModule._source 上，这样这个模块实例就通过 loader 编译后的内容就存储在模块实例上
+    * 				5. 最后回到 _doBuild 执行完毕回调中，即 build 方法调用 _doBuild 传入的回调
+    * 2. _doBuild 方法处理好了构建的模块，将其存储在模块实例的 _source 中，执行 _doBuild 方法的回调，在这里通过 ast 分析模块依赖关系，生成 buildHash 模块 hash(存储在 this.buildInfo.hash: 'fb3946de651534a6717ed3745bd94032')
+    * 		最后调用 callback 回到 ./Compilation.js 的 module.build 的回调中
+    */
    ```
 
 ### 4. 递归构建模块的依赖
@@ -543,7 +542,7 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
    	// 启动构建模块
    	this.buildModule(module, err => {
    		//...
-   	
+
    		// 递归解析模块的依赖
    		this.processModuleDependencies(module, err => {
    			if (err) {
@@ -560,7 +559,7 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
    processModuleDependencies(module, callback) {
    	this.processDependenciesQueue.add(module, callback);
    }
-   
+
    // _processModuleDependencies
    _processModuleDependencies(module, callback) {
    	// ...
@@ -581,7 +580,7 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
    			inProgressTransitive++;
    			// 递归调用 handleModuleCreation 方法，启动构建这个模块：创建模块实例、缓存模块、loaders 编译模块、递归构建模
          this.handleModuleCreation(item, err => {
-   
+
          });
    	}
    };
@@ -596,5 +595,5 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 
 ## 参考
 
-* [webpack 4 源码主流程分析（一）：前言及总流程概览](https://juejin.cn/post/6844904047221145613#heading-2)
-* [多图详解，一次性搞懂Webpack Loader](https://juejin.cn/post/6992754161221632030#heading-9)
+- [webpack 4 源码主流程分析（一）：前言及总流程概览](https://juejin.cn/post/6844904047221145613#heading-2)
+- [多图详解，一次性搞懂 Webpack Loader](https://juejin.cn/post/6992754161221632030#heading-9)
