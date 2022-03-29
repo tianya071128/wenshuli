@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --config ./00_process/webpack.config.js",
-    "build:cache": "webpack --config ./05_cache/webpack.config.js"
+    "build:cache": "webpack --config ./05_cache/webpack.config.js",
+    "build:mode": "webpack --config ./06_mode/webpack.config.js"
   },
   "keywords": [],
   "author": "",

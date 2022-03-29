@@ -1,7 +1,7 @@
 ---
 title: 入口和上下文
 date: 2021-10-21 15:00:00
-permalink: /webpack/entryandcontext
+permalink: /webpack/entry_context
 categories: -- 工程化
   -- webpack
 tags:

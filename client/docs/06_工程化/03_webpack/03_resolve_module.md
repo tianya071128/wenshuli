@@ -1,7 +1,7 @@
 ---
 title: 模块
 date: 2021-10-21 15:00:00
-permalink: /webpack/module
+permalink: /webpack/resolve_module
 categories: -- 工程化
   -- webpack
 tags:
@@ -20,12 +20,12 @@ tags:
 
 模块的构建简单讲经过下述流程，[具体流程查看](/webpack/loader/#浅析-webpack-调用-loader-构建模块流程)
 
-* 模块实例的构建：
-  * resolve：解析模块的路径，加载出处理资源的 `loader` 数组、 `parser对象(用于 AST 生成)` 、 `generator对象(用于模板生成)`以及其他信息
-  * 创建模块实例
-* 使用 `loader` 数组对资源进行编译，得到编译结果
-* 对编译结果进行 `parser`，得到 `AST`，分析 `AST` 可以得到模块的依赖项
-* 递归构建模块的依赖项，重复上述流程
+- 模块实例的构建：
+  - resolve：解析模块的路径，加载出处理资源的 `loader` 数组、 `parser对象(用于 AST 生成)` 、 `generator对象(用于模板生成)`以及其他信息
+  - 创建模块实例
+- 使用 `loader` 数组对资源进行编译，得到编译结果
+- 对编译结果进行 `parser`，得到 `AST`，分析 `AST` 可以得到模块的依赖项
+- 递归构建模块的依赖项，重复上述流程
 
 e.g：
 
@@ -54,58 +54,59 @@ e.g：
        },
      },
    },
-   
+
    /** 输入 */
    import MyImage from './img/01.png';
    class Test {}
    console.log('全流程构建', MyImage, Test, Array.prototype.fill);
-   
-   
-   /** 输出，经过 loader 进行编译后 */
-   import _createClass from '@babel/runtime/helpers/createClass';
-   import _classCallCheck from '@babel/runtime/helpers/classCallCheck';
-   import 'core-js/modules/es.array.fill.js';
-   import MyImage from './img/01.png';
-   
-   var Test = /*#__PURE__*/ _createClass(function Test() {
-     _classCallCheck(this, Test);
-   });
-   
-   console.log('全流程构建', MyImage, Test, Array.prototype.fill);
    ```
 
-   :::
+/\*_ 输出，经过 loader 进行编译后 _/
+import \_createClass from '@babel/runtime/helpers/createClass';
+import \_classCallCheck from '@babel/runtime/helpers/classCallCheck';
+import 'core-js/modules/es.array.fill.js';
+import MyImage from './img/01.png';
+
+var Test = /_#**PURE**_/ \_createClass(function Test() {
+\_classCallCheck(this, Test);
+});
+
+console.log('全流程构建', MyImage, Test, Array.prototype.fill);
+
+````
+
+:::
 
 2. 对于 `png` 文件而言，编译结果：
 
-   ::: details 点击查看
+::: details 点击查看
 
-   ```js
-   /** webpack loader 配置 */
-   {
-     test: /\.(png|jpg|gif)$/i,
-     use: [
-       {
-         loader: 'url-loader',
-         options: {
-           limit: 1 * 1024,
-         },
-       },
-     ],
-   },
-     
-   /** 输入 */
-   // Buffer：二进制图片内容
-     
-   /** 输出 - 这个 png 会被单独编译成图片文件，此时对于引入这个图片的模块来说，得到的就是一个 url 路径 */
-   module.exports = __webpack_public_path__ + "48bd36ea4fc5ea87bfe5bc4fa3bf05b2.png";
-   ```
+```js
+/** webpack loader 配置 */
+{
+  test: /\.(png|jpg|gif)$/i,
+  use: [
+    {
+      loader: 'url-loader',
+      options: {
+        limit: 1 * 1024,
+      },
+    },
+  ],
+},
 
-   :::
+/** 输入 */
+// Buffer：二进制图片内容
+
+/** 输出 - 这个 png 会被单独编译成图片文件，此时对于引入这个图片的模块来说，得到的就是一个 url 路径 */
+module.exports = __webpack_public_path__ + "48bd36ea4fc5ea87bfe5bc4fa3bf05b2.png";
+````
+
+:::
 
 ::: warning 注意
 
-上述编译是在模块层面进行编译的，`Compiler` 编译器先将所有的模块进行编译完成，并保存在 `Compiler.modules`  中，以及保存这些模块之间的引用关系。
+上述编译是在模块层面进行编译的，`Compiler` 编译器先将所有的模块进行编译完成，并保存在 `Compiler.modules` 中，以及保存这些模块之间的引用关系。
 
 然后会根据 `options.targets` 和 `options.output` 等配置项继续编译模块并组织模块生成 `chunk`
 
@@ -114,6 +115,8 @@ e.g：
 ## 解析(resolve)
 
 `options.resolve` 这些选项设置模块如何被解析，而 `options.resolveLoader` 用于解析 webpack 的 loader 包，配置项与 `options.resolve`一样
+
+[详细配置项见官网](https://webpack.docschina.org/configuration/resolve/)
 
 ### resolve.alias：别名
 
@@ -145,9 +148,7 @@ import Utility from '@/utilities/utility'; // 会被解析为 src/utilities/util
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     }
   }
 }
@@ -182,8 +183,8 @@ import File from '../path/to/file'; // 此时会解析为 file(.js | .json | .wa
 
 根据 `options.target` 配置项不同，默认值也不同：
 
-* 当 `target` 属性设置为 `webworker`, `web` 或者没有指定：`['browser', 'module', 'main']`
-* 其他任意的 target（包括 `node`）：`['module', 'main']`
+- 当 `target` 属性设置为 `webworker`, `web` 或者没有指定：`['browser', 'module', 'main']`
+- 其他任意的 target（包括 `node`）：`['module', 'main']`
 
 ```js
 /** 假设 upstream 库 package.json */
@@ -192,7 +193,7 @@ import File from '../path/to/file'; // 此时会解析为 file(.js | .json | .wa
   "module": "index"
 }
 
-/** 
+/**
  * 导入语句
  * 	在 web 环境下，取 browser 值
  *  在 node 环境下，取 module 值
@@ -219,10 +220,9 @@ module.exports = {
  * 导入目录
  *  会先尝试解析文件 ./test/index 是否存在，不存在尝试解析文件 ./test/index02 是否存在
  */
-import './test'
+import './test';
 ```
 
+## 模块(module)
 
-
-
-
+这些选项决定了如何处理项目中的不同类型的模块，还是查看[官方文档](https://webpack.docschina.org/configuration/module)

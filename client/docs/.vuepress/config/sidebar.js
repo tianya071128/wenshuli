@@ -137,12 +137,13 @@ module.exports = {
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
         '01_webpack',
-        '04_entryandcontext',
+        '02_entry_context',
+        '03_resolve_module',
+        '04_mode',
         '05_output',
         '03_loader',
         '02_sourceMap',
         '06_library',
-        '07_模块',
         '08_缓存',
       ],
     },
