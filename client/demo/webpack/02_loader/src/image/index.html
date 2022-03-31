@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <img src="./01.png" alt="" csii-data-src id="test" />
+  </body>
+</html>
+<script>
+  var imgs = document.querySelectorAll('[csii-data-src]');
+  for (var index = 0; index < imgs.length; index++) {
+    var element = imgs[index];
+    sendXhr(element);
+  }
+
+  function sendXhr(img) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', img.src);
+    xhr.setRequestHeader('Access-Conterol-Allow-Credentials', true);
+    xhr.setRequestHeader('Access-Conterol-Allow-Origin', '*');
+    xhr.overrideMimeType('text/plain; charset=x-user-defined');
+    xhr.onload = function() {
+      console.log(xhr, xhr.responseText.length);
+      // img.src =
+      //   'data:image/png;base64,' +
+      //   convertString(xhr.responseText, 'binary').base64String;
+      // console.log(convertString(xhr.responseText, 'binary'));
+    };
+    xhr.send(null);
+  }
+
+  var convert = function(inputString, inputType) {
+    var resp = convertString(inputString.toString(), inputType.toString());
+    document.getElementById('hexString').value = resp.hexString;
+
+    document.getElementById('asciiString').value = resp.asciiString;
+
+    document.getElementById('decString').value = resp.decimalString;
+
+    document.getElementById('base64String').value = resp.base64String;
+
+    document.getElementById('binaryString').value = resp.binaryString;
+  };
+
+  var copyText = function(elem) {
+    elem.select();
+
+    elem.setSelectionRange(0, 9999);
+
+    navigator.clipboard.writeText(elem.value);
+  };
+
+  var removeWhiteSpace = function(elem) {
+    elem.value = removeChar(elem.value, ' ');
+  };
+
+  var removeChar = function(text, character) {
+    var splitText = text.split(character);
+
+    return splitText.join('');
+  };
+
+  function convertString(inputString, inputType) {
+    var hexString;
+    var base64String;
+    var binaryString;
+    var asciiString;
+    var decimalString;
+
+    var response;
+
+    if (inputString.length == 0) {
+      response = {
+        statusCode: 200,
+        hexString: '',
+        asciiString: '',
+        binaryString: '',
+        base64String: '',
+        decimalString: '',
+        inputType: inputType,
+      };
+    } else {
+      switch (inputType) {
+        case 'ascii':
+          asciiString = inputString;
+
+          hexString = asciiToHex(inputString);
+
+          base64String = Base64.asciiToBase64(inputString);
+
+          decimalString = hexToDecimal(hexString);
+
+          binaryString = hexToBinary(hexString);
+
+          break;
+
+        case 'hex':
+          asciiString = hexToAscii(inputString);
+
+          hexString = inputString;
+
+          base64String = Base64.asciiToBase64(asciiString);
+
+          decimalString = hexToDecimal(hexString);
+
+          binaryString = hexToBinary(hexString);
+
+          break;
+
+        case 'base64':
+          asciiString = Base64.base64ToAscii(inputString);
+
+          hexString = asciiToHex(asciiString);
+
+          base64String = inputString;
+
+          decimalString = hexToDecimal(hexString);
+
+          binaryString = hexToBinary(hexString);
+
+          break;
+
+        case 'decimal':
+          hexString = decimalToHex(inputString);
+
+          asciiString = hexToAscii(hexString);
+
+          base64String = Base64.asciiToBase64(asciiString);
+
+          decimalString = inputString;
+
+          binaryString = hexToBinary(hexString);
+
+          break;
+
+        case 'binary':
+          hexString = binaryToHex(inputString);
+
+          asciiString = hexToAscii(hexString);
+
+          base64String = Base64.asciiToBase64(asciiString);
+
+          decimalString = hexToDecimal(hexString);
+
+          binaryString = inputString;
+
+          break;
+
+        default:
+      }
+
+      // Create a JSON object with our response and store it in a varant
+      response = {
+        statusCode: 200,
+        hexString: hexString,
+        asciiString: asciiString,
+        binaryString: binaryString,
+        base64String: base64String,
+        decimalString: decimalString,
+        inputType: inputType,
+      };
+    }
+    return response;
+  }
+
+  //-----------------------HEX & Binary-------------------------
+  var hexToBinary = function(hexString) {
+    hexStringValue = removeChar(hexString, ' ').trim();
+
+    hexStringValue = removeChar(hexStringValue, ',');
+
+    if (hexStringValue.length % 2 === 1) hexStringValue = '0' + hexStringValue;
+
+    var binString = '';
+
+    for (var i = 0; i < hexStringValue.length; i += 2)
+      binString +=
+        padLeft(parseInt(hexStringValue.substr(i, 2), 16).toString(2), '0', 8) +
+        ' ';
+
+    return binString.trim();
+  };
+
+  var padLeft = function(text, character, minLength) {
+    if (text.length >= minLength) return text;
+
+    var addLen = minLength - text.length;
+
+    var appendText = '';
+
+    for (i = addLen; i > 0; i--) appendText += character;
+
+    return appendText + text;
+  };
+
+  var binaryToHex = function(binaryString) {
+    var binString = padLeft(removeChar(binaryString.toString(), ' '), '0', 8);
+
+    var hexArray = [];
+
+    var hexString = '';
+
+    for (i = 0; i < binString.length / 8; i++)
+      hexArray[i] = parseInt(binString.substr(8 * i, 8), 2).toString(16);
+
+    hexArray.forEach(function(element) {
+      hexString += padLeft(element.toString(), '0', 2) + ' ';
+    });
+
+    return hexString.trim();
+  };
+
+  //-----------------------ASCII & HEX --------------------------
+
+  function asciiToHex(inputString) {
+    var hexString = '';
+
+    for (var n = 0, l = inputString.length; n < l; n++) {
+      hexString +=
+        padLeft(inputString.charCodeAt(n).toString(16), '0', 2) + ' ';
+    }
+
+    return hexString.trim();
+  }
+
+  function hexToAscii(hexString) {
+    try {
+      var hex = removeChar(hexString.toString(), ' ');
+
+      hex = removeChar(hex, ',');
+
+      var asciiString = '';
+
+      for (var n = 0; n < hex.length; n += 2)
+        asciiString += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
+
+      return asciiString;
+    } catch (e) {
+      return 'Conversion error' + e;
+    }
+  }
+
+  //------------------------HEX & Decimal------------------------
+
+  function hexToDecimal(inputString) {
+    var splitText = inputString.toString().split(',');
+
+    var hexString = splitText.join(' ');
+
+    var decimalString = '';
+
+    var hexArray = hexString.split(' ');
+
+    for (var i = 0; i < hexArray.length; i++) {
+      var hexVal = parseInt(hexArray[i], 16);
+
+      if (!isNaN(hexVal)) decimalString += hexVal.toString(10) + ' ';
+    }
+
+    return decimalString.trim();
+  }
+
+  function decimalToHex(inputString) {
+    var hexString = '';
+
+    var decString = inputString.toString();
+
+    var splitStr = decString.split(' ');
+
+    for (var i = 0; i < splitStr.length; i++) {
+      var dec = parseInt(splitStr[i]);
+      if (!isNaN(dec)) hexString += padLeft(dec.toString(16), '0', 2) + ' ';
+    }
+
+    return hexString.trim();
+  }
+
+  //-------------------------ASCII & BASE64-----------------------
+
+  var Base64 = {
+    _keyStr:
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
+    asciiToBase64: function(input) {
+      var output = '';
+      var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+      var i = 0;
+
+      input = Base64._utf8_encode(input);
+
+      while (i < input.length) {
+        chr1 = input.charCodeAt(i++);
+        chr2 = input.charCodeAt(i++);
+        chr3 = input.charCodeAt(i++);
+
+        enc1 = chr1 >> 2;
+        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+        enc4 = chr3 & 63;
+
+        if (isNaN(chr2)) {
+          enc3 = enc4 = 64;
+        } else if (isNaN(chr3)) {
+          enc4 = 64;
+        }
+
+        output =
+          output +
+          Base64._keyStr.charAt(enc1) +
+          Base64._keyStr.charAt(enc2) +
+          Base64._keyStr.charAt(enc3) +
+          Base64._keyStr.charAt(enc4);
+      }
+
+      return output;
+    },
+
+    // public method for decoding
+    base64ToAscii: function(input) {
+      var output = '';
+      var chr1, chr2, chr3;
+      var enc1, enc2, enc3, enc4;
+      var i = 0;
+
+      input = input.replace(/[^A-Za-z0-9\+\/\=]/g, '');
+
+      while (i < input.length) {
+        enc1 = Base64._keyStr.indexOf(input.charAt(i++));
+        enc2 = Base64._keyStr.indexOf(input.charAt(i++));
+        enc3 = Base64._keyStr.indexOf(input.charAt(i++));
+        enc4 = Base64._keyStr.indexOf(input.charAt(i++));
+
+        chr1 = (enc1 << 2) | (enc2 >> 4);
+        chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+        chr3 = ((enc3 & 3) << 6) | enc4;
+
+        output = output + String.fromCharCode(chr1);
+
+        if (enc3 != 64) {
+          output = output + String.fromCharCode(chr2);
+        }
+        if (enc4 != 64) {
+          output = output + String.fromCharCode(chr3);
+        }
+      }
+
+      output = Base64._utf8_decode(output);
+
+      return output;
+    },
+
+    // private method for UTF-8 encoding
+    _utf8_encode: function(string) {
+      string = string.replace(/\r\n/g, '\n');
+      var utftext = '';
+
+      for (var n = 0; n < string.length; n++) {
+        var c = string.charCodeAt(n);
+
+        if (c < 128) {
+          utftext += String.fromCharCode(c);
+        } else if (c > 127 && c < 2048) {
+          utftext += String.fromCharCode((c >> 6) | 192);
+          utftext += String.fromCharCode((c & 63) | 128);
+        } else {
+          utftext += String.fromCharCode((c >> 12) | 224);
+          utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+          utftext += String.fromCharCode((c & 63) | 128);
+        }
+      }
+
+      return utftext;
+    },
+
+    // private method for UTF-8 decoding
+    _utf8_decode: function(utftext) {
+      var string = '';
+      var i = 0;
+      var c = 0;
+      var c1 = 0;
+      var c2 = 0;
+
+      while (i < utftext.length) {
+        c = utftext.charCodeAt(i);
+
+        if (c < 128) {
+          string += String.fromCharCode(c);
+          i++;
+        } else if (c > 191 && c < 224) {
+          c2 = utftext.charCodeAt(i + 1);
+          string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+          i += 2;
+        } else {
+          c2 = utftext.charCodeAt(i + 1);
+          var c3 = utftext.charCodeAt(i + 2);
+          string += String.fromCharCode(
+            ((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63)
+          );
+          i += 3;
+        }
+      }
+      return string;
+    },
+  };
+</script>

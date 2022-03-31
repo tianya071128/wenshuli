@@ -2,7 +2,16 @@ const path = require('path');
 
 module.exports = {
   mode: 'development',
-  entry: './src/index.js',
+  // mode: 'production',
+  entry: {
+    main: {
+      import: './src/index.js',
+      // runtime: 'runtime_file',
+    },
+  },
+  optimization: {
+    runtimeChunk: 'single',
+  },
   context: __dirname,
   output: {
     filename: 'js/[name].[fullhash:4].js',
@@ -11,7 +20,6 @@ module.exports = {
   },
   name: 'wenshuli',
   devtool: false,
-  // recordsPath: path.join(__dirname, 'records.json'),
   module: {
     rules: [
       {
@@ -25,25 +33,25 @@ module.exports = {
           emitWarning: true,
         },
       },
-      {
-        test: /\.m?js$/,
-        exclude: /(node_modules|bower_components)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: [
-              [
-                '@babel/preset-env',
-                {
-                  corejs: '3',
-                  useBuiltIns: 'usage',
-                },
-              ],
-            ],
-            plugins: ['@babel/plugin-transform-runtime'],
-          },
-        },
-      },
+      // {
+      //   test: /\.m?js$/,
+      //   exclude: /(node_modules|bower_components)/,
+      //   use: {
+      //     loader: 'babel-loader',
+      //     options: {
+      //       presets: [
+      //         [
+      //           '@babel/preset-env',
+      //           {
+      //             corejs: '3',
+      //             useBuiltIns: 'usage',
+      //           },
+      //         ],
+      //       ],
+      //       plugins: ['@babel/plugin-transform-runtime'],
+      //     },
+      //   },
+      // },
       {
         test: /\.(png|jpg|gif)$/i,
         use: [

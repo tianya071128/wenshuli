@@ -1,7 +1,7 @@
 ---
 title: 模块
 date: 2021-10-21 15:00:00
-permalink: /webpack/resolve_module
+permalink: /webpack/module
 categories: -- 工程化
   -- webpack
 tags:
@@ -59,50 +59,45 @@ e.g：
    import MyImage from './img/01.png';
    class Test {}
    console.log('全流程构建', MyImage, Test, Array.prototype.fill);
+   /**_ 输出，经过 loader 进行编译后 */
+   import _createClass from '@babel/runtime/helpers/createClass';
+   import _classCallCheck from '@babel/runtime/helpers/classCallCheck';
+   import 'core-js/modules/es.array.fill.js';
+   import MyImage from './img/01.png';
+
+   var Test = _createClass(function Test() {
+   	_classCallCheck(this, Test);
+   });
+
+   console.log('全流程构建', MyImage, Test, Array.prototype.fill);
    ```
-
-/\*_ 输出，经过 loader 进行编译后 _/
-import \_createClass from '@babel/runtime/helpers/createClass';
-import \_classCallCheck from '@babel/runtime/helpers/classCallCheck';
-import 'core-js/modules/es.array.fill.js';
-import MyImage from './img/01.png';
-
-var Test = /_#**PURE**_/ \_createClass(function Test() {
-\_classCallCheck(this, Test);
-});
-
-console.log('全流程构建', MyImage, Test, Array.prototype.fill);
-
-````
-
-:::
 
 2. 对于 `png` 文件而言，编译结果：
 
-::: details 点击查看
+   ::: details 点击查看
 
-```js
-/** webpack loader 配置 */
-{
-  test: /\.(png|jpg|gif)$/i,
-  use: [
-    {
-      loader: 'url-loader',
-      options: {
-        limit: 1 * 1024,
-      },
-    },
-  ],
-},
+   ```js
+   /** webpack loader 配置 */
+   {
+     test: /\.(png|jpg|gif)$/i,
+     use: [
+       {
+         loader: 'url-loader',
+         options: {
+           limit: 1 * 1024,
+         },
+       },
+     ],
+   },
 
-/** 输入 */
-// Buffer：二进制图片内容
+   /** 输入 */
+   // Buffer：二进制图片内容
 
-/** 输出 - 这个 png 会被单独编译成图片文件，此时对于引入这个图片的模块来说，得到的就是一个 url 路径 */
-module.exports = __webpack_public_path__ + "48bd36ea4fc5ea87bfe5bc4fa3bf05b2.png";
-````
+   /** 输出 - 这个 png 会被单独编译成图片文件，此时对于引入这个图片的模块来说，得到的就是一个 url 路径 */
+   module.exports = __webpack_public_path__ + "48bd36ea4fc5ea87bfe5bc4fa3bf05b2.png";
+   ```
 
-:::
+   :::
 
 ::: warning 注意
 

@@ -132,20 +132,26 @@ module.exports = {
   ],
   '/06_工程化/03_webpack/': [
     {
-      title: 'webpack', // 分组标题
-      collapsable: false, // 是否可折叠，可选的，默认true
+      title: 'webpack 配置', // 分组标题
+      collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
         '01_webpack',
-        '02_entry_context',
-        '03_resolve_module',
-        '04_mode',
-        '05_output',
-        '03_loader',
-        '02_sourceMap',
-        '06_library',
-        '08_缓存',
+        '02_mode',
+        '03_entry_context',
+        '04_loader',
+        '05_module',
+        '06_output',
+        '07_plugin',
+        '08_sourceMap',
+        '09_cache',
       ],
+    },
+    {
+      title: 'webpack 概念', // 分组标题
+      collapsable: true, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: ['09_cache'],
     },
   ],
   '/06_工程化/04_prettier/': [

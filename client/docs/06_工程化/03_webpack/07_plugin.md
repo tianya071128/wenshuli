@@ -1,11 +1,9 @@
 ---
-title: 模式(Mode)
+title: 插件
 date: 2021-10-21 15:00:00
-permalink: /webpack/mode
+permalink: /webpack/plugin
 categories: -- 工程化
   -- webpack
 tags:
   - null
 ---
-
-# 模式
