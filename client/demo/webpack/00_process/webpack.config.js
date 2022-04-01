@@ -5,7 +5,7 @@ module.exports = {
   // mode: 'production',
   entry: {
     main: {
-      import: './src/index.js',
+      import: ['./src/index02.js', './src/index.js'],
       // runtime: 'runtime_file',
     },
   },

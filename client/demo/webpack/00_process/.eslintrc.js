@@ -8,11 +8,5 @@ module.exports = {
   // 使用 eslint-plugin-vue 中 essential 配置 and eslint 默认 recommended 配置
   extends: ['eslint:recommended'],
   rules: {},
-  parserOptions: {
-    ecmaVersion: 6,
-    sourceType: 'module',
-    ecmaFeatures: {
-      jsx: true,
-    },
-  },
+  parser: '@babel/eslint-parser',
 };
