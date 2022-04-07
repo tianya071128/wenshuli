@@ -224,7 +224,7 @@ class ChunkGraph {
 		/** @private @type {WeakMap<Module, ChunkGraphModule>} */
 		this._modules = new WeakMap();
 		/** @private @type {WeakMap<Chunk, ChunkGraphChunk>} */
-		this._chunks = new WeakMap();
+		this._chunks = new WeakMap(); // chunkGraph 中包含的 chunk 集合
 		/** @private @type {WeakMap<AsyncDependenciesBlock, ChunkGroup>} */
 		this._blockChunkGroups = new WeakMap();
 		/** @private @type {Map<string, string | number>} */
@@ -243,8 +243,9 @@ class ChunkGraph {
 	 * @returns {ChunkGraphModule} internal module
 	 */
 	_getChunkGraphModule(module) {
-		let cgm = this._modules.get(module);
+		let cgm = this._modules.get(module); // 根据 module 从 modules 集合中提取出 ChunkGraphModule
 		if (cgm === undefined) {
+			// 如果不存在，那么就新建一个并存储在 _modules 中
 			cgm = new ChunkGraphModule();
 			this._modules.set(module, cgm);
 		}
@@ -942,9 +943,10 @@ class ChunkGraph {
 	}
 
 	/**
-	 * @param {Chunk} chunk the new chunk
+	 * 连接 chunk 和 entryModule
+	 * @param {Chunk} chunk the new chunk 
 	 * @param {Module} module the entry module
-	 * @param {Entrypoint=} entrypoint the chunk group which must be loaded before the module is executed
+	 * @param {Entrypoint=} entrypoint the chunk group which must be loaded before the module is executed 执行模块前必须加载的chunk组
 	 * @returns {void}
 	 */
 	connectChunkAndEntryModule(chunk, module, entrypoint) {
@@ -1639,7 +1641,7 @@ Caller might not support runtime-dependent code generation (opt-out via optimiza
 		return newFn(module);
 	}
 
-	// TODO remove in webpack 6
+	// TODO remove in webpack 6 在webpack 6中删除所有内容
 	/**
 	 * @param {Module} module the module
 	 * @param {ChunkGraph} chunkGraph the chunk graph
@@ -1678,7 +1680,7 @@ Caller might not support runtime-dependent code generation (opt-out via optimiza
 				if (!chunkGraph)
 					throw new Error(
 						deprecateMessage +
-							"There was no ChunkGraph assigned to the Chunk for backward-compat (Use the new API)"
+							"There was no ChunkGraph assigned to the Chunk for backward-compat (Use the new API)" // 没有Chunk Graph分配给Chunk用于向后compat(使用新的API)
 					);
 				return chunkGraph;
 			},

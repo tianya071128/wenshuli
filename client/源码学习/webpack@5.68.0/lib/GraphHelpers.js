@@ -12,13 +12,14 @@
 /** @typedef {import("./Module")} Module */
 
 /**
- * @param {ChunkGroup} chunkGroup the ChunkGroup to connect
- * @param {Chunk} chunk chunk to tie to ChunkGroup
+ * @param {ChunkGroup} chunkGroup the ChunkGroup to connect 需要连接 ChunkGroup
+ * @param {Chunk} chunk chunk to tie to ChunkGroup 需要绑定到 chunkGroup 的 chunk
  * @returns {void}
  */
 const connectChunkGroupAndChunk = (chunkGroup, chunk) => {
+	// 如果该 chunk 没有被推入到 chunkGroup 中的话，就会将其推入到 chunkGroup.chunks 中并返回 true
 	if (chunkGroup.pushChunk(chunk)) {
-		chunk.addGroup(chunkGroup);
+		chunk.addGroup(chunkGroup); // 建立 chunk 与 chunkGroup 连接
 	}
 };
 

@@ -5,7 +5,7 @@ module.exports = [
     text: '前端',
     items: [
       { text: 'html', link: '/html/' },
-      // { text: 'css', link: '/css/' },
+      { text: 'css', link: '/css/' },
       { text: 'js', link: '/js/' },
     ],
   },
@@ -20,6 +20,7 @@ module.exports = [
       { text: 'ESLint', link: '/eslint/' },
       { text: 'vscode', link: '/vscode/' },
       { text: 'prettier', link: '/prettier/' },
+      { text: 'npm', link: '/npm/' },
       { text: 'webpack', link: '/webpack/' },
     ],
   },

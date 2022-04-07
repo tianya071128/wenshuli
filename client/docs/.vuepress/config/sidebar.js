@@ -29,6 +29,27 @@ module.exports = {
       ],
     },
   ],
+  '/01_前端/02_css/': [
+    {
+      title: 'CSS概念', // 分组标题
+      collapsable: true, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: [
+        // 这个表示的是路径?
+        '01_index',
+      ],
+    },
+    {
+      title: 'CSS模块', // 分组标题
+      collapsable: true, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: [
+        // 这个表示的是路径?
+        '02_选择器',
+        '03_伪元素',
+      ],
+    },
+  ],
   '/01_前端/03_js/': [
     {
       title: 'ES', // 分组标题
@@ -176,6 +197,14 @@ module.exports = {
         '06_插件',
         '07_babal架构',
       ],
+    },
+  ],
+  '/06_工程化/06_npm/': [
+    {
+      title: 'npm', // 分组标题
+      collapsable: false, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: ['01_npm', '02_常用命令'],
     },
   ],
   '/07_参考/': ['01.index'],

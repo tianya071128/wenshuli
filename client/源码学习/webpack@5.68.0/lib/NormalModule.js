@@ -906,8 +906,8 @@ class NormalModule extends Module {
 	markModuleAsErrored(error) {
 		// Restore build meta from successful build to keep importing state 从成功生成还原生成元以保持导入状态
 		this.buildMeta = { ...this._lastSuccessfulBuildMeta };
-		this.error = error;
-		this.addError(error);
+		this.error = error; // 
+		this.addError(error); // 添加一个模块构建错误
 	}
 
 	// 对模块是否进行 parse 检查 -- webpack.options.module.noParse

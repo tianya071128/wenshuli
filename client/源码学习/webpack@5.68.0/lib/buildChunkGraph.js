@@ -39,7 +39,7 @@ const { getEntryRuntime, mergeRuntime } = require("./util/runtime");
  * @typedef {Object} ChunkGroupInfo
  * @property {ChunkGroup} chunkGroup the chunk group
  * @property {RuntimeSpec} runtime the runtimes
- * @property {ModuleSetPlus} minAvailableModules current minimal set of modules available at this point
+ * @property {ModuleSetPlus} minAvailableModules current minimal set of modules available at this point 目前可用的最小模块集
  * @property {boolean} minAvailableModulesOwned true, if minAvailableModules is owned and can be modified
  * @property {ModuleSetPlus[]} availableModulesToBeMerged enqueued updates to the minimal set of available modules
  * @property {Set<Module>=} skippedItems modules that were skipped because module is already available in parent chunks (need to reconsider when minAvailableModules is shrinking)
@@ -50,8 +50,8 @@ const { getEntryRuntime, mergeRuntime } = require("./util/runtime");
  * @property {Set<ChunkGroupInfo>} availableChildren set of chunk groups which depend on the this chunk group as availableSource
  * @property {number} preOrderIndex next pre order index
  * @property {number} postOrderIndex next post order index
- * @property {boolean} chunkLoading has a chunk loading mechanism
- * @property {boolean} asyncChunks create async chunks
+ * @property {boolean} chunkLoading has a chunk loading mechanism 是否有块加载机制 -- 可参考 webpack.optinos.output.chunkLoading
+ * @property {boolean} asyncChunks create async chunks 是否允许创建按需加载的异步 chunk -- 可参考 webpack.optinos.output.asyncChunks
  */
 
 /**
@@ -185,15 +185,15 @@ const extractBlockModules = (module, moduleGraph, runtime, blockModulesMap) => {
  * @param {Set<ChunkGroup>} allCreatedChunkGroups filled with all chunk groups that are created here
  */
 const visitModules = (
-	logger,
-	compilation,
-	inputEntrypointsAndModules,
+	logger, // 打印类
+	compilation, // Compilation 实例
+	inputEntrypointsAndModules, // Entrypoint 与 entryModule 的数据结构（Map<Entrypoint, entryModule[]>
 	chunkGroupInfoMap,
 	blockConnections,
 	blocksWithNestedBlocks,
 	allCreatedChunkGroups
 ) => {
-	const { moduleGraph, chunkGraph, moduleMemCaches } = compilation;
+	const { moduleGraph /** 模块图，描述所有模块之间的联系 */, chunkGraph /** chunk图 */, moduleMemCaches /** 应该跟模块缓存有关 */ } = compilation;
 
 	const blockModulesRuntimeMap = new Map();
 
@@ -285,19 +285,31 @@ const visitModules = (
 	/** @type {Set<ChunkGroupInfo>} */
 	const chunkGroupsForCombining = new Set();
 
-	// Fill queue with entrypoint modules
-	// Create ChunkGroupInfo for entrypoints
+	// Fill queue with entrypoint modules 使用入口点模块填充队列
+	// Create ChunkGroupInfo for entrypoints 为入口点创建 ChunkGroupInfo
+	/**
+	 * chunkGroup：Entrypoint(继承至 chunkGroup)，主要用于描述 entryChunk 相关信息(例如 entryChunk 之前需要加载 chunk)
+	 * modules：一个入口对应的 entryModule 集合 --> 对应 entry.options.import: [xxx,xxx]
+	 */
 	for (const [chunkGroup, modules] of inputEntrypointsAndModules) {
+		/**
+ 		 * 从 entry.options 的 runtime 和 dependOn 提取出 runtime 名称
+ 		 * 可能是：
+ 		 * 	- 单独的 runtime
+ 		 * 	- 内嵌到 entryChunk 中，此时就是 entryName
+ 		 * 	- 如果配置了 dependOn 的话，可能就是 {string | SortableSet<string> | undefined} 结构，存在多个 runtimeName 可能
+ 		 */ 
 		const runtime = getEntryRuntime(
 			compilation,
-			chunkGroup.name,
-			chunkGroup.options
+			chunkGroup.name, // entryName
+			chunkGroup.options // entryOptions：https://webpack.docschina.org/configuration/entry-context/#entry
 		);
+		
 		/** @type {ChunkGroupInfo} */
 		const chunkGroupInfo = {
 			chunkGroup,
-			runtime,
-			minAvailableModules: undefined,
+			runtime, // rumtime 名称
+			minAvailableModules: undefined, // 目前可用的最小模块集
 			minAvailableModulesOwned: false,
 			availableModulesToBeMerged: [],
 			skippedItems: undefined,
@@ -307,20 +319,20 @@ const visitModules = (
 			availableChildren: undefined,
 			preOrderIndex: 0,
 			postOrderIndex: 0,
-			chunkLoading:
+			chunkLoading: // 是否有块加载机制 -- 可参考 webpack.optinos.output.chunkLoading
 				chunkGroup.options.chunkLoading !== undefined
 					? chunkGroup.options.chunkLoading !== false
 					: compilation.outputOptions.chunkLoading !== false,
-			asyncChunks:
+			asyncChunks: // 是否允许创建按需加载的异步 chunk -- 可参考 webpack.optinos.output.asyncChunks
 				chunkGroup.options.asyncChunks !== undefined
 					? chunkGroup.options.asyncChunks
 					: compilation.outputOptions.asyncChunks !== false
 		};
 		chunkGroup.index = nextChunkGroupIndex++;
 		if (chunkGroup.getNumberOfParents() > 0) {
-			// minAvailableModules for child entrypoints are unknown yet, set to undefined.
-			// This means no module is added until other sets are merged into
-			// this minAvailableModules (by the parent entrypoints)
+			// minAvailableModules for child entrypoints are unknown yet, set to undefined. 子入口点的可用模块未知，设置为undefined
+			// This means no module is added until other sets are merged into 这意味着在合并到其他集合之前不会添加模块
+			// this minAvailableModules (by the parent entrypoints) 这个最小可用模块(由父入口点)
 			const skippedItems = new Set();
 			for (const module of modules) {
 				skippedItems.add(module);
@@ -328,9 +340,12 @@ const visitModules = (
 			chunkGroupInfo.skippedItems = skippedItems;
 			chunkGroupsForCombining.add(chunkGroupInfo);
 		} else {
-			// The application may start here: We start with an empty list of available modules
+			// The application may start here: We start with an empty list of available modules 应用程序可以从这里开始:我们从一个空的可用模块列表开始
 			chunkGroupInfo.minAvailableModules = EMPTY_SET;
-			const chunk = chunkGroup.getEntrypointChunk();
+			const chunk = chunkGroup.getEntrypointChunk(); // 返回 entryChunk
+			/**
+			 * 遍历入口模块
+			 */
 			for (const module of modules) {
 				queue.push({
 					action: ADD_AND_ENTER_MODULE,
@@ -347,7 +362,7 @@ const visitModules = (
 			namedChunkGroups.set(chunkGroup.name, chunkGroupInfo);
 		}
 	}
-	// Fill availableSources with parent-child dependencies between entrypoints
+	// Fill availableSources with parent-child dependencies between entrypoints 在入口点之间用父-子依赖关系填充可用的source
 	for (const chunkGroupInfo of chunkGroupsForCombining) {
 		const { chunkGroup } = chunkGroupInfo;
 		chunkGroupInfo.availableSources = new Set();
@@ -1195,8 +1210,8 @@ const visitModules = (
 		outdatedChunkGroupInfo.clear();
 	};
 
-	// Iterative traversal of the Module graph
-	// Recursive would be simpler to write but could result in Stack Overflows
+	// Iterative traversal of the Module graph 模块图的迭代遍历
+	// Recursive would be simpler to write but could result in Stack Overflows 递归写起来更简单，但可能会导致堆栈溢出
 	while (queue.length || queueConnect.size) {
 		logger.time("visitModules: visiting");
 		processQueue();
@@ -1319,7 +1334,7 @@ const connectChunkGroups = (
 };
 
 /**
- * Remove all unconnected chunk groups
+ * Remove all unconnected chunk groups 删除所有未连接的chunk组
  * @param {Compilation} compilation the compilation
  * @param {Iterable<ChunkGroup>} allCreatedChunkGroups all chunk groups that where created before
  */
@@ -1339,13 +1354,13 @@ const cleanupUnconnectedGroups = (compilation, allCreatedChunkGroups) => {
 };
 
 /**
- * This method creates the Chunk graph from the Module graph
- * @param {Compilation} compilation the compilation
- * @param {Map<Entrypoint, Module[]>} inputEntrypointsAndModules chunk groups which are processed with the modules
+ * This method creates the Chunk graph from the Module graph 该方法从模块图创建Chunk图
+ * @param {Compilation} compilation the compilation Compilation 实例
+ * @param {Map<Entrypoint, Module[]>} inputEntrypointsAndModules chunk groups which are processed with the modules 用模块处理的Chunk组
  * @returns {void}
  */
-const buildChunkGraph = (compilation, inputEntrypointsAndModules) => {
-	const logger = compilation.getLogger("webpack.buildChunkGraph");
+const buildChunkGraph = (compilation, inputEntrypointsAndModules/** 这个参数保存着 Entrypoint: entryModule[]，对应 entry */) => {
+	const logger = compilation.getLogger("webpack.buildChunkGraph"); // 打印类
 
 	// SHARED STATE
 
@@ -1365,9 +1380,9 @@ const buildChunkGraph = (compilation, inputEntrypointsAndModules) => {
 
 	logger.time("visitModules");
 	visitModules(
-		logger,
-		compilation,
-		inputEntrypointsAndModules,
+		logger, // 打印类
+		compilation, // Compilation 实例
+		inputEntrypointsAndModules, // Entrypoint 与 entryModule 的数据结构（Map<Entrypoint, entryModule[]>
 		chunkGroupInfoMap,
 		blockConnections,
 		blocksWithNestedBlocks,

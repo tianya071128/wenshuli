@@ -392,6 +392,7 @@ class WebpackOptionsApply extends OptionsApply {
 
     new JavascriptMetaInfoPlugin().apply(compiler);
 
+    // 如果没有设置 options.mode 值的话，注册一个插件，插件在初始化 compilation 时调用，发出一个警告
     if (typeof options.mode !== 'string') {
       const WarnNoModeSetPlugin = require('./WarnNoModeSetPlugin');
       new WarnNoModeSetPlugin().apply(compiler);
@@ -552,6 +553,7 @@ class WebpackOptionsApply extends OptionsApply {
           );
       }
     }
+    // options.optimization.nodeEnv 默认值会根据 mode 去设置
     if (options.optimization.nodeEnv) {
       const DefinePlugin = require('./DefinePlugin');
       new DefinePlugin({
@@ -583,6 +585,10 @@ class WebpackOptionsApply extends OptionsApply {
       portableIds: options.optimization.portableRecords,
     }).apply(compiler);
 
+    /**
+     * 插件注册在 compilation.hooks.seal 时机，此时不在接收新的模块(模块构建完成)
+     * 检测模块名称是否存在只有大小写不同(e.g：module.js 和 Module.js)，此时发出一个警告
+     */
     new WarnCaseSensitiveModulesPlugin().apply(compiler);
 
     // 这个插件是处理 options.snapshot.managedPaths 和 immutablePaths 的，并没有做其他注册工作

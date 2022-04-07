@@ -181,7 +181,7 @@ const webpack /** @type {WebpackFunctionSingle & WebpackFunctionMulti} */ =
       return { compiler, watch, watchOptions }; // 返回
     };
     // 从代码上看，如果存在 callback 的话，还会驱动 compiler 进行编译
-    //            否则的话，直接创建一下 compiler 返回
+    //            否则的话，直接创建一下 compiler 返回，这时可以自行编译流程
     if (callback) {
       try {
         const { compiler, watch, watchOptions } = create();

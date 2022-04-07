@@ -58,6 +58,7 @@ class CaseSensitiveModulesWarning extends WebpackError {
 	constructor(modules, moduleGraph) {
 		const sortedModules = sortModules(Array.from(modules));
 		const modulesList = createModulesListMessage(sortedModules, moduleGraph);
+		// 有多个模块的名称只有大小写不同。在用其他大小写语义编译文件系统时，这可能会导致意想不到的行为。用平等的套管。比较这些模块标识符
 		super(`There are multiple modules with names that only differ in casing.
 This can lead to unexpected behavior when compiling on a filesystem with other case-semantic.
 Use equal casing. Compare these module identifiers:

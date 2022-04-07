@@ -57,13 +57,13 @@ const ChunkFilesSet = createArrayToSetDeprecationSet("chunk.files");
 let debugId = 1000;
 
 /**
- * A Chunk is a unit of encapsulation for Modules.
- * Chunks are "rendered" into bundles that get emitted when the build completes.
+ * A Chunk is a unit of encapsulation for Modules. 块是模块的封装单元
+ * Chunks are "rendered" into bundles that get emitted when the build completes. 块被“呈现”到构建完成时发出的包中
  */
 class Chunk {
 	/**
-	 * @param {string=} name of chunk being created, is optional (for subclasses)
-	 * @param {boolean} backCompat enable backward-compatibility
+	 * @param {string=} name of chunk being created, is optional (for subclasses) 是可选的(对于子类)
+	 * @param {boolean} backCompat enable backward-compatibility 支持向后兼容
 	 */
 	constructor(name, backCompat = true) {
 		/** @type {number | string | null} */
@@ -75,15 +75,15 @@ class Chunk {
 		/** @type {string} */
 		this.name = name;
 		/** @type {SortableSet<string>} */
-		this.idNameHints = new SortableSet();
+		this.idNameHints = new SortableSet(); // SortableSet：继承至 Set，增强 Set 功能
 		/** @type {boolean} */
 		this.preventIntegration = false;
 		/** @type {(string | function(PathData, AssetInfo=): string)?} */
-		this.filenameTemplate = undefined;
+		this.filenameTemplate = undefined; // 该 chunk 的输出文件名
 		/** @type {(string | function(PathData, AssetInfo=): string)?} */
 		this.cssFilenameTemplate = undefined;
 		/** @private @type {SortableSet<ChunkGroup>} */
-		this._groups = new SortableSet(undefined, compareChunkGroupsByIndex);
+		this._groups = new SortableSet(undefined, compareChunkGroupsByIndex /** 排序方法 */); // 该 chunk 归属的 chunkGroup 集合 --> 说明 chunk 可能归属于不同的 chunkGroup
 		/** @type {RuntimeSpec} */
 		this.runtime = undefined;
 		/** @type {Set<string>} */
@@ -474,11 +474,12 @@ class Chunk {
 	}
 
 	/**
-	 * @param {ChunkGroup} chunkGroup the chunkGroup the chunk is being added
+	 * 建立该 Chunk 归属的 chunkGroup 
+	 * @param {ChunkGroup} chunkGroup the chunkGroup the chunk is being added  对该 chunk 进行分组的 chunkGroup
 	 * @returns {void}
 	 */
 	addGroup(chunkGroup) {
-		this._groups.add(chunkGroup);
+		this._groups.add(chunkGroup); // 将该 chunk 归属的 chunkGroup 推入到集合中 --> 说明 chunk 可能归属于不同的 chunkGroup
 	}
 
 	/**
@@ -610,7 +611,7 @@ class Chunk {
 	}
 
 	/**
-	 * @returns {Set<Chunk>} a set of all the referenced chunks (including itself)
+	 * @returns {Set<Chunk>} a set of all the referenced chunks (including itself) 所有引用块的集合(包括它自己)
 	 */
 	getAllReferencedChunks() {
 		const queue = new Set(this.groupsIterable);

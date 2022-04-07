@@ -15,18 +15,22 @@
   </head>
   <body>
     <div class="sign" id="download">
-      <a href="/img/logo.png" download="logo.png">点击下载下面图片</a><br />
+      <a href="/img/logo.png" download="logo.png">点击下载下面图片</a>
+      <br />
       <img src="/img/logo.png" alt="" />
     </div>
     <div class="sign" id="CORS">
       <div class="cors_img" onclick="startDownload()">点击下载下面跨域图片</div>
-      <img src="https://cdn.glitch.com/4c9ebeb9-8b9a-4adc-ad0a-238d9ae00bb5%2Fmdn_logo-only_color.svg?1535749917189" alt="" />
+      <img
+        src="https://cdn.glitch.com/4c9ebeb9-8b9a-4adc-ad0a-238d9ae00bb5%2Fmdn_logo-only_color.svg?1535749917189"
+        alt=""
+      />
     </div>
   </body>
 </html>
 <script>
-  const test = new URLSearchParams(location.search).get("test");
-  for (const dom of document.body.querySelectorAll(".sign")) {
+  const test = new URLSearchParams(location.search).get('test');
+  for (const dom of document.body.querySelectorAll('.sign')) {
     if (dom.id !== test) {
       dom.parentNode.removeChild(dom);
     }
@@ -34,17 +38,17 @@
 
   function startDownload() {
     let imageURL =
-      "https://cdn.glitch.com/4c9ebeb9-8b9a-4adc-ad0a-238d9ae00bb5%2Fmdn_logo-only_color.svg?1535749917189";
+      'https://cdn.glitch.com/4c9ebeb9-8b9a-4adc-ad0a-238d9ae00bb5%2Fmdn_logo-only_color.svg?1535749917189';
 
     downloadedImg = new Image();
-    downloadedImg.crossOrigin = "Anonymous";
+    downloadedImg.crossOrigin = 'Anonymous';
     // 在图片加载完成后, 通过 canvas 下载图片
-    downloadedImg.addEventListener("load", imageReceived, false);
+    downloadedImg.addEventListener('load', imageReceived, false);
     downloadedImg.src = imageURL;
   }
   function imageReceived() {
-    let canvas = document.createElement("canvas");
-    let context = canvas.getContext("2d");
+    let canvas = document.createElement('canvas');
+    let context = canvas.getContext('2d');
 
     canvas.width = downloadedImg.width;
     canvas.height = downloadedImg.height;
@@ -54,11 +58,11 @@
 
     try {
       localStorage.setItem(
-        "saved-image-example",
-        canvas.toDataURL("image/png")
+        'saved-image-example',
+        canvas.toDataURL('image/png')
       );
     } catch (err) {
-      console.log("Error: " + err);
+      console.log('Error: ' + err);
     }
   }
 </script>

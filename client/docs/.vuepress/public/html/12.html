@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>::placeholder 占位符伪元素</title>
+    <style>
+      input::placeholder {
+        color: red;
+        font-size: 1em;
+        font-style: italic;
+      }
+      input::-webkit-input-placeholder {
+        color: red;
+        font-size: 1em;
+        font-style: italic;
+      }
+      input::-moz-placeholder {
+        color: red;
+        font-size: 1em;
+        font-style: italic;
+      }
+      input:-ms-input-placeholder {
+        color: red;
+        font-size: 1em;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <input placeholder="我是红色的！" />
+  </body>
+</html>

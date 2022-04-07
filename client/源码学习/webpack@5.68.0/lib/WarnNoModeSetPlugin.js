@@ -11,6 +11,7 @@ const NoModeWarning = require("./NoModeWarning");
 
 class WarnNoModeSetPlugin {
 	/**
+	 * 插件在初始化 compilation 时调用，添加一个编译过程中的警告
 	 * Apply the plugin
 	 * @param {Compiler} compiler the compiler instance
 	 * @returns {void}

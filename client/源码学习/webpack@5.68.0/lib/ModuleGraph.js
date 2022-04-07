@@ -380,11 +380,11 @@ class ModuleGraph {
 	}
 
 	/**
-	 * @param {Dependency} dependency the dependency to look for a referenced module
+	 * @param {Dependency} dependency the dependency to look for a referenced module 用于查找被引用模块的依赖项
 	 * @returns {ModuleGraphConnection | undefined} the connection
 	 */
 	getConnection(dependency) {
-		const connection = this._dependencyMap.get(dependency);
+		const connection = this._dependencyMap.get(dependency); // 根据依赖项提取 connection(连接 module 和 dep 的)
 		if (connection === undefined) {
 			const module = this.getParentModule(dependency);
 			if (module !== undefined) {
@@ -412,12 +412,17 @@ class ModuleGraph {
 	}
 
 	/**
-	 * @param {Dependency} dependency the dependency to look for a referenced module
-	 * @returns {Module} the referenced module
+	 * 根据依赖项来查找被引用模块
+	 * e.g：index.js
+	 * 	import './module01.js';
+	 * 	import './module02.js';
+	 * 如上，会生成两个 HarmonyImportSideEffectDependency(导入依赖类)，这个类保存着依赖的信息(导入位置，导入路径)
+	 * @param {Dependency} dependency the dependency to look for a referenced module 用于查找被引用模块的依赖项
+	 * @returns {Module} the referenced module 被引用的模块
 	 */
 	getModule(dependency) {
-		const connection = this.getConnection(dependency);
-		return connection !== undefined ? connection.module : null;
+		const connection = this.getConnection(dependency); // 查找 connection(连接 module 与 dep)
+		return connection !== undefined ? connection.module : null; // 返回查找到模块
 	}
 
 	/**
@@ -738,7 +743,7 @@ class ModuleGraph {
 	}
 
 	/**
-	 * @param {string=} cacheStage a persistent stage name for caching
+	 * @param {string=} cacheStage a persistent stage name for caching 用于缓存的持久阶段名
 	 */
 	freeze(cacheStage) {
 		this._cache = new WeakTupleMap();

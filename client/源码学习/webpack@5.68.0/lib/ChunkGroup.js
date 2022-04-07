@@ -68,7 +68,7 @@ const sortOrigin = (a, b) => {
 
 class ChunkGroup {
 	/**
-	 * Creates an instance of ChunkGroup.
+	 * Creates an instance of ChunkGroup. 创建 ChunkGroup 实例
 	 * @param {string|ChunkGroupOptions=} options chunk group options passed to chunkGroup
 	 */
 	constructor(options) {
@@ -81,14 +81,14 @@ class ChunkGroup {
 		this.groupDebugId = debugId++;
 		this.options = options;
 		/** @type {SortableSet<ChunkGroup>} */
-		this._children = new SortableSet(undefined, sortById);
+		this._children = new SortableSet(undefined, sortById); 
 		/** @type {SortableSet<ChunkGroup>} */
 		this._parents = new SortableSet(undefined, sortById);
 		/** @type {SortableSet<ChunkGroup>} */
 		this._asyncEntrypoints = new SortableSet(undefined, sortById);
 		this._blocks = new SortableSet();
 		/** @type {Chunk[]} */
-		this.chunks = [];
+		this.chunks = []; // 该 chunkGroup 具有哪些 chunk
 		/** @type {OriginRecord[]} */
 		this.origins = [];
 		/** Indices in top-down order */
@@ -123,7 +123,7 @@ class ChunkGroup {
 	}
 
 	/**
-	 * returns the name of current ChunkGroup
+	 * returns the name of current ChunkGroup 返回当前 ChunkGroup 的名称
 	 * @returns {string|undefined} returns the ChunkGroup name
 	 */
 	get name() {
@@ -157,11 +157,12 @@ class ChunkGroup {
 	}
 
 	/**
-	 * Performs an unshift of a specific chunk
-	 * @param {Chunk} chunk chunk being unshifted
-	 * @returns {boolean} returns true if attempted chunk shift is accepted
+	 * Performs an unshift of a specific chunk 执行一个特定块的固定移位
+	 * @param {Chunk} chunk chunk being unshifted 块被未移位
+	 * @returns {boolean} returns true if attempted chunk shift is accepted 如果尝试的块移位被接受，则返回true
 	 */
 	unshiftChunk(chunk) {
+		// 将指定 chunk 移动到最前端
 		const oldIdx = this.chunks.indexOf(chunk);
 		if (oldIdx > 0) {
 			this.chunks.splice(oldIdx, 1);
@@ -196,15 +197,17 @@ class ChunkGroup {
 	}
 
 	/**
-	 * add a chunk into ChunkGroup. Is pushed on or prepended
-	 * @param {Chunk} chunk chunk being pushed into ChunkGroupS
-	 * @returns {boolean} returns true if chunk addition was successful.
+	 * add a chunk into ChunkGroup. Is pushed on or prepended 将 chunk 添加到 chunkGroup 中。pushed 还是 prepened
+	 * @param {Chunk} chunk chunk being pushed into ChunkGroupS 需要推入到该 ChunkGroup 的 chunk
+	 * @returns {boolean} returns true if chunk addition was successful. 如果 chunk 添加成功则返回true
 	 */
 	pushChunk(chunk) {
-		const oldIdx = this.chunks.indexOf(chunk);
+		const oldIdx = this.chunks.indexOf(chunk); // 检测该 chunk 是否存在于 this.chunks 集合中
+		// 如果存在于 this.chunks 集合中，表明 chunk 已经推入到 chunkGroup 中
 		if (oldIdx >= 0) {
 			return false;
 		}
+		// 不存在则推入 this.chunks 集合中
 		this.chunks.push(chunk);
 		return true;
 	}
@@ -387,9 +390,9 @@ class ChunkGroup {
 	}
 
 	/**
-	 * @param {Module} module origin module
-	 * @param {DependencyLocation} loc location of the reference in the origin module
-	 * @param {string} request request name of the reference
+	 * @param {Module} module origin module 源模块
+	 * @param {DependencyLocation} loc location of the reference in the origin module 引用在原始模块中的位置
+	 * @param {string} request request name of the reference 请求引用的名称
 	 * @returns {void}
 	 */
 	addOrigin(module, loc, request) {

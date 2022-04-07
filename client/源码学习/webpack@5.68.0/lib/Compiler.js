@@ -197,6 +197,10 @@ class Compiler {
       compile: new SyncHook(['params']),
       /** @type {AsyncParallelHook<[Compilation]>} */
       make: new AsyncParallelHook(['compilation']),
+      /**
+       * 模块构建完成
+       * AsyncSeriesHook 钩子：异步串联执行
+       */
       /** @type {AsyncParallelHook<[Compilation]>} */
       finishMake: new AsyncSeriesHook(['compilation']),
       /** @type {AsyncSeriesHook<[Compilation]>} */
@@ -460,13 +464,14 @@ class Compiler {
   }
 
   /**
+   * 启动所有编译工作。 完成之后，执行传入的的 callback 函数。 最终记录下来的概括信息（stats）和错误（errors），都应在这个 callback 函数中获取。
    * @param {Callback<Stats>} callback signals when the call finishes 调用结束时发出的信号
    * @returns {void}
    */
   run(callback) {
     // 如果已经开始运行，则抛出错误
     if (this.running) {
-      // 抛出错误：你运行了Webpack两次。每个实例一次只支持一个并发编译
+      // 抛出错误：你运行了 Webpack 两次。每个实例一次只支持一个并发编译
       return callback(new ConcurrentCompilationError() /** 继承至 Error */);
     }
 
@@ -584,7 +589,8 @@ class Compiler {
       });
     };
 
-    if (this.idle) {
+    if (this.idle) { 
+      // 该 Compiler 当前状态为闲置时，再次启动时，需要通知 cache 编译器启动(cache 会在文件系统缓存时在编译器闲置时写入数据)
       this.cache.endIdle((err) => {
         if (err) return finalCallback(err);
 
@@ -1273,19 +1279,31 @@ ${other}`);
        * 在之后，控制权就交由 compilation，开启对程序的模块进行编译、优化、分块等等操作
        */
       this.hooks.make.callAsync(compilation, (err) => {
+        /**
+         * 从入口开始，所有的模块都已经编译好了
+         */
         logger.timeEnd('make hook');
-        if (err) return callback(err);
+        if (err) return callback(err); // 编译过程出现错误，抛出错误
 
         logger.time('finish make hook');
+        /**
+         * 模块构建完成钩子
+         */
         this.hooks.finishMake.callAsync(compilation, (err) => {
           logger.timeEnd('finish make hook');
           if (err) return callback(err);
 
+          // 类似于 Promise，在微任务中执行
           process.nextTick(() => {
             logger.time('finish compilation');
+            /**
+	           * 在所有模块构建完成后从模块中提取一些信息
+             *  例如：遍历所有 module 将 export 出来的变量以数组的形式，单独存储到 module.buildMeta.providedExports变量下。
+	           * 			 遍历所有 module 将错误和警告信息提取出来等等
+	           */
             compilation.finish((err) => {
               logger.timeEnd('finish compilation');
-              if (err) return callback(err);
+              if (err) return callback(err); // 存在错误，抛出错误
 
               logger.time('seal compilation');
               compilation.seal((err) => {

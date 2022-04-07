@@ -135,7 +135,7 @@ const applyWebpackOptionsDefaults = options => {
 		return getDefaultTarget(options.context);
 	});
 
-	const { mode, name, target } = options;
+	const { mode /** 模式 */, name, target } = options;
 
 	let targetProperties =
 		target === false
@@ -145,7 +145,7 @@ const applyWebpackOptionsDefaults = options => {
 			: getTargetsProperties(target, options.context);
 
 	const development = mode === "development"; // 模式是否为开发环境
-	const production = mode === "production" || !mode;
+	const production = mode === "production" || !mode; // 模式是否为生产环境(如果没有设置的话默认为生产环境)
 
 	if (typeof options.entry !== "function") {
 		for (const key of Object.keys(options.entry)) {
@@ -157,6 +157,7 @@ const applyWebpackOptionsDefaults = options => {
 		}
 	}
 
+	// 开发环境下 devtool 默认为 eval
 	F(options, "devtool", () => (development ? "eval" : false));
 	D(options, "watch", false);
 	D(options, "profile", false);

@@ -14,6 +14,11 @@ const SortableSet = require("./SortableSet");
 /** @typedef {RuntimeSpec | boolean} RuntimeCondition */
 
 /**
+ * 从 entry.options 的 runtime 和 dependOn 提取出 runtime 名称
+ * 可能是：
+ * 	- 单独的 runtime
+ * 	- 内嵌到 entryChunk 中，此时就是 entryName
+ * 	- 如果配置了 dependOn 的话，可能就是 {string | SortableSet<string> | undefined} 结构，存在多个 runtimeName 可能
  * @param {Compilation} compilation the compilation
  * @param {string} name name of the entry
  * @param {EntryOptions=} options optionally already received entry options
@@ -22,9 +27,12 @@ const SortableSet = require("./SortableSet");
 exports.getEntryRuntime = (compilation, name, options) => {
 	let dependOn;
 	let runtime;
+	// 提取 dependOn 和 runtime 配置
 	if (options) {
+		// 存在入口配置项，提取 dependOn 和 runtime 配置
 		({ dependOn, runtime } = options);
 	} else {
+		// 没有传入，从 entries 集合中提取一下，如果不存在的话，直接返回
 		const entry = compilation.entries.get(name);
 		if (!entry) return name;
 		({ dependOn, runtime } = entry.options);
@@ -33,9 +41,12 @@ exports.getEntryRuntime = (compilation, name, options) => {
 		/** @type {RuntimeSpec} */
 		let result = undefined;
 		const queue = new Set(dependOn);
+		// 遍历 dependOn
 		for (const name of queue) {
+			// 从全局 entries 集合中提取 entry
 			const dep = compilation.entries.get(name);
 			if (!dep) continue;
+			// 提取出 dependOn, runtime
 			const { dependOn, runtime } = dep.options;
 			if (dependOn) {
 				for (const name of dependOn) {
@@ -47,6 +58,7 @@ exports.getEntryRuntime = (compilation, name, options) => {
 		}
 		return result || name;
 	} else {
+		// 此时存在 rumtime 配置项，直接取 rumtime 或 name(此时运行时代码内嵌在 entryChunk 中)
 		return runtime || name;
 	}
 };

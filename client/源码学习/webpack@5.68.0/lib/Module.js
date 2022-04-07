@@ -160,7 +160,7 @@ class Module extends DependenciesBlock {
 		/** @type {WebpackError[] | undefined} */
 		this._warnings = undefined; // 模块输出警告列表
 		/** @type {WebpackError[] | undefined} */
-		this._errors = undefined;
+		this._errors = undefined; // 模块输出错误列表
 		/** @type {BuildMeta} */
 		this.buildMeta = undefined;
 		/** @type {Record<string, any>} */
@@ -535,7 +535,7 @@ class Module extends DependenciesBlock {
 	}
 
 	/**
-	 * @returns {Iterable<WebpackError> | undefined} list of warnings if any
+	 * @returns {Iterable<WebpackError> | undefined} list of warnings if any 警告列表(如有)
 	 */
 	getWarnings() {
 		return this._warnings;
@@ -549,6 +549,7 @@ class Module extends DependenciesBlock {
 	}
 
 	/**
+	 * 新增一个模块构建错误
 	 * @param {WebpackError} error the error
 	 * @returns {void}
 	 */

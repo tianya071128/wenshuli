@@ -3,6 +3,46 @@
 	Author Tobias Koppers @sokra
 */
 
+/**
+ * dependency：依赖类
+ * 	会将模块的 import 和 export 以及导入的变量都当成依赖项来处理，并将其进行依赖项分类，所有依赖项类都存储在 ./dependencies 文件夹中
+ *	
+ *  -> 对于入口文件，生成一个 EntryDependency 依赖类(保存入口文件的路径等信息)，就会根据这个 EntryDependency 生成 entryModule
+ * 	-> 在构建 entryModule 时，通过 AST 分析出 entryModule，得出所有的依赖项
+ * 			e.g(./src/index.js)：
+ * 				import { test } from './module/module01';
+ * 				// .,. 
+ * 				export function exportTest() {} 
+ * 			就会生成如下依赖项：
+ * 				HarmonyImportSideEffectDependency：表示导入模块 -- 存储着导入位置(导入语句在文件中的行号和列号)、导入路径(./module/module01)等信息
+ * 				HrrmonyImportSpecifierDependency：表示导入变量(import { test }) -- 存储着导入位置、导入变量名等信息
+ * 				HarmonyExportSpecifierDependency：表示导出变量(export function exportTest() {}) -- 同理存储一些信息
+ * 
+ * 			就会根据这些依赖项采取不同的策略
+ */
+
+ /**
+	* Module：用于描述每个模块，包含模块的路径信息，模块的构建结果，模块的依赖项等信息
+  * 	- 
+  */
+
+	/**
+	 * Chunk：
+	 */
+
+	/**
+	 * ChunkGroup：
+	 */
+
+	/**
+	 * Entrypoint：继承至 ChunkGroup，专门用来描述 entry，除了 ChunkGroup 的相关行为后，还包含以下信息
+	 * 	- _runtimeChunk：runtimeChunk，可能有如下情况
+	 * 		可能是：
+	 * 			- 内嵌到 entryChunk 中，此时就是 entryChunk
+	 * 			- 配置了 entry.options.runtime 的话，就是单独的 runtimeChunk
+	 * 			- 如果配置了 entry.options.dependOn 的话，那么建立与 entry.options.dependOn 指向的 Entrypoint 关系
+	 * 	- _entrypointChunk：entryChunk，表示该 entry 生成的 chunk
+	 */
 "use strict";
 
 const asyncLib = require("neo-async");
@@ -635,22 +675,42 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			/** @type {AsyncParallelHook<[ExecuteModuleArgument, ExecuteModuleContext]>} */
 			prepareModuleExecution: new AsyncParallelHook(["options", "context"]),
 
+			/**
+			 * 所有模块都完成构建并且没有错误时执行。
+			 * AsyncSeriesHook：异步串联执行
+			 */
 			/** @type {AsyncSeriesHook<[Iterable<Module>]>} */
 			finishModules: new AsyncSeriesHook(["modules"]),
 			/** @type {AsyncSeriesHook<[Module]>} */
 			finishRebuildingModule: new AsyncSeriesHook(["module"]),
 			/** @type {SyncHook<[]>} */
 			unseal: new SyncHook([]),
+			/**
+			 * compilation 对象停止接收新的模块时触发。
+			 * SyncHook：同步钩子
+			 */
 			/** @type {SyncHook<[]>} */
 			seal: new SyncHook([]),
 
+			/**
+			 * 生成 chunks 之前触发
+			 * SyncHook：同步串联钩子
+			 */
 			/** @type {SyncHook<[]>} */
 			beforeChunks: new SyncHook([]),
 			/** @type {SyncHook<[Iterable<Chunk>]>} */
 			afterChunks: new SyncHook(["chunks"]),
 
+			/**
+			 * 依赖优化开始时触发。
+			 * SyncBailHook：如果任何事件函数存在返回值，那么会立即中断后续事件函数的调用
+			 */
 			/** @type {SyncBailHook<[Iterable<Module>]>} */
 			optimizeDependencies: new SyncBailHook(["modules"]),
+			/**
+			 * 依赖优化之后触发。
+			 * SyncHook：同步串联钩子
+			 */
 			/** @type {SyncHook<[Iterable<Module>]>} */
 			afterOptimizeDependencies: new SyncHook(["modules"]),
 
@@ -926,9 +986,9 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		this.moduleMemCaches = undefined;
 		/** @type {Map<Module, WeakTupleMap<any, any>> | undefined} */
 		this.moduleMemCaches2 = undefined;
-		this.moduleGraph = new ModuleGraph();
+		this.moduleGraph = new ModuleGraph(); // 模块图，应该是保存着模块之间的关系
 		/** @type {ChunkGraph} */
-		this.chunkGraph = undefined;
+		this.chunkGraph = undefined; // chunk 图 - 应该是用来建立模块与 chunk 的关系
 		/** @type {CodeGenerationResults} */
 		this.codeGenerationResults = undefined;
 
@@ -984,17 +1044,17 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			}
 		};
 		/** @type {Map<string, Entrypoint>} */
-		this.entrypoints = new Map();
+		this.entrypoints = new Map(); // Entrypoint 集合 -- Entrypoint：继承至 ChunkGroup，用于描述 entryChunk
 		/** @type {Entrypoint[]} */
 		this.asyncEntrypoints = [];
 		/** @type {Set<Chunk>} */
-		this.chunks = new Set();
+		this.chunks = new Set(); // 所有 Chunks 集合
 		/** @type {ChunkGroup[]} */
-		this.chunkGroups = [];
+		this.chunkGroups = []; // ChunkGroup 集合
 		/** @type {Map<string, ChunkGroup>} */
-		this.namedChunkGroups = new Map();
+		this.namedChunkGroups = new Map(); // chunkGroup 集合
 		/** @type {Map<string, Chunk>} */
-		this.namedChunks = new Map();
+		this.namedChunks = new Map(); // 已创建具有 name 的 chunk，同一个 name 无需重复创建
 		/** @type {Set<Module>} */
 		this.modules = new Set(); // 该 Compilation 所有的构建的模块
 		if (this._backCompat) {
@@ -1013,9 +1073,9 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		/** @type {Map<string, Map<string, Set<string>>>} */
 		this._assetsRelatedIn = new Map();
 		/** @type {WebpackError[]} */
-		this.errors = [];
+		this.errors = []; // 构建过程中收集的错误列表
 		/** @type {WebpackError[]} */
-		this.warnings = [];
+		this.warnings = []; // 构建过程中收集的警告列表
 		/** @type {Compilation[]} */
 		this.children = [];
 		/** @type {Map<string, LogEntry[]>} */
@@ -2704,8 +2764,13 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 		);
 	}
 
+	/**
+	 * 在所有模块构建完成后从模块中提取一些信息，例如：遍历所有 module 将 export 出来的变量以数组的形式，单独存储到 module.buildMeta.providedExports变量下。
+	 * 																						 遍历所有 module 将错误和警告信息提取出来等等
+	 */
 	finish(callback) {
-		this.factorizeQueue.clear();
+		this.factorizeQueue.clear(); // 创建模块实例的启动进程清空
+		// 是否统计模块信息
 		if (this.profile) {
 			this.logger.time("finish module profiles");
 			const ParallelismFactorCalculator = require("./util/ParallelismFactorCalculator");
@@ -2885,39 +2950,48 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			this.logger.timeEnd("finish module profiles");
 		}
 		this.logger.time("compute affected modules");
-		this._computeAffectedModules(this.modules);
+		this._computeAffectedModules(this.modules); // 计算受影响的模块？？
 		this.logger.timeEnd("compute affected modules");
 		this.logger.time("finish modules");
 		const { modules, moduleMemCaches } = this;
+		/**
+		 * 所有模块都完成构建并且没有错误时执行 -- 异步串联执行
+		 */
 		this.hooks.finishModules.callAsync(modules, err => {
 			this.logger.timeEnd("finish modules");
 			if (err) return callback(err);
 
-			// extract warnings and errors from modules
+			// extract warnings and errors from modules 从模块中提取警告和错误
 			this.moduleGraph.freeze("dependency errors");
-			// TODO keep a cacheToken (= {}) for each module in the graph
-			// create a new one per compilation and flag all updated files
-			// and parents with it
+			// TODO keep a cacheToken (= {}) for each module in the graph TODO为图中的每个模块保留一个缓存令牌(= {})
+			// create a new one per compilation and flag all updated files 每次编译创建一个新文件，并标记所有更新的文件
+			// and parents with it 和父母一起
 			this.logger.time("report dependency errors and warnings");
 			for (const module of modules) {
-				// TODO only run for modules with changed cacheToken
-				// global WeakMap<CacheToken, WeakSet<Module>> to keep modules without errors/warnings
+				// TODO only run for modules with changed cacheToken TODO只在更改了缓存令牌的模块中运行
+				// global WeakMap<CacheToken, WeakSet<Module>> to keep modules without errors/warnings 全局弱映射< Cache令牌，弱集合<模块>>以保持模块没有错误/警告
+				// 推测应该在 watch 模式下，重新编译时，只收集变更的模块错误和警告
 				const memCache = moduleMemCaches && moduleMemCaches.get(module);
 				if (memCache && memCache.get("noWarningsOrErrors")) continue;
+				// 下面的错误和警告并不会阻止构建，只是会在控制台中显示
+				/**
+				 * 这里的错误和警告是什么呢？
+				 */
 				let hasProblems = this.reportDependencyErrorsAndWarnings(module, [
 					module
 				]);
+				// 这里的错误和警告，可以由 loader 发出
 				const errors = module.getErrors();
 				if (errors !== undefined) {
 					for (const error of errors) {
 						if (!error.module) {
-							error.module = module;
+							error.module = module; // 绑定错误信息的模块引用
 						}
-						this.errors.push(error);
-						hasProblems = true;
+						this.errors.push(error); // 推入到所有模块构建错误集合
+						hasProblems = true; // 标记存在模块错误或警告
 					}
 				}
-				const warnings = module.getWarnings();
+				const warnings = module.getWarnings(); // 获取当前模块警告列表
 				if (warnings !== undefined) {
 					for (const warning of warnings) {
 						if (!warning.module) {
@@ -2930,7 +3004,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 				if (!hasProblems && memCache) memCache.set("noWarningsOrErrors", true);
 			}
 			this.moduleGraph.unfreeze();
-			this.logger.timeEnd("report dependency errors and warnings");
+			this.logger.timeEnd("report dependency errors and warnings"); // 报告依赖项错误和警告
 
 			callback();
 		});
@@ -2952,7 +3026,7 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 	}
 
 	/**
-	 * @param {Callback} callback signals when the call finishes
+	 * @param {Callback} callback signals when the call finishes 调用结束时发出的信号
 	 * @returns {void}
 	 */
 	seal(callback) {
@@ -2964,56 +3038,135 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 			this.addModuleQueue.clear();
 			return callback(err);
 		};
+		// 创建 chunk 图 - 这个 chunkGraph 图是唯一的，用来描述 chunk 的关系 -- 注意与 chunkGroup 的区别
 		const chunkGraph = new ChunkGraph(
 			this.moduleGraph,
-			this.outputOptions.hashFunction
+			this.outputOptions.hashFunction // hash 散列算法
 		);
 		this.chunkGraph = chunkGraph;
 
-		if (this._backCompat) {
+		// this._backCompat：为许多 webpack 4 api 启用后向兼容层，并发出弃用警告。
+		if (this._backCompat) { 
+			// 遍历所有模块
 			for (const module of this.modules) {
 				ChunkGraph.setChunkGraphForModule(module, chunkGraph);
 			}
 		}
 
+		/**
+		 * compilation 对象停止接收新的模块时触发
+		 */
 		this.hooks.seal.call();
 
 		this.logger.time("optimize dependencies");
+		/**
+		 * optimizeDependencies：依赖优化开始时触发。
+		 * 如果任何事件函数存在返回值，那么会立即中断后续事件函数的调用
+		 */
 		while (this.hooks.optimizeDependencies.call(this.modules)) {
 			/* empty */
+			// ?
 		}
+		/**
+		 * 依赖优化之后触发。
+		 */
 		this.hooks.afterOptimizeDependencies.call(this.modules);
 		this.logger.timeEnd("optimize dependencies");
 
 		this.logger.time("create chunks");
+		/**
+		 * 开始生成 chunks 触发
+		 */
 		this.hooks.beforeChunks.call();
 		this.moduleGraph.freeze("seal");
+		/**
+		 * 收集入口 Entrypoint 与 ModuleList，即建立入口 Entrypint(继承至ChunkGroup)的 entryModule
+		 * e.g：
+		 * 	entry {
+		 * 		main: {
+		 * 			import: ['./src/index02.js', './src/index.js']
+		 * 		}
+		 *  }
+		 * 此时就会生成
+		 * chunkGraphInit map<entrypoint, module[]> {
+		 * 	Entrypoint: [Module, Module]
+		 * }
+		 */
 		/** @type {Map<Entrypoint, Module[]>} */
-		const chunkGraphInit = new Map();
-		for (const [name, { dependencies, includeDependencies, options }] of this
-			.entries) {
+		const chunkGraphInit = new Map(); 
+		/**
+		 * 遍历 entry：主要用于处理 entryChunk、entryModule、Entrypoint 之间的关系
+		 * 	1. 为每个 entry 生成一个 entryChunk
+		 * 	2. 为每个 entry 生成一个 Entrypoint(继承至 ChunkGroup)，用于描述 entry 相关 chunk
+		 * 	3. 建立 Entrypoint(继承至 ChunkGroup) 与 entryChunk 的联系
+		 *  4. 遍历 entry.deps(即 entry.options.import)，这几个都表示 entryModule
+		 * 			- 根据 EntryDependency 提取出 entryModule
+		 * 			- 连接 entryChunk 和 entryModule
+		 * 			- 将一个入口生成的模块收集到 modulesList 中。
+		 * 					e.g：
+		 * 						entry {
+		 * 							main: {
+		 * 								import: ['./src/index02.js', './src/index.js']
+		 * 							}
+		 * 					 }
+		 * 					此时就会生成
+		 * 					chunkGraphInit map<entrypoint, module[]> {
+		 * 						Entrypoint: [Module, Module]
+		 * 					}
+		 */
+		for (const [name /** 入口名称 */, { dependencies, includeDependencies, options /** 入口配置项 */ }] of this.entries) {
 			const chunk = this.addChunk(name);
+			// options.filename：默认情况下，入口 chunk 的输出文件名是从 output.filename 中提取出来的，但你可以为特定的入口指定一个自定义的输出文件名。
 			if (options.filename) {
-				chunk.filenameTemplate = options.filename;
+				chunk.filenameTemplate = options.filename; // chunk 的输出文件名
 			}
 			const entrypoint = new Entrypoint(options);
+			/**
+			 * https://webpack.docschina.org/concepts/entry-points/
+			 * 	options.dependOn：当前入口所依赖的入口。它们必须在该入口被加载前被加载。
+			 * 	options.runtime：运行时 chunk 的名字。如果设置了，就会创建一个新的运行时 chunk。
+			 * 		- options.runtime 会生成一个新的 chunk，是 webpack 的 runtime(https://webpack.docschina.org/concepts/manifest/#runtime)
+			 * 	这两个配置项指向的 chunk 都需要在这个 chunk 之前先进行加载，也就是这个 chunk 依赖 chunk
+			 *  并且如果设置了 optimization.runtimeChunk 的话，那么就相当于设置 options.runtime
+			 * 
+			 * 如果 dependOn 和 runtime 都不存在，那么就说明 webpack runtime(在浏览器运行过程中，webpack 用来连接模块化应用程序所需的所有代码。) 会内嵌在这个 entryChunk 中
+			 */
 			if (!options.dependOn && !options.runtime) {
 				entrypoint.setRuntimeChunk(chunk);
 			}
-			entrypoint.setEntrypointChunk(chunk);
-			this.namedChunkGroups.set(name, entrypoint);
-			this.entrypoints.set(name, entrypoint);
-			this.chunkGroups.push(entrypoint);
+			entrypoint.setEntrypointChunk(chunk); // 设置 entrypoint 的 entryChunk
+			this.namedChunkGroups.set(name, entrypoint); // 将该 entrypoint 推入到 namedChunkGroups 集合中
+			this.entrypoints.set(name, entrypoint); // 推入到 entrypoints 集合中
+			this.chunkGroups.push(entrypoint); // 推入到 chunkGroups 集合中
+			/**
+			 * 建立 Entrypoint(继承至 ChunkGroup) 与 chunk 的连接
+			 *  1. 将该 chunk 推入到 chunkGroup.chunks 集合中
+			 *  2. 将该 chunkGroup 推入到 chunk._groups 集合中
+			 */
 			connectChunkGroupAndChunk(entrypoint, chunk);
 
-			const entryModules = new Set();
-			for (const dep of [...this.globalEntry.dependencies, ...dependencies]) {
+			const entryModules = new Set(); // 入口模块集合
+			for (const dep of [...this.globalEntry.dependencies /** 全局 entry 依赖？ */, ...dependencies /** 入口依赖(即入口文件) */]) {
 				entrypoint.addOrigin(null, { name }, /** @type {any} */ (dep).request);
 
-				const module = this.moduleGraph.getModule(dep);
+				const module = this.moduleGraph.getModule(dep); // 根据入口依赖查找到入口模块
 				if (module) {
+					// 连接 chunk 和 entryModule 关系
 					chunkGraph.connectChunkAndEntryModule(chunk, module, entrypoint);
-					entryModules.add(module);
+					entryModules.add(module); // 将该模块推入到集合
+					/**
+					 * 将一个入口生成的模块收集到 modulesList 中。
+					 * e.g：
+					 * 	entry {
+					 * 		main: {
+					 * 			import: ['./src/index02.js', './src/index.js']
+					 * 		}
+					 *  }
+					 * 此时就会生成
+					 * chunkGraphInit map<entrypoint, module[]> {
+					 * 	Entrypoint: [Module, Module]
+					 * }
+					 */
 					const modulesList = chunkGraphInit.get(entrypoint);
 					if (modulesList === undefined) {
 						chunkGraphInit.set(entrypoint, [module]);
@@ -3023,18 +3176,22 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 				}
 			}
 
+			// ？
 			this.assignDepths(entryModules);
-
+		
+			// 对依赖项集合提取模块并对模块进行排序
 			const mapAndSort = deps =>
 				deps
-					.map(dep => this.moduleGraph.getModule(dep))
-					.filter(Boolean)
-					.sort(compareModulesByIdentifier);
+					.map(dep => this.moduleGraph.getModule(dep)) // 根据依赖项提取模块
+					.filter(Boolean) // 过滤 falsy 值
+					.sort(compareModulesByIdentifier); // 模块进行排序
+			// 当前入口需要的额外模块？
 			const includedModules = [
 				...mapAndSort(this.globalEntry.includeDependencies),
 				...mapAndSort(includeDependencies)
 			];
 
+			// 如果当前入口没有一个模块的话，初始化为 []
 			let modulesList = chunkGraphInit.get(entrypoint);
 			if (modulesList === undefined) {
 				chunkGraphInit.set(entrypoint, (modulesList = []));
@@ -3044,39 +3201,53 @@ BREAKING CHANGE: Asset processing hooks in Compilation has been merged into a si
 				modulesList.push(module);
 			}
 		}
-		const runtimeChunks = new Set();
+		const runtimeChunks = new Set(); // runtime(webpack运行时chunk) chunk 集合
+		/**
+		 * 继续遍历 entrys，主要用于处理 runtimeChunk
+		 *  处理 entry.options.depenOn 和 entry.options.runtime
+		 * 	 - 如果同时存在这两个选项，错误提示
+		 * 	 - entry.options.depenOn：？？？
+		 * 	 - entry.options.runtime：
+		 * 			- 如果已经存在这个 runtime 名称的 chunk 的话
+		 * 					- 如果这个已存在的 chunk 是 runtimeChunk 的话，重用 chunk
+		 * 					- 如果这个已存在的 chunk 不是 runtimeChunk 的话，添加一个错误，并退出本次循环
+		 * 			- 如果不存在的话，新建一个 chunk
+		 * 	 		- 将该 runtimeChunk 移动到 Entrypoint.chunks 最前端，表示加载 entryChunk 前需要先加载 runtimeChunk，设置 Entrypoint 的 rumtimeChunk 为该 rumtimeChunk
+		 */
 		outer: for (const [
-			name,
+			name, // 入口名称
 			{
-				options: { dependOn, runtime }
+				options: { dependOn /** 当前入口所依赖的入口。它们必须在该入口被加载前被加载。 */, runtime /** 运行时 chunk 的名字。 */ }
 			}
 		] of this.entries) {
+			// dependOn 和 runtime 不能同时使用，只需要包含一份运行时代码即可
 			if (dependOn && runtime) {
 				const err =
-					new WebpackError(`Entrypoint '${name}' has 'dependOn' and 'runtime' specified. This is not valid.
-Entrypoints that depend on other entrypoints do not have their own runtime.
-They will use the runtime(s) from referenced entrypoints instead.
-Remove the 'runtime' option from the entrypoint.`);
-				const entry = this.entrypoints.get(name);
+					new WebpackError(`Entrypoint '${name}' has 'dependOn' and 'runtime' specified. This is not valid. // 入口点“${name}”已经指定了“depend On”和“runtime”。这是无效的
+Entrypoints that depend on other entrypoints do not have their own runtime. // 依赖于其他入口点的入口点没有自己的运行时
+They will use the runtime(s) from referenced entrypoints instead. // 它们将使用来自引用入口点的运行时
+Remove the 'runtime' option from the entrypoint.`); // 从入口点移除'runtime'选项
+				const entry = this.entrypoints.get(name); // 获取当前入口的 Entrypoint
 				err.chunk = entry.getEntrypointChunk();
-				this.errors.push(err);
+				this.errors.push(err); // 添加一个错误
 			}
+			// dependOn：当前入口所依赖的入口。它们必须在该入口被加载前被加载。
 			if (dependOn) {
-				const entry = this.entrypoints.get(name);
+				const entry = this.entrypoints.get(name); // 获取当前入口的 Entrypoint
 				const referencedChunks = entry
-					.getEntrypointChunk()
+					.getEntrypointChunk() // 入口起点 chunk
 					.getAllReferencedChunks();
 				const dependOnEntries = [];
 				for (const dep of dependOn) {
 					const dependency = this.entrypoints.get(dep);
 					if (!dependency) {
 						throw new Error(
-							`Entry ${name} depends on ${dep}, but this entry was not found`
+							`Entry ${name} depends on ${dep}, but this entry was not found` // 条目${name}依赖于${dep}，但是没有找到该条目
 						);
 					}
 					if (referencedChunks.has(dependency.getEntrypointChunk())) {
 						const err = new WebpackError(
-							`Entrypoints '${name}' and '${dep}' use 'dependOn' to depend on each other in a circular way.`
+							`Entrypoints '${name}' and '${dep}' use 'dependOn' to depend on each other in a circular way.` // 入口点'${name}'和'${dep}'使用'depend On'以循环的方式相互依赖
 						);
 						const entryChunk = entry.getEntrypointChunk();
 						err.chunk = entryChunk;
@@ -3090,10 +3261,17 @@ Remove the 'runtime' option from the entrypoint.`);
 					connectChunkGroupParentAndChild(dependency, entry);
 				}
 			} else if (runtime) {
-				const entry = this.entrypoints.get(name);
-				let chunk = this.namedChunks.get(runtime);
+				const entry = this.entrypoints.get(name); // 获取当前入口的 Entrypoint
+				let chunk = this.namedChunks.get(runtime); // 根据 runtime 提取一下 chunk
+				// 如果已经存在 rumtime 同样名称的 chunk 的话
 				if (chunk) {
+					// 并且这个 chunk 不是 runtime(运行时代码) 的话
 					if (!runtimeChunks.has(chunk)) {
+						// 入口点'${name}'有一个'runtime'选项，它指向另一个名为'${runtime}'的入口点。
+						// 使用其他入口点作为运行时块是无效的
+						// 你是想用“depend On”吗
+						// 而不是允许使用入口点'${name}'在入口点'${runtime}'的运行时?在使用'${name}'时，必须始终加载'${runtime}'
+						// 或者您想使用入口点'${name}'和'${runtime}'独立在一个共享运行时的同一页面上?在本例中，为'runtime'选项提供相同的值。它必须是一个没有被入口点使用过的名称
 						const err =
 							new WebpackError(`Entrypoint '${name}' has a 'runtime' option which points to another entrypoint named '${runtime}'.
 It's not valid to use other entrypoints as runtime chunk.
@@ -3103,21 +3281,26 @@ Did you mean to use 'dependOn: ${JSON.stringify(
 Or do you want to use the entrypoints '${name}' and '${runtime}' independently on the same page with a shared runtime? In this case give them both the same value for the 'runtime' option. It must be a name not already used by an entrypoint.`);
 						const entryChunk = entry.getEntrypointChunk();
 						err.chunk = entryChunk;
-						this.errors.push(err);
+						this.errors.push(err); // 推入一个错误
+						// 当 rumtime 名称已被占用，并且不是 timetimeChunk 时，重新写入 Entrypoint 的 runtimeChunk 为 entryChunk，即说明 rumtime(运行时代码) 需要嵌入到 entryChunk 中
 						entry.setRuntimeChunk(entryChunk);
 						continue;
 					}
 				} else {
-					chunk = this.addChunk(runtime);
+					chunk = this.addChunk(runtime); // 添加一个 runtimeChunk
 					chunk.preventIntegration = true;
-					runtimeChunks.add(chunk);
+					runtimeChunks.add(chunk); // 推入到集合中
 				}
-				entry.unshiftChunk(chunk);
-				chunk.addGroup(entry);
-				entry.setRuntimeChunk(chunk);
+				entry.unshiftChunk(chunk); // 将该 runtimeChunk 移动到 Entrypoint.chunks 最前端，表示加载 entryChunk 前需要先加载 runtimeChunk
+				chunk.addGroup(entry); // 建立 chunk 与 Entrypoint(继承 ChunkGroup) 的关系
+				entry.setRuntimeChunk(chunk); // 设置 Entrypoint 的 rumtimeChunk 为该 rumtimeChunk
 			}
 		}
+
 		buildChunkGraph(this, chunkGraphInit);
+		/**
+		 * 创建 chunk 完成之后触发
+		 */
 		this.hooks.afterChunks.call(this.chunks);
 		this.logger.timeEnd("create chunks");
 
@@ -3127,7 +3310,7 @@ Or do you want to use the entrypoints '${name}' and '${runtime}' independently o
 		while (this.hooks.optimizeModules.call(this.modules)) {
 			/* empty */
 		}
-		this.hooks.afterOptimizeModules.call(this.modules);
+		this.hooks.afterOptimizeModules.call(this.modules); 
 
 		while (this.hooks.optimizeChunks.call(this.chunks, this.chunkGroups)) {
 			/* empty */
@@ -3294,20 +3477,21 @@ Or do you want to use the entrypoints '${name}' and '${runtime}' independently o
 	}
 
 	/**
-	 * @param {Module} module module to report from
-	 * @param {DependenciesBlock[]} blocks blocks to report from
-	 * @returns {boolean} true, when it has warnings or errors
+	 * 检测
+	 * @param {Module} module module to report from 要报告的模块
+	 * @param {DependenciesBlock[]} blocks blocks to report from 要报告的区块
+	 * @returns {boolean} true, when it has warnings or errors 当它有警告或错误时
 	 */
 	reportDependencyErrorsAndWarnings(module, blocks) {
-		let hasProblems = false;
+		let hasProblems = false; // 检测的模块中是否存在警告或错误
 		for (let indexBlock = 0; indexBlock < blocks.length; indexBlock++) {
 			const block = blocks[indexBlock];
-			const dependencies = block.dependencies;
+			const dependencies = block.dependencies; // 所有依赖项
 
 			for (let indexDep = 0; indexDep < dependencies.length; indexDep++) {
-				const d = dependencies[indexDep];
+				const d = dependencies[indexDep]; // 
 
-				const warnings = d.getWarnings(this.moduleGraph);
+				const warnings = d.getWarnings(this.moduleGraph); // 是否存在警告
 				if (warnings) {
 					for (let indexWar = 0; indexWar < warnings.length; indexWar++) {
 						const w = warnings[indexWar];
@@ -3816,23 +4000,28 @@ Or do you want to use the entrypoints '${name}' and '${runtime}' independently o
 	}
 
 	/**
-	 * This method first looks to see if a name is provided for a new chunk,
-	 * and first looks to see if any named chunks already exist and reuse that chunk instead.
+	 * 添加一个 Chunk 类，首先如果提供了 name 名字，那么查看一下是否存在相同的 chunk
+	 * 不存在的话那么就新建一个 Chunk 类
+	 * 
+	 * This method first looks to see if a name is provided for a new chunk, 此方法首先查看是否为新块提供了名称
+	 * and first looks to see if any named chunks already exist and reuse that chunk instead. 首先查看是否存在任何已命名的块，然后重用该块
 	 *
-	 * @param {string=} name optional chunk name to be provided
-	 * @returns {Chunk} create a chunk (invoked during seal event)
+	 * @param {string=} name optional chunk name to be provided 可选要提供的chunk名称
+	 * @returns {Chunk} create a chunk (invoked during seal event) 创建一个块(在密封事件期间调用)
 	 */
 	addChunk(name) {
 		if (name) {
-			const chunk = this.namedChunks.get(name);
+			const chunk = this.namedChunks.get(name); // 根据 name 提取值
 			if (chunk !== undefined) {
 				return chunk;
 			}
 		}
+		// 初始化一个 Chunk 类，初始化一些参数而已
 		const chunk = new Chunk(name, this._backCompat);
-		this.chunks.add(chunk);
+		this.chunks.add(chunk); // 将该 chunk 推入到 chunks 集合中
 		if (this._backCompat)
 			ChunkGraph.setChunkGraphForChunk(chunk, this.chunkGraph);
+		// 如果存在名字的话，则将其缓存一下
 		if (name) {
 			this.namedChunks.set(name, chunk);
 		}
@@ -3875,7 +4064,7 @@ Or do you want to use the entrypoints '${name}' and '${runtime}' independently o
 	}
 
 	/**
-	 * @param {Set<Module>} modules module to assign depth
+	 * @param {Set<Module>} modules module to assign depth 模块来分配深度
 	 * @returns {void}
 	 */
 	assignDepths(modules) {

@@ -8,7 +8,7 @@
 const NONE = Symbol("not sorted");
 
 /**
- * A subset of Set that offers sorting functionality
+ * A subset of Set that offers sorting functionality 提供排序功能的集合的子集
  * @template T item type in set
  * @extends {Set<T>}
  */
