@@ -6,17 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
-      .div {
-        width: 100px;
-        height: 100px;
-        border: 10px solid red;
-        overflow: scroll;
+      .box {
+        background: pink;
+        height: 80px;
+        width: 80px;
+      }
+
+      .box:empty {
+        background: lime;
+      }
+      .test::after {
+        content: '伪元素';
       }
     </style>
   </head>
   <body>
-    <div class="div">
-      测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试
+    <div class="box test"><!-- I will be lime --></div>
+    <div class="box">I will be pink</div>
+    <div class="box">
+      <!-- I will be red because of the whitespace around this comment -->
     </div>
   </body>
 </html>
