@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>固定定位-定位上下文问题</title>
+    <style>
+      .test {
+        width: 100px;
+        height: 100px;
+        background-color: blue;
+      }
+      .transform {
+        width: 100px;
+        height: 100px;
+        background-color: red;
+        transform: translateX(30px);
+        color: beige;
+      }
+      .fiexd {
+        width: 50px;
+        background-color: black;
+        position: fixed;
+        top: 20px;
+        left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test"></div>
+    <div class="transform">
+      这是一个设置了 transform 的元素
+      <div class="fiexd">
+        固定定位元素-当元素祖先的 transform, perspective 或 filter 属性非 none
+        时，定位上下文改成该祖先
+      </div>
+    </div>
+  </body>
+</html>

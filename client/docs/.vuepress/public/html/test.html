@@ -6,25 +6,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
-      .box {
-        background: pink;
-        height: 80px;
-        width: 80px;
+      body {
+        overflow-y: auto;
+        padding-top: 400px;
       }
-
-      .box:empty {
-        background: lime;
+      .content {
+        width: 200px;
+        height: 400px;
+        overflow-y: auto;
       }
-      .test::after {
-        content: '伪元素';
+      .item2 {
+        height: 600px;
+      }
+      .item {
+        position: sticky;
+        top: 30px;
       }
     </style>
   </head>
   <body>
-    <div class="box test"><!-- I will be lime --></div>
-    <div class="box">I will be pink</div>
-    <div class="box">
-      <!-- I will be red because of the whitespace around this comment -->
+    <div class="content">
+      <div class="item2"></div>
+      <div class="item">
+        这是粘性定位元素
+      </div>
+      <div class="item2"></div>
     </div>
+    <div class="item">
+      123
+    </div>
+    <div class="item">
+      123
+    </div>
+    <div class="item2"></div>
   </body>
 </html>
