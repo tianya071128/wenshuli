@@ -113,6 +113,12 @@ export default {
               describe: 'Prettier 中文网 - 代码格式化程序',
               link: 'https://www.prettier.cn/',
             },
+            {
+              name: 'Sass',
+              img: 'https://sass-lang.com/assets/img/logos/logo-b6e1ef6e.svg',
+              describe: 'Sass 官网 - CSS 预处理器',
+              link: 'https://sass-lang.com/',
+            },
           ],
         },
         {
@@ -140,6 +146,12 @@ export default {
               img: 'https://www.w3.org/2008/site/images/logo-w3c-screen-lg',
               describe: 'W3C',
               link: 'https://www.w3.org/',
+            },
+            {
+              name: 'W3C CSS标准',
+              img: 'https://www.w3.org/2008/site/images/logo-w3c-screen-lg',
+              describe: 'W3C',
+              link: 'https://www.w3.org/Style/CSS/current-work',
             },
           ],
         },

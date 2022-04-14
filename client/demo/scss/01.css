@@ -1,0 +1,34 @@
+@charset "UTF-8";
+.accordion {
+  /** 放在后面也是允许的 */
+  /** 甚至可以将其用作伪类选择器的参数 */
+  /** 只允许在复合选择器的开头，不能放置复合选择器其他位置，此时编译失败
+   *  span& {
+   *    font-weight: bold;
+   *  }
+   */
+}
+
+.accordion:hover {
+  font-weight: bold;
+}
+
+[dir='rtl'] .accordion {
+  margin-left: 0;
+  margin-right: 10px;
+}
+
+:not(.accordion) {
+  opacity: 0.8;
+}
+
+.enlarge {
+  font-size: 14px;
+  transition-property: font-size;
+  transition-duration: 4s;
+  transition-delay: 2s;
+  /** 可以编写简写值和 更明确的嵌套版本 */
+  margin: auto;
+  margin-bottom: 10px;
+  margin-top: 2px;
+}

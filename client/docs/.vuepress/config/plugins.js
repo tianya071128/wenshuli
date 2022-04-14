@@ -14,9 +14,12 @@ module.exports = [
     '@vuepress/last-updated', // "上次更新"时间格式
     {
       transformer: (timestamp, lang) => {
-        const dayjs = require('dayjs') // https://day.js.org/
-        return dayjs(timestamp).format('YYYY/MM/DD, HH:mm:ss')
+        const dayjs = require('dayjs'); // https://day.js.org/
+        return dayjs(timestamp).format('YYYY/MM/DD, HH:mm:ss');
       },
     },
   ],
-]
+  [
+    'tabs', // 选项卡
+  ],
+];

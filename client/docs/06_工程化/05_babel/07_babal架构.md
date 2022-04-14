@@ -1,7 +1,7 @@
 ---
 title: babel 架构
 date: 2021-10-21 15:00:00
-permalink: /babel/plugins
+permalink: /babel/framework
 categories: -- 工程化
   -- babel
 tags:

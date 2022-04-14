@@ -28,7 +28,9 @@
   "dependencies": {
     "async-validator": "^1.11.5",
     "axios": "^0.24.0",
-    "element-ui": "^2.15.6"
+    "element-ui": "^2.15.6",
+    "vue-tabs-component": "^1.5.0",
+    "vuepress-plugin-tabs": "^0.3.0"
   },
   "browserslist": [
     "IE 11"
