@@ -1,36 +1,6 @@
-.accordion {
-  &:hover {
-    font-weight: bold;
-  }
+@use 'sass:list';
 
-  /** 放在后面也是允许的 */
-  [dir='rtl'] & {
-    margin-left: 0;
-    margin-right: 10px;
-  }
+$sizes: 40px, 50px, 80px;
 
-  /** 甚至可以将其用作伪类选择器的参数 */
-  :not(&) {
-    opacity: 0.8;
-  }
-
-  /** 只允许在复合选择器的开头，不能放置复合选择器其他位置，此时编译失败
-   *  span& {
-   *    font-weight: bold;
-   *  }
-   */
-}
-
-.enlarge {
-  font-size: 14px;
-  transition: {
-    property: font-size;
-    duration: 4s;
-    delay: 2s;
-  }
-  /** 可以编写简写值和 更明确的嵌套版本 */
-  margin: auto {
-    bottom: 10px;
-    top: 2px;
-  }
-}
+@debug list.append($sizes, 100px); // 40px, 50px, 80px, 100px
+@debug $sizes; // 40px, 50px, 80px

@@ -1,9 +1,10 @@
+/*﻿    第五百五十四章  叶遮天*/
 const head = require('./config/head.js');
 const plugins = require('./config/plugins.js');
 const themeConfig = require('./config/themeConfig.js');
 const webpack = require('webpack');
 
-// 导出 vuepress 配置
+// 导出 vuepress 配置s
 module.exports = {
   // 页面标题, 同时也会显示在左上角(默认主题下)
   title: '我的前端',

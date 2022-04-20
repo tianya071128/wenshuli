@@ -17,7 +17,7 @@ module.exports = [
     text: '工程化',
     items: [
       { text: 'babel', link: '/babel/' },
-      { text: 'Scss', link: '/scss/' },
+      { text: 'Sass', link: '/sass/' },
       { text: 'ESLint', link: '/eslint/' },
       { text: 'vscode', link: '/vscode/' },
       { text: 'prettier', link: '/prettier/' },

@@ -223,10 +223,10 @@ module.exports = {
   ],
   '/06_工程化/07_scss/': [
     {
-      title: 'Scss(Sass)', // 分组标题
+      title: 'Sass(Scss)', // 分组标题
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['01_index', '02_基础语法'],
+      children: ['01_index', '02_CSS 功能扩展', '03_SassScript', '04_规则'],
     },
   ],
   '/07_参考/': ['01.index'],
