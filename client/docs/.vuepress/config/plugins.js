@@ -1,3 +1,4 @@
+/*    “哗啦啦”*/
 // 插件配置
 module.exports = [
   ['@vuepress/back-to-top', true],

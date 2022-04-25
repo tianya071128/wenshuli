@@ -1,6 +1,12 @@
-@use 'sass:list';
-
-$sizes: 40px, 50px, 80px;
-
-@debug list.append($sizes, 100px); // 40px, 50px, 80px, 100px
-@debug $sizes; // 40px, 50px, 80px
+@mixin sexy-border($color, $width: 100px) {
+  border: {
+    color: $color;
+    width: $width;
+  }
+}
+p {
+  @include sexy-border(blue);
+}
+h1 {
+  @include sexy-border($width: 200px, $color: blue);
+}

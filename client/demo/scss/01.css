@@ -1,1 +1,9 @@
+p {
+  border-color: blue;
+  border-width: 100px;
+}
 
+h1 {
+  border-color: blue;
+  border-width: 200px;
+}
