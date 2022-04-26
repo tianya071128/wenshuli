@@ -1,12 +1,12 @@
-@mixin sexy-border($color, $width: 100px) {
-  border: {
-    color: $color;
-    width: $width;
+@function pow($base, $exponent) {
+  $result: 1;
+  @for $_ from 1 through $exponent {
+    $result: $result * $base;
   }
+  @return $result;
 }
-p {
-  @include sexy-border(blue);
-}
-h1 {
-  @include sexy-border($width: 200px, $color: blue);
+
+.sidebar {
+  float: left;
+  margin-left: pow(4, 3) * 1px;
 }
