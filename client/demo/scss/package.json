@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "sass --no-source-map  01.scss 01.css"
+    "start": "sass --no-source-map src/01.scss src/01.css",
+    "build": "sass --no-source-map src:dist"
   },
   "keywords": [],
   "author": "",

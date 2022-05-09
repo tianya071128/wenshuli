@@ -228,14 +228,19 @@ module.exports = {
       title: 'Sass(Scss)', // 分组标题
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: ['01_index', '02_CSS 功能扩展', '03_SassScript'],
+    },
+    {
+      title: 'Sass 规则', // 分组标题
+      collapsable: false, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
-        '01_index',
-        '02_CSS 功能扩展',
-        '03_SassScript',
         '04_规则',
         '05_流控制规则',
         '06_混入',
         '07_函数',
+        '08_扩展',
+        '09_导入',
       ],
     },
   ],

@@ -506,7 +506,7 @@ $sizes: 40px, 50px, 80px;
 @debug $sizes; // 40px, 50px, 80px
 ```
 
-### Maps
+### 映射(Maps)
 
 Sass 中的 `Maps` 包含键和值，并且可以通过对应的键轻松查找值。语法为：`(<expression>: <expression>, <expression>: <expression>)`。**键必须是唯一的，但值可能重复。**`Maps` 必须用括号括起来
 
@@ -525,9 +525,167 @@ Sass 中的 `Maps` 包含键和值，并且可以通过对应的键轻松查找�
 * 添加值：[map.set($map, $key, $value)](https://sass-lang.com/documentation/modules/map#set)
 * 合并值：[map.merge($map1, $map2)](https://sass-lang.com/documentation/modules/map#merge)
 
-#### 不变形
+#### 不变性
 
 与 数组(LIst) 一样，Sass 中的 `Maps` 是*不可变*的，这意味着 `Maps` 值的内容永远不会改变。Sass 的 `Map` 函数都返回新 `Maps` 而不是修改原始 `Maps` 。
+
+### 函数(Function)
+
+函数也可以是值。但是不能直接将函数作为值，需要将函数的名称传递给 [`meta.get-function()`函数](https://sass-lang.com/documentation/modules/meta#get-function) 以将其作为值获取。然后需要通过 [`meta.call()`函数](https://sass-lang.com/documentation/modules/meta#call) 来调用它。
+
+:::: tabs :options="{ useUrlFragment: false }"
+::: tab Scss
+```scss
+@use "sass:list";
+@use "sass:meta";
+@use "sass:string";
+
+@function remove-where($fn) {
+  $fonts: Tahoma, Geneva, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  @return meta.call($fn, $fonts);
+}
+
+content {
+  @function contains-helvetica($string) {
+    @return $string;
+  }
+  font-family: remove-where(meta.get-function('contains-helvetica'));
+}
+```
+::: 
+::: tab css
+```css
+content {
+  font-family: Tahoma, Geneva, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+```
+:::
+::::
+
+## 运算符
+
+Sass 支持一些运算符处理不同类型的数据：
+
+* `==` 和 `!=` 用于检查两个值是否相同。
+* `+`、`-`、`*`、`/`、和`%`对数字有其通常的数学意义，对单位有特殊的行为，与科学数学中单位的使用相匹配。
+* `<`，`<=`，`>`，和 `>=` 检查两个数字是大于还是小于彼此。
+* `and`，`or`，和 `not` 具有通常的布尔行为。除了 `false` 和 `null` 之外，Sass认为每个值都是“真”的。
+* `+`、`-`、和 `/` 可用于连接字符串。
+
+### 操作优先级
+
+Sass 有一个非常标准的操作顺序，从最紧到最松，[详见官网](https://sass-lang.com/documentation/operators#order-of-operations)
+
+可以使用括号显式控制操作的顺序。
+
+### 相等运算符 ==、!=
+
+相等运算符比较两个值是否相同(相同类型且相同值)：
+
+* `<expression> == <expression>`：返回两个[表达式](https://sass-lang.com/documentation/syntax/structure#expressions)是否相等
+* `<expression> != <expression>`：返回两个[表达式](https://sass-lang.com/documentation/syntax/structure#expressions)是否不相等
+
+运算符同时会比较类型，意味着对于不同类型有不同含义：
+
+* 对于数字：具有相同的值和相同的单位，或者当它们的单位相互转换时它们的值相等，则它们是相等的
+* 对于字符串：具有相同内容的不带引号和带引号的字符串被认为是相等的
+* 对于颜色：具有相同的红色、绿色、蓝色和 alpha 值，则它们是相等的
+* 对于数组(Lists)：内容相等，则列表是相等的。逗号分隔的列表不等于空格分隔的列表，括号列表不等于无括号的列表
+* 对于 `Maps`：它们的键和值都相等，则 Maps 是相等的
+* 对于 `true`、`false`、`null`：只等于它们自己
+* 对于 `Function`：只等于同一个 `Function`。函数*通过引用*进行比较，因此即使两个函数具有相同的名称和定义，如果它们没有在同一个地方定义，它们也会被认为是不同的
+
+```scss
+@debug 1px == 1px; // true
+@debug 1px != 1em; // true
+@debug 96px == 1in; // true -- 单位可以转换
+
+@debug 'Helvetica' == Helvetica; // true -- 字符串比较不比较是否带引号
+
+@debug hsl(34, 35%, 92.1%) == #f2ece4; // true
+
+@debug (5px 7px 10px) == (5px 7px 10px); // true
+@debug (5px 7px 10px) != (5px, 7px, 10px); // true -- 分隔符不相同就不相同
+
+$theme: ('venus': #998099, 'nebula': #d2e1dd);
+@debug $theme == ('venus': #998099, 'nebula': #d2e1dd); // true
+@debug $theme != ('venus': #998099, 'iron': #dadbdf); // true
+
+@debug true == true; // true
+@debug true != false; // true
+@debug null != false; // true
+
+@debug get-function('rgba') == get-function('rgba'); // true
+@debug get-function('rgba') != get-function('hsla'); // true
+```
+
+### 关系运算符 <、<=、>、>=
+
+关系运算符用于比较**数字**的大小。会在兼容单位之间自动转换：
+
+* `<expression> < <expression>`：返回第一个[表达式](https://sass-lang.com/documentation/syntax/structure#expressions)的值是否小于第二个。
+* `<expression> <= <expression>`：返回第一个[表达式](https://sass-lang.com/documentation/syntax/structure#expressions)的值是否小于或等于第二个。
+* `<expression> > <expression>`：返回第一个[表达式](https://sass-lang.com/documentation/syntax/structure#expressions)的值是否大于第二个表达式的值。
+* `<expression> >= <expression>`：返回第一个[表达式](https://sass-lang.com/documentation/syntax/structure#expressions)的值是否大于或等于第二个。
+
+```scss
+@debug 100 > 50; // true
+@debug 10px < 17px; // true
+@debug 96px >= 1in; // true -- 兼容单位会自动转换
+@debug 1000ms <= 1s; // true
+
+@debug 100 > 50px; // true -- 无单位数可以与任何数进行比较。它们会自动转换为该数字的单位。
+
+@debug 100px > 10s; // 无法比较具有不兼容单位的数字。
+//     ^^^^^^^^^^^
+// Error: Incompatible units px and s.
+```
+
+### 字符串运算符
+
+Sass 支持一些字符串的操作运算符：
+
+* `<expression> + <expression>`返回一个包含两个表达式值的字符串。如果任一值是带[引号的字符串](https://sass-lang.com/documentation/values/strings#quoted)，则结果将被引用；否则，它将不被引用。
+* `<expression> - <expression>`返回一个不带引号的字符串，其中包含两个表达式的值，用 . 分隔`-`。这是一个遗留运算符，通常应该使用[插值。](https://sass-lang.com/documentation/interpolation)
+
+```scss
+@debug "Helvetica" + " Neue"; // "Helvetica Neue"
+@debug sans- + serif; // sans-serif
+@debug sans - serif; // sans-serif
+
+// 也可以跟其他类型一起使用
+@debug "Elapsed time: " + 10s; // "Elapsed time: 10s";
+```
+
+::: warning 注意
+
+应该使用插值(`#{}`)来操作字符串，而不是依赖这个运算符
+
+:::
+
+### 布尔运算符 and、or、not
+
+与 JS 不一样，Sass 使用单词而不是符号作为布尔运算符：
+
+* `not <expression>`：返回表达式值的反面
+* `<expression> and <expression>`：如果两个表达式的值都是`true`，则返回 `true`
+* `<expression> or <expression>`：如果任一表达式为 `true`，则返回 `true`
+
+```scss
+@debug not true; // false
+@debug true and false; // false
+@debug true or false; // true
+```
+
+
+
+
+
+
+
+
+
+
 
 
 

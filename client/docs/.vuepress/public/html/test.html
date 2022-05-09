@@ -6,38 +6,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
-      body {
-        overflow-y: auto;
-        padding-top: 400px;
-      }
-      .content {
-        width: 200px;
-        height: 400px;
-        overflow-y: auto;
-      }
-      .item2 {
-        height: 600px;
-      }
-      .item {
-        position: sticky;
-        top: 30px;
+      .test {
       }
     </style>
   </head>
   <body>
-    <div class="content">
-      <div class="item2"></div>
-      <div class="item">
-        这是粘性定位元素
-      </div>
-      <div class="item2"></div>
-    </div>
-    <div class="item">
-      123
-    </div>
-    <div class="item">
-      123
-    </div>
-    <div class="item2"></div>
+    <p class="color">测试一下</p>
+    <input type="text" id="input" />
   </body>
 </html>
+<script>
+  let initColor = 'red';
+  let style = document.createElement('style');
+  document.head.appendChild(style);
+  function addStylesheetRules(color) {
+    let styleSheets;
+    for (const s of document.styleSheets) {
+      if (s.ownerNode === style) {
+        styleSheets = s;
+        break;
+      }
+    }
+    for (let index = 0; index < styleSheets.cssRules.length; index++) {
+      const rule = styleSheets.cssRules[index];
+      console.log(rule);
+    }
+    styleSheets.insertRule(
+      '.color' + `{color: ${color}}`,
+      styleSheets.cssRules.length
+    );
+  }
+  addStylesheetRules(initColor);
+
+  document.getElementById('input').addEventListener('blur', (e) => {
+    addStylesheetRules(e.target.value);
+  });
+</script>
