@@ -1,0 +1,7 @@
+@use "module";
+
+.button {
+  @include module.;
+
+  // padding: 5px + module.$-radius;
+}

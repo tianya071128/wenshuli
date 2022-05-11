@@ -641,6 +641,32 @@ $theme: ('venus': #998099, 'nebula': #d2e1dd);
 // Error: Incompatible units px and s.
 ```
 
+### 数字运算符
+
+Sass 支持数字的运算符，会在兼容单位之间自动转换：
+
+* `<expression> + <expression>`：加
+* `<expression> - <expression>`：减
+* `<expression> * <expression>`：乘
+* `<expression> % <expression>`：求模
+
+```scss
+@debug 10s + 15s; // 25s
+@debug 1in - 10px; // 0.8958333333in
+@debug 5px * 3px; // 15px*px
+@debug 1in % 9px; // 0.0625in
+
+// 无单位数字可以与任何单位的数字一起使用。
+@debug 100px + 50; // 150px
+
+// 单位不兼容的数字不能与加法、减法或模数一起使用。
+@debug 100px + 10s;
+//     ^^^^^^^^^^^
+// Error: Incompatible units px and s.
+```
+
+* 除法：Sass 中的除法是通过[`math.div()`](https://sass-lang.com/documentation/modules/math#div)函数完成的。在CSS `/`中用作分隔符（如`font: 15px/32px` or `hsl(120 100% 50% / 0.8)`）。注意的是，Sass 确实支持使用`/`除法运算符，[详见官网规则](https://sass-lang.com/documentation/operators/numeric#slash-separated-values)
+
 ### 字符串运算符
 
 Sass 支持一些字符串的操作运算符：
