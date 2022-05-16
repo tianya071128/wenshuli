@@ -8,6 +8,7 @@ module.exports = [
       { text: 'html', link: '/html/' },
       { text: 'css', link: '/css/' },
       { text: 'js', link: '/js/' },
+      { text: '浏览器', link: '/browser/' },
     ],
   },
   {
@@ -18,18 +19,18 @@ module.exports = [
     text: '工程化',
     items: [
       { text: 'babel', link: '/babel/' },
-      { text: 'Sass', link: '/sass/' },
-      { text: 'ESLint', link: '/eslint/' },
+      { text: 'sass', link: '/sass/' },
+      { text: 'eslint', link: '/eslint/' },
       { text: 'vscode', link: '/vscode/' },
       { text: 'prettier', link: '/prettier/' },
       { text: 'npm', link: '/npm/' },
       { text: 'webpack', link: '/webpack/' },
     ],
   },
-  {
-    text: '项目',
-    items: [{ text: '学习记录', link: 'http://weshuli.com/study/#/home' }],
-  },
+  // {
+  //   text: '项目',
+  //   items: [{ text: '学习记录', link: 'http://weshuli.com/study/#/home' }],
+  // },
   {
     text: '参考',
     link: '/reference/',

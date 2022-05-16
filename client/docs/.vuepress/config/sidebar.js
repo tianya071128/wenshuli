@@ -125,6 +125,18 @@ module.exports = {
       ],
     },
   ],
+  '/01_前端/04_浏览器/': [
+    {
+      title: '浏览器', // 分组标题
+      collapsable: false, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: [
+        // 这个表示的是路径?
+        '01_Chrome基础架构',
+        '02_导航流程',
+      ],
+    },
+  ],
   '/05_网络协议/01_http/': [
     {
       title: 'HTTP', // 分组标题
