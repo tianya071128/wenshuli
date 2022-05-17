@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        font-family: Arial;
+      }
+      .box {
+        display: block;
+        margin: 15px;
+        padding: 10px;
+        border: 1px dashed rgb(13, 17, 240);
+        transition: transform 1s ease-out;
+        will-change: transform;
+      }
+      .box2 {
+        width: 200px;
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        border: 1px dashed rgb(219, 19, 19);
+        padding: 10px;
+      }
+      .box3 {
+        height: 200px;
+        overflow: auto;
+        background: gray;
+      }
+      .box4 {
+        height: 600px;
+      }
+      .box5 {
+        height: 200vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box2">
+      <p>元素为固定定位元素，但是需要满足页面可滚动的条件</p>
+    </div>
+    <div class="box3">
+      <div class="box4">
+        <p>元素可滚动，但是似乎需要一定条件(在这里是存在背景颜色)</p>
+        <p>并且滚动条一定会生成图层</p>
+      </div>
+    </div>
+    <div class="box">
+      <div>元素为单独图层：will-change: transform</div>
+    </div>
+    <!-- <div class="box5"></div> -->
+  </body>
+</html>
