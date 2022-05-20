@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>重排和重绘</title>
+    <style>
+      .box {
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px double red;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="chongpai">点击触发重排</button>
+    <button id="chonghui" style="margin-bottom: 10px">点击触发重绘</button>
+    <div class="box">操作盒子</div>
+    <div class="box">盒子</div>
+    <div class="box">盒子</div>
+  </body>
+</html>
+<script>
+  const d = document.querySelector('.box');
+  const d2 = document.getElementById('chongpai');
+  const d3 = document.getElementById('chonghui');
+  d2.addEventListener('click', function chongpaiFn() {
+    d.style.height = '300px';
+  });
+  d3.addEventListener('click', function chonghuiFn() {
+    d.style.borderColor = 'blue';
+  });
+</script>

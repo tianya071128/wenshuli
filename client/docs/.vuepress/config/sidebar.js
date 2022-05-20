@@ -7,7 +7,6 @@ module.exports = {
       collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
-        // 这个表示的是路径?
         '01_index',
         '02_全局属性',
         '03_head',
@@ -21,12 +20,7 @@ module.exports = {
       title: '表单', // 分组标题
       collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: [
-        // 这个表示的是路径?
-        '07_form',
-        '08_form_data',
-        '09_form_js',
-      ],
+      children: ['07_form', '08_form_data', '09_form_js'],
     },
   ],
   '/01_前端/02_css/': [
@@ -34,30 +28,19 @@ module.exports = {
       title: 'CSS概念', // 分组标题
       collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: [
-        // 这个表示的是路径?
-        '01_index',
-        '05_层叠、优先级和继承',
-        '06_盒模型',
-      ],
+      children: ['01_index', '05_层叠、优先级和继承', '06_盒模型'],
     },
     {
       title: 'CSS模块', // 分组标题
       collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: [
-        // 这个表示的是路径?
-        '02_选择器',
-        '03_伪元素',
-        '04_伪类',
-      ],
+      children: ['02_选择器', '03_伪元素', '04_伪类'],
     },
     {
       title: 'CSS布局', // 分组标题
       collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
-        // 这个表示的是路径?
         '11_布局概述',
         '12.正常布局流',
         '13_浮动和定位布局',
@@ -131,10 +114,10 @@ module.exports = {
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
-        // 这个表示的是路径?
         '01_Chrome基础架构',
         '02_导航流程',
         '03_渲染流程',
+        '04_渲染相关概念',
       ],
     },
   ],
@@ -145,7 +128,6 @@ module.exports = {
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
         '00_思考问题',
-        // 这个表示的是路径?
         '01_index',
         '02_method',
         '03_status',
