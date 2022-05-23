@@ -5,13 +5,13 @@ const fs = require('fs');
 var server = http.createServer(); // 创建一个web容器 静态服务器
 // 3、监听请求事件
 server.on('request', function(req, res) {
-  if (req.url.includes('test.js')) {
-    fs.readFile('./test.js', (err, data) => {
-      // setTimeout(() => {
-      res.setHeader('Content-Type', 'application/javascript');
-      res.write(data);
-      res.end();
-      // }, 3000);
+  if (req.url.includes('theme.css')) {
+    fs.readFile('./theme.css', (err, data) => {
+      setTimeout(() => {
+        res.setHeader('Content-Type', 'text/css');
+        res.write(data);
+        res.end();
+      }, 3000);
     });
   } else {
     fs.readFile('./index.html', (err, data) => {
