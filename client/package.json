@@ -28,6 +28,7 @@
   "dependencies": {
     "async-validator": "^1.11.5",
     "axios": "^0.24.0",
+    "caniuse-lite": "^1.0.30001342",
     "element-ui": "^2.15.6",
     "vue-tabs-component": "^1.5.0",
     "vuepress-plugin-tabs": "^0.3.0"

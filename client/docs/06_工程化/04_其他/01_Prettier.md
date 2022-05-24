@@ -1,9 +1,9 @@
 ---
 title: Prettier
 date: 2021-10-21 15:00:00
-permalink: /prettier/
+permalink: /otherEngineering/
 categories: -- 工程化
-  -- Prettier
+  -- 其他
 tags:
   - null
 ---
@@ -63,7 +63,7 @@ Linter 主要有两类规则：
 
 优先级如下：
 
-- `package.json` 文件中的 `"prettier"`键`。
+- `package.json` 文件中的 `"prettier"`键。
 - `.prettierrc`用 JSON 或 YAML 编写的文件。
 - `.prettierrc.json`，`.prettierrc.yml`，`.prettierrc.yaml`，或`.prettierrc.json5`文件。
 - 使用`.prettierrc.js`、`.prettierrc.cjs`、`prettier.config.js`或`prettier.config.cjs`导出对象的文件`module.exports`。

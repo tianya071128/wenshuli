@@ -110,7 +110,7 @@ module.exports = {
   ],
   '/01_前端/04_浏览器/': [
     {
-      title: '浏览器', // 分组标题
+      title: '浏览器渲染', // 分组标题
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
@@ -119,6 +119,12 @@ module.exports = {
         '03_渲染流程',
         '04_渲染相关概念',
       ],
+    },
+    {
+      title: '浏览器安全', // 分组标题
+      collapsable: false, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: ['05_跨站脚本攻击(XSS)'],
     },
   ],
   '/05_网络协议/01_http/': [
@@ -186,12 +192,12 @@ module.exports = {
       children: ['09_cache'],
     },
   ],
-  '/06_工程化/04_prettier/': [
+  '/06_工程化/04_其他/': [
     {
-      title: 'Prettier', // 分组标题
+      title: '工程化 - 其他', // 分组标题
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['01_index'],
+      children: ['01_Prettier', '02_Browserslist'],
     },
   ],
   '/06_工程化/05_babel/': [

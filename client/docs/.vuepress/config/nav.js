@@ -22,17 +22,9 @@ module.exports = [
       { text: 'sass', link: '/sass/' },
       { text: 'eslint', link: '/eslint/' },
       { text: 'vscode', link: '/vscode/' },
-      { text: 'prettier', link: '/prettier/' },
       { text: 'npm', link: '/npm/' },
       { text: 'webpack', link: '/webpack/' },
+      { text: '其他', link: '/otherEngineering/' },
     ],
-  },
-  // {
-  //   text: '项目',
-  //   items: [{ text: '学习记录', link: 'http://weshuli.com/study/#/home' }],
-  // },
-  {
-    text: '参考',
-    link: '/reference/',
   },
 ];
