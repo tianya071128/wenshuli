@@ -28,7 +28,13 @@ module.exports = {
       title: 'CSS概念', // 分组标题
       collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['01_index', '05_层叠、优先级和继承', '06_盒模型'],
+      children: [
+        '01_index',
+        '05_层叠、优先级和继承',
+        '06_盒模型',
+        '07_层叠上下文',
+        '08_格式化上下文',
+      ],
     },
     {
       title: 'CSS模块', // 分组标题
