@@ -40,7 +40,7 @@ module.exports = {
       title: 'CSS模块', // 分组标题
       collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['02_选择器', '03_伪元素', '04_伪类'],
+      children: ['02_选择器', '03_伪元素', '04_伪类', '09_值和单位'],
     },
     {
       title: 'CSS布局', // 分组标题
