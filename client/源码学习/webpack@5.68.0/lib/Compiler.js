@@ -311,7 +311,7 @@ class Compiler {
     this.idle = false; // Compiler 是否闲置标识
 
     /** @type {boolean} */
-    this.watchMode = false;
+    this.watchMode = false; // Watch 模式
 
     this._backCompat = this.options.experiments.backCompat !== false; // optinos.experiments.backCompat - 为许多 webpack 4 api 启用后向兼容层，并发出弃用警告。
 
@@ -448,19 +448,20 @@ class Compiler {
   }
 
   /**
-   * @param {WatchOptions} watchOptions the watcher's options
-   * @param {Callback<Stats>} handler signals when the call finishes
-   * @returns {Watching} a compiler watcher
+   * @param {WatchOptions} watchOptions the watcher's options 观察者的选项
+   * @param {Callback<Stats>} handler signals when the call finishes 当调用结束时发出信号
+   * @returns {Watching} a compiler watcher 一个编译器中
    */
   watch(watchOptions, handler) {
+    // 是否运行的标记
     if (this.running) {
-      return handler(new ConcurrentCompilationError());
+      return handler(new ConcurrentCompilationError()); // 重复编译报错
     }
 
-    this.running = true;
-    this.watchMode = true;
+    this.running = true; // 正在运行编译
+    this.watchMode = true; // watch 模式标识
     this.watching = new Watching(this, watchOptions, handler);
-    return this.watching;
+    return this.watching; // 返回 watching 类
   }
 
   /**

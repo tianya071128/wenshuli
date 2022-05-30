@@ -502,6 +502,7 @@ module.exports = class MultiCompiler {
 	 * @returns {MultiWatching} a compiler watcher
 	 */
 	watch(watchOptions, handler) {
+		// 
 		if (this.running) {
 			return handler(new ConcurrentCompilationError());
 		}
