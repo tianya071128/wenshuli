@@ -40,7 +40,7 @@ class NodeWatchFileSystem {
 	 * 					假如文件和目录存在，如果在没有进一步信息的情况下找不到它们，则会发出删除事件
 	 * 					假如文件和目录不存在，不会未发出移除事件
 	 */
-	watch(
+	watch( 
 		files,
 		directories,
 		missing,
@@ -120,12 +120,14 @@ class NodeWatchFileSystem {
 			oldWatcher.close();
 		}
 		return {
+			// 关闭监听
 			close: () => {
 				if (this.watcher) {
 					this.watcher.close();
 					this.watcher = null;
 				}
 			},
+			// 暂停监听
 			pause: () => {
 				if (this.watcher) {
 					this.watcher.pause();

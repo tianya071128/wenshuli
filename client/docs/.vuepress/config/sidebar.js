@@ -189,14 +189,15 @@ module.exports = {
         '07_plugin',
         '08_sourceMap',
         '09_cache',
+        '10_watch',
       ],
     },
-    {
-      title: 'webpack 概念', // 分组标题
-      collapsable: true, // 是否可折叠，可选的，默认true
-      sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['09_cache'],
-    },
+    // {
+    //   title: 'webpack 概念', // 分组标题
+    //   collapsable: true, // 是否可折叠，可选的，默认true
+    //   sidebarDepth: 2, // 深度，可选的, 默认值是 1
+    //   children: ['09_cache'],
+    // },
   ],
   '/06_工程化/04_其他/': [
     {
