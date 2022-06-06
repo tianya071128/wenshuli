@@ -1,5 +1,5 @@
 ---
-title: 模块
+title: module
 date: 2021-10-21 15:00:00
 permalink: /webpack/module
 categories: -- 工程化

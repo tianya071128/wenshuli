@@ -186,10 +186,10 @@ module.exports = {
         '04_loader',
         '05_module',
         '06_output',
-        '07_plugin',
+        '10_watch',
+        // '07_plugin',
         '08_sourceMap',
         '09_cache',
-        '10_watch',
       ],
     },
     // {
