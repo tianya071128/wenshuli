@@ -7,7 +7,10 @@ module.exports = {
   devtool: 'inline-source-map',
   context: __dirname,
   devServer: {
-    static: './dist',
+    // webSocketServer: false,
+    // client: {
+    //   progress: true,
+    // },
   },
   plugins: [
     new HtmlWebpackPlugin({
