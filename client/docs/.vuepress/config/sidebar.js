@@ -189,6 +189,7 @@ module.exports = {
         '10_watch',
         // '07_plugin',
         '08_sourceMap',
+        '11_devServer',
         '09_cache',
       ],
     },

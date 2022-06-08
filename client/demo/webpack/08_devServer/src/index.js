@@ -1,1 +1,1 @@
-console.log('开发环境666');
+document.body.innerText = '测试一下';
