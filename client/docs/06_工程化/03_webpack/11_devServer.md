@@ -200,7 +200,7 @@ this.server = require(/** @type {string} */ (type)).createServer(
   });
   ```
 
-## 代理 - devServer.proxy
+## devServer.proxy - 代理
 
 * `object` `[object, function]`
 
@@ -494,7 +494,244 @@ if (this.options.compress) {
     )
     ```
 
-    
+## devServer.open - 打开浏览器
+
+* `boolean = false` `string` `object` `[string, object]`
+
+在服务器启动后打开浏览器，使用默认浏览器进行打开：
+
+```js
+module.exports = {
+  devServer: {
+    open: true, // 使用默认浏览器打开
+    open: ['/my-page'], // 打开指定 URL
+    open: ['/my-page', '/another-page'], // 打开多个 URL - 会开启多个标签页
+    // 对象形式 - 接收所有 open(https://www.npmjs.com/package/open) 配置项
+    open: {
+      target: ['first.html', 'http://localhost:8080/second.html'],
+      app: {
+        name: 'google-chrome',
+        arguments: ['--incognito', '--new-window'],
+      },
+    }
+  },
+};
+```
+
+### 原理
+
+内部使用 [open](https://www.npmjs.com/package/open) 库实现。
+
+1. 在初始时，会将 `devServer.open` 规范化为数组形式，数据签名如下：
+
+   ```tsx
+   interface NormalizedOpen {
+     target: string, // 打开目标 URL
+     options: import("open").Options, // open 库的配置项
+   }
+   ```
+
+2. 在服务开启后，会执行如下逻辑：
+
+   ```js
+   // 如果 devServer.open 存在值，说明需要在服务开启后打开浏览器
+   if ((this.options.open).length > 0) {
+     // 打开的 URL：http://localhost:8082/
+     const openTarget = prettyPrintURL(this.options.host || "localhost");
+     
+     this.openBrowser(openTarget);
+   }
+   
+   // 遍历 devServer.open，拼接一个完成 URL，借助 open 库实现功能
+   function openBrowser(defaultOpenTarget) {
+     const open = require("open");
+     Promise.all(
+       (this.options.open).map((item) => {
+         let openTarget; // 打开目标，拼接了路径 - http://localhost:8082/my-page
+         if (item.target === "<url>") {
+           openTarget = defaultOpenTarget;
+         } else {
+           openTarget = Server.isAbsoluteURL(item.target)
+             ? item.target
+             : new URL(item.target, defaultOpenTarget).toString();
+         }
+         // 直接启用 open 库打开即可
+         return open(openTarget, item.options).catch(() => {
+           // 错误处理，warning 一下
+       	})
+     );
+   }
+   ```
+
+## devServer.hot - 热更新
+
+* `'only'` `boolean = true`
+
+启用 webpack 的 [热模块替换](https://webpack.docschina.org/concepts/hot-module-replacement/) 特性：
+
+* `hot: 'only'`：启用热模块替换功能，在构建失败时不刷新页面作为回退
+* `boolean = true`：默认为 true，默认会开启热更新功能
+
+```js
+module.exports = {
+  devServer: {
+    hot: true,
+    hot: 'only',
+  },
+};
+
+```
+
+::: tip 注意
+
+从 webpack-dev-server v4 开始，HMR 是默认启用的。它会自动应用[`webpack.HotModuleReplacementPlugin`](https://webpack.docschina.org/plugins/hot-module-replacement-plugin/)，这是启用 HMR 所必需的。
+
+:::
+
+### 原理
+
+1. 对于服务端，向 `webpack.Compiler` 注入一个 `webpack.HotModuleReplacementPlugin` 插件
+
+   ```js
+   // 只有在客户端和服务器需要进行 Socket 通信的时候才会进行 HMR
+   if (this.options.webSocketServer) {
+     // 多编译器情况下
+     const compilers = (this.compiler).compilers || [this.compiler];
+     compilers.forEach((compiler) => {
+       // 需要开启 HMR 时才会
+       if (this.options.hot) {
+         // 检测用户是否注册了 webpack.HotModuleReplacementPlugin 插件
+         const HMRPluginExists = compiler.options.plugins.find(
+           (p) => p.constructor === webpack.HotModuleReplacementPlugin
+         );
+         if (HMRPluginExists) {
+           // ...
+         } else {
+           // 添加 webpack.HotModuleReplacementPlugin 插件实现 HMR
+           const plugin = new webpack.HotModuleReplacementPlugin();
+           plugin.apply(compiler);
+         }
+       }
+     })
+   }
+   ```
+
+2. 对于客户端：添加 `hot` 相应入口，在服务端通知变更时进行操作：
+
+   ```js
+   if (this.options.webSocketServer) {
+       // 多编译器情况下
+       const compilers = (this.compiler).compilers || [this.compiler];
+       compilers.forEach((compiler) => {
+         this.addAdditionalEntries(compiler); // 为每个 Compiler 添加一个客户端入口
+       })
+   }
+   
+   function addAdditionalEntries(compiler) {
+     const additionalEntries = []; // 需要添加的 entry 列表
+     
+     // 对于客户端，需要添加对应 hot 入口
+     if (this.options.hot === "only") {
+       additionalEntries.push(require.resolve("webpack/hot/only-dev-server"));
+     } else if (this.options.hot) {
+       additionalEntries.push(require.resolve("webpack/hot/dev-server"));
+     }
+     
+     for (const additionalEntry of additionalEntries) {
+       // 借助 EntryPlugin 插件添加入口，这样上面的添加的 entry 就会注入到 chunk 中
+       new webpack.EntryPlugin(compiler.context, additionalEntry, {
+         name: undefined, // name 为 undefined 应该就可以让这几个 entry 在主入口的 chunk 中
+       }).apply(compiler);
+     }
+   }
+   ```
+
+3. 具体的 `HMR` 功能原理参考，待续
+
+## 整体流程
+
+1. 在 `webpack-cli` 中会判断是 `server` 模式，就会调用生成一个 `DevServer` 类，接着调用 `DevServer.start()` 将控制权交给 `webpak-dev-server`
+
+   ```js
+   if (isDevServer4) {
+     	// webpack-dev-server v4 版本，生成一个 DevServer 类，在 DevServer 构造器中主要初始化一下属性
+       server = new DevServer(devServerOptions, compiler); 
+   } else {
+       // webpack-dev-server v3 版本
+   }
+   if (typeof server.start === "function") {
+     	// 调用 start() 方法开启服务
+       await server.start();
+   }
+   ```
+
+2. `Server.start()`：启动服务的相关逻辑都在这个方法中
+
+   ```js
+   async start() {
+     // 1. 规范化配置项
+     await this.normalizeOptions();
+     
+     // 2. 提取出 host 和 port
+     if (this.options.ipc) { /** 略过 */ } else {
+       this.options.host = await Server.getHostname(this.options.host);
+     	this.options.port = await Server.getFreePort(this.options.host);
+     }
+     
+     // 3. 初始化本地服务器相关，见下文 - 简单理解就是生成 express 实例，设置各种中间件
+     await this.initialize();
+     
+     // 4. 启动监听连接的服务器 - this.server.listen()
+     const listenOptions = this.options.ipc
+       ? { path: this.options.ipc }
+       : { host: this.options.host, port: this.options.port };
+     await new Promise((resolve) => {
+         (this.server).listen(listenOptions, () => {
+           resolve();
+         });
+     })
+     
+     // 5. 创建本地 ws 服务器，并在与客户端连接时发送一些数据给客户端 - 也可能是其他类型服务器
+     if (this.options.webSocketServer) {
+       this.createWebSocketServer();
+     }
+     
+     // 6. devServer.bonjour：这个配置用于在启动时通过 ZeroConf 网络广播你的开发服务器。
+     if (this.options.bonjour) {
+       this.runBonjour();
+     }
+     
+     // 7. 进行终端信息输出
+     this.logStatus();
+     
+     // devServer.onListening：提供在 webpack-dev-server 开始监听端口连接时执行自定义函数的能力。
+     if (typeof this.options.onListening === "function") {
+       this.options.onListening(this);
+     }
+   }
+   ```
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

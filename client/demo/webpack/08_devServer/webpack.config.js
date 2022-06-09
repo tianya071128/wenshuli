@@ -7,7 +7,8 @@ module.exports = {
   devtool: 'inline-source-map',
   context: __dirname,
   devServer: {
-    historyApiFallback: true,
+    // historyApiFallback: true,
+    // open: ['/my-page', '/another-page'],
     // host: 'localhost',
     // port: 8080,
     // webSocketServer: false,
