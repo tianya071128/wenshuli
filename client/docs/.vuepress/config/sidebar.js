@@ -136,10 +136,9 @@ module.exports = {
   '/05_网络协议/01_http/': [
     {
       title: 'HTTP', // 分组标题
-      collapsable: true, // 是否可折叠，可选的，默认true
+      collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
-        '00_思考问题',
         '01_index',
         '02_method',
         '03_status',
@@ -149,13 +148,16 @@ module.exports = {
         '06_cookie',
         '07_cache',
         '09_cors',
+        '10_抓包分析',
       ],
     },
+  ],
+  '/05_网络协议/02_https/': [
     {
       title: 'HTTPS', // 分组标题
-      collapsable: true, // 是否可折叠，可选的，默认true
+      collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['10_https', '11_https安全性', '12_TLS'],
+      children: ['01_https', '02_https安全性', '03_TLS'],
     },
   ],
   '/06_工程化/01_vscode/': [

@@ -1,13 +1,14 @@
 ---
 title: TLS 的连接过程
 date: 2021-10-21 15:00:00
-permalink: /http/TLS
-categories: 
+permalink: /https/TLS
+categories:
   - 其他
   - HTTPS
-tags: 
+tags:
   - null
 ---
+
 # TLS 的连接过程
 
 HTTPS 也就是 HTTP + SSL/TLS + 数字证书，HTTPS 的连接过程也同样要先经过 TCP 层的三次握手建立 TCP 连接，**然后在通过 TLS 建立安全通道，之后就可以通过这个安全通道进行 HTTP 通信了。**
@@ -18,10 +19,10 @@ HTTPS 也就是 HTTP + SSL/TLS + 数字证书，HTTPS 的连接过程也同样�
 
 TLS 包含几个子协议，你也可以理解为它是由几个不同职责的模块组成，比较常用的有记录协议、警报协议、握手协议、变更密码规范协议等。
 
-* 记录协议（Record Protocol）规定了 TLS 收发数据的基本单位：记录（record）。它有点像是 TCP 里的 segment，所有的其他子协议都需要通过记录协议发出。**但多个记录数据可以在一个 TCP 包里一次性发出，也并不需要像 TCP 那样返回 ACK。**
-* 警报协议（Alert Protocol）的职责是向对方发出警报信息，有点像是 HTTP 协议里的状态码。比如，protocol_version 就是不支持旧版本，bad_certificate 就是证书有问题，收到警报后另一方可以选择继续，也可以立即终止连接。
-* 握手协议（Handshake Protocol）是 TLS 里最复杂的子协议，要比 TCP 的 SYN/ACK 复杂的多，浏览器和服务器会在握手过程中协商 TLS 版本号、随机数、密码套件等信息，然后交换证书和密钥参数，最终双方协商得到会话密钥，用于后续的混合加密系统。
-* 变更密码规范协议（Change Cipher Spec Protocol），它非常简单，就是一个“通知”，告诉对方，后续的数据都将使用加密保护。那么反过来，在它之前，数据都是明文的。
+- 记录协议（Record Protocol）规定了 TLS 收发数据的基本单位：记录（record）。它有点像是 TCP 里的 segment，所有的其他子协议都需要通过记录协议发出。**但多个记录数据可以在一个 TCP 包里一次性发出，也并不需要像 TCP 那样返回 ACK。**
+- 警报协议（Alert Protocol）的职责是向对方发出警报信息，有点像是 HTTP 协议里的状态码。比如，protocol_version 就是不支持旧版本，bad_certificate 就是证书有问题，收到警报后另一方可以选择继续，也可以立即终止连接。
+- 握手协议（Handshake Protocol）是 TLS 里最复杂的子协议，要比 TCP 的 SYN/ACK 复杂的多，浏览器和服务器会在握手过程中协商 TLS 版本号、随机数、密码套件等信息，然后交换证书和密钥参数，最终双方协商得到会话密钥，用于后续的混合加密系统。
+- 变更密码规范协议（Change Cipher Spec Protocol），它非常简单，就是一个“通知”，告诉对方，后续的数据都将使用加密保护。那么反过来，在它之前，数据都是明文的。
 
 下面的这张图简要地描述了 TLS 的握手过程，其中每一个“框”都是一个记录，多个记录组合成一个 TCP 包发送。所以，最多经过两次消息往返（4 个消息）就可以完成握手，然后就可以在安全的通信环境里发送 HTTP 报文，实现 HTTPS 协议。
 
@@ -40,7 +41,7 @@ TLS 包含几个子协议，你也可以理解为它是由几个不同职责的�
 2. 浏览器会首先发一个“Client Hello”消息，也就是跟服务器“打招呼”。里面有客户端的版本号、支持的密码套件，还有一个随机数（Client Random），用于后续生成会话密钥。
 
    ```tex
-   
+
    Handshake Protocol: Client Hello
        Version: TLS 1.2 (0x0303) # 支持的 TLS 版本
        Random: 1cbf803321fd2623408dfe…
@@ -125,10 +126,9 @@ TLS/1.2 在 2008 年发布，随着时代的发展，在 2018 年推出了 TLS/1
 
 暂时略
 
-具体见 [极客 - TLS1.3特性解析](https://time.geekbang.org/column/article/110718)
+具体见 [极客 - TLS1.3 特性解析](https://time.geekbang.org/column/article/110718)
 
 ## 参考
 
-* [极客-TLS1.2连接过程解析](https://time.geekbang.org/column/article/110354)
-* [极客 - TLS1.3特性解析](https://time.geekbang.org/column/article/110718)
-
+- [极客-TLS1.2 连接过程解析](https://time.geekbang.org/column/article/110354)
+- [极客 - TLS1.3 特性解析](https://time.geekbang.org/column/article/110718)

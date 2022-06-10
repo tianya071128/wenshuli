@@ -13,7 +13,10 @@ module.exports = [
   },
   {
     text: '网络协议',
-    items: [{ text: 'http', link: '/http/' }],
+    items: [
+      { text: 'http', link: '/http/' },
+      { text: 'https', link: '/https/' },
+    ],
   },
   {
     text: '工程化',

@@ -563,7 +563,7 @@ module.exports = {
    }
    ```
 
-## devServer.hot - 热更新
+## devServer.hot - 热替换
 
 * `'only'` `boolean = true`
 
@@ -650,6 +650,19 @@ module.exports = {
 
 ## 整体流程
 
+整理的比较糟糕，还是直接看[源码解析文件](https://github.com/tianya071128/wenshuli/blob/master/client/%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0/webpack%405.68.0/webpack%20%E4%BE%9D%E8%B5%96%E5%8C%85/webpack-dev-server/lib/Server.js)吧
+
+::: warning 简单整理一下流程
+
+* 在 `webpack-cli` 中生成 `webpack-dev-server` 类并将控制权交由 `webpack-dev-server`
+
+* **开启本地服务器(http、https、http2)**：`Server` 内部会通过 `express` 开启一个本地服务器，并通过 [webpack-dev-middleware](https://github.com/webpack/webpack-dev-middleware) 来代理构建的文件。以及会生成各种中间件实现其他功能
+  * `webpack-dev-middleware`：会调用 `webapck.watch()` 方法来实现 `webpack` 的构建(类似于 `watch` 模式)，并生一个 `express` 中间件代理构建资源。
+  
+* **开启本地 ws 服务器**：`Server` 内部还会生成一个 `ws` 服务器，同时会向客户端注入入口(向 `Webpack.Compiler` 注入一个 entry)，在客户端连接这个本地 `ws` 服务器。**客户端和服务器就可以实现双向通信**，如果监听到文件变化资源重新构建时可以通知客户端做出相应的处理
+
+:::
+
 1. 在 `webpack-cli` 中会判断是 `server` 模式，就会调用生成一个 `DevServer` 类，接着调用 `DevServer.start()` 将控制权交给 `webpak-dev-server`
 
    ```js
@@ -711,7 +724,7 @@ module.exports = {
    }
    ```
 
-   
+
 
 
 

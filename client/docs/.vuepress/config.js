@@ -17,6 +17,7 @@ module.exports = {
       '/vuepress_test': {
         target: 'http://localhost:5000',
         changeOrigin: true,
+        logger: console,
       },
     },
   },
