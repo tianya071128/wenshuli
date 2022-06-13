@@ -15,6 +15,13 @@ module.exports = {
     // client: {
     //   progress: true,
     // },
+    proxy: {
+      '/vuepress_test': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        logger: console,
+      },
+    },
   },
   plugins: [
     new HtmlWebpackPlugin({
