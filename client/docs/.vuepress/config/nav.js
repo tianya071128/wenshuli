@@ -16,6 +16,7 @@ module.exports = [
     items: [
       { text: 'http', link: '/http/' },
       { text: 'https', link: '/https/' },
+      { text: 'http2', link: '/h2/' },
     ],
   },
   {
