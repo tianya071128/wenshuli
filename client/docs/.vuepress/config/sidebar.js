@@ -133,6 +133,14 @@ module.exports = {
       children: ['05_跨站脚本攻击(XSS)'],
     },
   ],
+  '/02_库和框架/01_ts/': [
+    {
+      title: 'ts', // 分组标题
+      collapsable: false, // 是否可折叠，可选的，默认true
+      sidebarDepth: 2, // 深度，可选的, 默认值是 1
+      children: ['01_基础类型'],
+    },
+  ],
   '/05_网络协议/01_http/': [
     {
       title: 'HTTP', // 分组标题

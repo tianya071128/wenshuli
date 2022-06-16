@@ -1,4 +1,3 @@
-/*第六百五十九章 炼狱圣魂*/
 // nav
 module.exports = [
   // 说明：以下所有link的值只是在相应md文件定义的永久链接（不是什么特殊生成的编码）。另外，注意结尾是有斜杠的
@@ -12,12 +11,8 @@ module.exports = [
     ],
   },
   {
-    text: '网络协议',
-    items: [
-      { text: 'http', link: '/http/' },
-      { text: 'https', link: '/https/' },
-      { text: 'http2', link: '/h2/' },
-    ],
+    text: '库和框架',
+    items: [{ text: 'ts', link: '/ts/' }],
   },
   {
     text: '工程化',
@@ -29,6 +24,14 @@ module.exports = [
       { text: 'npm', link: '/npm/' },
       { text: 'webpack', link: '/webpack/' },
       { text: '其他', link: '/otherEngineering/' },
+    ],
+  },
+  {
+    text: '网络协议',
+    items: [
+      { text: 'http', link: '/http/' },
+      { text: 'https', link: '/https/' },
+      { text: 'http2', link: '/h2/' },
     ],
   },
 ];
