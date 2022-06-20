@@ -11,10 +11,6 @@ module.exports = [
     ],
   },
   {
-    text: '库和框架',
-    items: [{ text: 'ts', link: '/ts/' }],
-  },
-  {
     text: '工程化',
     items: [
       { text: 'babel', link: '/babel/' },
