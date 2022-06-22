@@ -8,6 +8,7 @@
     "build:cache": "webpack --config ./05_cache/webpack.config.js",
     "build:mode": "webpack --config ./06_mode/webpack.config.js",
     "build:watch": "webpack --config ./07_watch/webpack.config.js",
+    "build:hot": "webpack serve --config ./09_hot/webpack.config.js",
     "dev": "webpack serve --config ./08_devServer/webpack.config.js"
   },
   "keywords": [],

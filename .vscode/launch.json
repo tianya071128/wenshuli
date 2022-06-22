@@ -12,7 +12,7 @@
       // 请求配置类型。 launch(启动): 启动一个进程 | attach(附加): 见下面的配置
       "request": "launch",
       // 传递给运行时可执行文件的可选参数。 -- 相当于执行 npm run-script build
-      "runtimeArgs": ["run-script", "dev"],
+      "runtimeArgs": ["run-script", "build:hot"],
       // 运行时的程序, 默认为 node. 此处可为 npm
       "runtimeExecutable": "npm",
       // 自动跳过这些 glob 模式覆盖的文件。
