@@ -74,16 +74,17 @@ class HotModuleReplacementPlugin {
 	}
 
 	constructor(options) {
-		this.options = options || {};
+		this.options = options || {}; // 大多数情况下不需要任何配置。
 	}
 
 	/**
-	 * Apply the plugin
-	 * @param {Compiler} compiler the compiler instance
+	 * Apply the plugin 应用 hot 插件
+	 * @param {Compiler} compiler the compiler instance Compiler 实例
 	 * @returns {void}
 	 */
 	apply(compiler) {
-		const { _backCompat: backCompat } = compiler;
+		const { _backCompat: backCompat } = compiler; // optinos.experiments.backCompat - 为许多 webpack 4 api 启用后向兼容层，并发出弃用警告。
+		// compiler.options.output.strictModuleErrorHandling：按照 ES Module 规范处理 module 加载时的错误，会有性能损失。
 		if (compiler.options.output.strictModuleErrorHandling === undefined)
 			compiler.options.output.strictModuleErrorHandling = true;
 		const runtimeRequirements = [RuntimeGlobals.module];
@@ -240,11 +241,14 @@ class HotModuleReplacementPlugin {
 				.tap("HotModuleReplacementPlugin", createHMRExpressionHandler(parser));
 		};
 
+		/**
+		 * compilation 创建之后执行。
+		 */
 		compiler.hooks.compilation.tap(
 			"HotModuleReplacementPlugin",
 			(compilation, { normalModuleFactory }) => {
-				// This applies the HMR plugin only to the targeted compiler
-				// It should not affect child compilations
+				// This applies the HMR plugin only to the targeted compiler 这只对目标编译器应用HMR插件
+				// It should not affect child compilations 它不应该影响子编译
 				if (compilation.compiler !== compiler) return;
 
 				//#region module.hot.* API

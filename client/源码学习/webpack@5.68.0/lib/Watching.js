@@ -271,12 +271,13 @@ class Watching {
 
 		/**
 		 * 这里似乎是，如果当前编译无效的话，那么就重新编译一下
-		 * 可能是因为在重新编译时间过长，在这次编译中又有文件变更，那么就直接中断编译而重新编译一下
+		 * 在 webpack-dev-server 中借助 webpack-dev-middleware 中会调用 invalidate 方法，使当次编译无效并重新编译一下
+		 * 实现重新编译的原理就在这里，重新启动 _go() 执行编译
 		 */
 		if (
 			this.invalid && // 当前编译无效
 			!this.suspended && // 监听状态中
-			!this.blocked && // 。。。
+			!this.blocked && // 非阻塞中
 			!(this._isBlocked() && (this.blocked = true))
 		) {
 			if (compilation) {

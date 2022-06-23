@@ -195,6 +195,7 @@ var onSocketMessage = {
   ok: function ok() {
     sendMessage("Ok");
 
+    // // 重新编译后将错误或警告遮罩消息
     if (options.overlay) {
       hide();
     }

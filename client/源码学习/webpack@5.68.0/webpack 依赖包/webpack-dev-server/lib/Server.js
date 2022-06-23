@@ -1,4 +1,39 @@
 "use strict";
+/**
+ * 客户端和服务端会通过 ws 服务器传递如下消息, 客户端接收到消息后，会采用不同的策略，具体策略可见：../client/index.js 文件
+ * 这里重点看一下编译完成后，发送的 ok 消息：{ "type": "ok" }
+ *  客户端接收到这条消息后，会重新加载应用或者 hot 模块热替换：
+ *      1. 如果不支持 hot 的话，策略如下：  
+ *          只要支持 liveReload 功能(默认支持)，那么就会调用 location.reload() 方法刷新页面
+ *      2. 如果支持 hot 的话，策略如下：
+ *          通过 hotEmitter 发送 webpackHotUpdate 事件，并传递编译 hash 参数，此时就会交给 webapck/hot/dev-server.js 进行处理进行 hot，
+ *          接下来的逻辑查看 webapck/HotModuleReplacementPlugin.js 插件文件
+ */
+/**
+ * 当初次构建时，会发送如下消息：
+ *  1. 在创建本地 ws 服务器的 createWebSocketServer 方法中，会初始发送一些消息，表明需要的功能
+ *      如果设置了功能 options.hot：发送 {"type": "hot"}
+ *      如果设置了功能 options.liveReload：发送 {"type": "liveReload"}
+ *      如果设置了功能 options.client.progress：发送 {"type": "progress", "data": xxx}
+ *      如果设置了功能 options.client.reconnect：发送 {"type": "reconnect", "data": 重连次数}
+ *      如果设置了功能 options.client.overlay：发送 {"type": "overlay", "data": overlay设置值}
+ *  2. 在初次编译完成后，会通过 sendStats 方法传递消息：
+ *      当次编译的 hash 值：{"type":"hash","data":"8954544ba0c760cc1f4a"}
+ *      如果编译出现错误或警告，那么就将错误和警告信息发送给客户端
+ *         1. 错误：{"type": "errors", "data": [{ loc: 错误位置(行:列), message: 错误信息, moduleName: 错误文件 }]}
+ *         2. 警告：{ "type": "warnings", "data": 与错误类似 }
+ *      如果没有错误或警告，发送一条 ok 消息
+ *         { "type": "ok" }
+ */
+
+/**
+ * 当文件发生变动，客户端和本地服务端的消息往返
+ *  首先会在 compiler.hooks.invalid(文件开始哈发送变化) 事件中，发送一条消息
+ *    {"type":"invalid"}
+ *  然后会在编译结束后，在 compiler.hooks.done(编译结束) 事件中，根据构建信息发送消息
+ *    与初次编译完成一样，通过 sendStats 方法传递消息，如上
+ */
+
 
 const os = require("os");
 const path = require("path");
@@ -1936,7 +1971,7 @@ class Server {
             );
           } else {
             // Apply the HMR plugin 应用 HMR插件
-            const plugin = new webpack.HotModuleReplacementPlugin();
+            const plugin = new webpack.HotModuleReplacementPlugin(); 
 
             plugin.apply(compiler); // 添加一个 webpack 插件
           }
@@ -2815,7 +2850,7 @@ class Server {
 
           return;
         }
-
+        
         // 客户端需要热更新
         if (this.options.hot === true || this.options.hot === "only") {
           this.sendMessage([client], "hot");
@@ -3433,9 +3468,17 @@ class Server {
       return;
     }
 
+    // 当次编译 hash 值
     this.currentHash = stats.hash;
     this.sendMessage(clients, "hash", stats.hash);
 
+    /**
+     * 如果编译出现错误或警告，那么就将错误和警告信息发送给客户端
+     *  1. 错误：{"type": "errors", "data": [{ loc: 错误位置(行:列), message: 错误信息, moduleName: 错误文件 }]}
+     *  2. 警告：{ "type": "warnings", "data": 与错误类似 }
+     * 如果没有错误或警告，发送一条 ok 消息
+     *  { "type": "ok" }
+     */
     if (
       /** @type {NonNullable<StatsCompilation["errors"]>} */
       (stats.errors).length > 0 ||

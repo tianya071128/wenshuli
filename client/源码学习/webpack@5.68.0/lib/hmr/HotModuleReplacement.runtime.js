@@ -25,7 +25,7 @@ module.exports = function () {
 
 	// status
 	var registeredStatusHandlers = [];
-	var currentStatus = "idle";
+	var currentStatus = "idle"; // 当前状态
 
 	// while downloading
 	var blockingPromises;
@@ -103,6 +103,7 @@ module.exports = function () {
 
 	function createModuleHotObject(moduleId, me) {
 		var _main = currentChildModule !== moduleId;
+		// hot API
 		var hot = {
 			// private stuff
 			_acceptedDependencies: {},
@@ -119,7 +120,7 @@ module.exports = function () {
 				__webpack_require__(moduleId);
 			},
 
-			// Module API
+			// Module API 模块 API -- https://webpack.docschina.org/api/hot-module-replacement/#module-api
 			active: true,
 			accept: function (dep, callback, errorHandler) {
 				if (dep === undefined) hot._selfAccepted = true;
@@ -186,8 +187,8 @@ module.exports = function () {
 				}
 			},
 
-			// Management API
-			check: hotCheck,
+			// Management API 管理 API -- https://webpack.docschina.org/api/hot-module-replacement/#management-api
+			check: hotCheck, // 测试所有加载的模块以进行更新，如果有更新，则 apply 它们。
 			apply: hotApply,
 			status: function (l) {
 				if (!l) return currentStatus;
@@ -244,13 +245,19 @@ module.exports = function () {
 		});
 	}
 
+	/**
+	 * 
+	 */
 	function hotCheck(applyOnUpdate) {
 		if (currentStatus !== "idle") {
-			throw new Error("check() is only allowed in idle status");
+			throw new Error("check() is only allowed in idle status"); // Check()只允许在空闲状态下使用
 		}
-		return setStatus("check")
+		return setStatus("check") // 更新状态为 check
+			// 请求 runtime.a54ade24fa813d443440.hot-update.json 文件（文件名由 output.hotUpdateMainFilename 配置）
+			// 这个文件保存着变更的信息，如变更的 chunk 名，需要删除的模块名等等
 			.then($hmrDownloadManifest$)
-			.then(function (update) {
+			.then(function (update /** 请求文件返回值 */) {
+				// 如果没有返回值，则将状态重置一下，不做其他处理
 				if (!update) {
 					return setStatus(applyInvalidatedModules() ? "ready" : "idle").then(
 						function () {
@@ -270,9 +277,9 @@ module.exports = function () {
 							key
 						) {
 							$hmrDownloadUpdateHandlers$[key](
-								update.c,
-								update.r,
-								update.m,
+								update.c, // 需要更新的 chunk
+								update.r, // 需要删除的 chunk
+								update.m, // 需要删除的 module
 								promises,
 								currentUpdateApplyHandlers,
 								updatedModules
