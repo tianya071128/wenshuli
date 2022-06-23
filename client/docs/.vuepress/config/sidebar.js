@@ -190,16 +190,16 @@ module.exports = {
       collapsable: true, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
       children: [
-        '01_webpack',
+        // '01_webpack',
         '02_mode',
         '03_entry_context',
         '04_loader',
         '05_module',
         '06_output',
         '10_watch',
-        // '07_plugin',
         '08_sourceMap',
         '11_devServer',
+        '12_hot',
         '09_cache',
       ],
     },
