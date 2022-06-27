@@ -1,11 +1,11 @@
 ---
-title: npm 常用命令
+title: package.json 文件
 date: 2021-10-21 15:00:00
-permalink: /npm/command
+permalink: /npm/packageFile
 categories: -- 工程化
   -- npm
 tags:
   - null
 ---
 
-# 常用命令
+# package.json 文件
