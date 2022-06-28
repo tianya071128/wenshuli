@@ -8,5 +8,8 @@
   },
   "keywords": [],
   "author": "wenzubiao <wenzubiao@126.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "create_package": "file:../创建包"
+  }
 }

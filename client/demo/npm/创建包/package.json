@@ -1,0 +1,11 @@
+{
+  "name": "wenzubiao_package_demo",
+  "version": "1.0.3-0",
+  "description": "测试 npm 发布公共包流程",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "wenzubiao <wenzubiao@126.com>",
+  "license": "ISC"
+}
