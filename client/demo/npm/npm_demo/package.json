@@ -10,6 +10,7 @@
   "author": "wenzubiao <wenzubiao@126.com>",
   "license": "ISC",
   "dependencies": {
-    "create_package": "file:../创建包"
+    "vue": "^2.6.14",
+    "wenzubiao_package_demo": "^1.0.2"
   }
 }
