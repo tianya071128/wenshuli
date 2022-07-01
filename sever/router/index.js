@@ -1,5 +1,6 @@
 const httpController = require('../controller/http');
 const htmlController = require('../controller/html');
+const securityController = require('../controller/security');
 
 const routers = [
   {
@@ -51,6 +52,11 @@ const routers = [
     method: ['post'],
     path: '/html/xhr',
     controller: htmlController.xhr,
+  },
+  {
+    method: ['get'],
+    path: '/security/xss',
+    controller: securityController.xss,
   },
 ];
 const conterollers = routers.reduce(function (total, item) {
