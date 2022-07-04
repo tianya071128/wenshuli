@@ -67,6 +67,25 @@ tags:
 * bundledDependencies - 打包依赖
 * optionalDependencies - 可选依赖
 
+### main、browser、module - 程序入口点
+
+这几个字段决定了包程序的入口点：
+
+* main：包的入口文件，browser 环境和 node 环境均可使用
+* module：包的 ESM 规范的入口文件，browser 环境和 node 环境均可使用
+* browser：包在 browser 环境下的入口文件
+
+而根据场景不同，加载包时程序入口文件的优先级也就不同：
+
+* 使用 `webpack`(或其他构建工具) ：此时可以由 [webpack.resolve.mainFields](https://webpack.docschina.org/configuration/resolve/#resolvemainfields)进行配置，指定的 [target](https://webpack.docschina.org/concepts/targets)进行配置，指定的 [target](https://webpack.docschina.org/concepts/targets) 不同，默认值也会有所不同：
+  * `target` 属性设置为 `webworker`, `web` 或者没有指定：`['browser', 'module', 'main']`
+  * 其他任意的 `target`（包括 `node`）：`['module', 'main']`
+* 通过 `node` 直接加载包：此时只有 `main` 字段有效
+
+### scripts - 可执行脚本
+
+`scripts` 字段是一个字典，其中包含在包生命周期的不同时间运行的脚本命令。
+
 
 
 ### 其他字段
@@ -121,8 +140,25 @@ tags:
     }
   }
   ```
+  
+* repository - 存储库
 
+  指定代码所在的位置
 
+  ```json
+  {
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/npm/cli.git"
+    }
+  }
+  ```
+
+  
+
+## 参考
+
+* [掘金-https://juejin.cn/post/6844903862977953806#heading-8](https://juejin.cn/post/6844903862977953806#heading-8)
 
 
 
