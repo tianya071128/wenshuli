@@ -239,13 +239,13 @@ module.exports = {
       title: 'npm', // 分组标题
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['01_npm', '02_命令', '03_发布包', '05_获取包'],
+      children: ['01_npm', '02_命令', '08_配置', '03_发布包', '05_获取包'],
     },
     {
-      title: 'npm 使用', // 分组标题
+      title: 'npm 概念', // 分组标题
       collapsable: false, // 是否可折叠，可选的，默认true
       sidebarDepth: 2, // 深度，可选的, 默认值是 1
-      children: ['04_package文件', '06_依赖包'],
+      children: ['07_包安装机制', '04_package文件', '06_依赖包'],
     },
   ],
   '/06_工程化/07_scss/': [

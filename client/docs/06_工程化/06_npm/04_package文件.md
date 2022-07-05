@@ -86,7 +86,19 @@ tags:
 
 `scripts` 字段是一个字典，其中包含在包生命周期的不同时间运行的脚本命令。
 
+### bin - 可执行命令
 
+[详情参考](/npm/scripts/)
+
+`bin` 字段指定项目的一个或多个可执行文件，将其安装到 PATH 中，这样在终端可以直接运行命令。
+
+### 其他工具使用的字段
+
+* `browserslist`：配置项目的 Browserslist
+* `babel`：配置项目的 Babel
+* `eslintConfig`：配置项目的 ESLint
+* `sideEffects`：配置项目的 `tree shaking`
+* 以 `_`(或 `$`) 开头的保留字段：这些是 `npm` 安装包时添加的字段，是为包注册表保留的元数据，给包注册表以供他们自行决定使用。[可参考](https://stackoverflow.com/questions/42625563/what-are-these-properties-prefixing-underscore-used-for-in-package-json/42625703#42625703)
 
 ### 其他字段
 
@@ -154,7 +166,47 @@ tags:
   }
   ```
 
-  
+
+## package-lock.json 文件
+
+`package-lock.json` 文件会为 npm 修改 node_modules 或 package.json 的任何操作自动生成。**描述了生成的确切树，以便后续安装能够生成相同的树，而不管中间依赖项更新如何**。
+
+在开发应用时，该文件推荐提交到存储库中，以用于如下目的：
+
+* 描述依赖关系树的单一表示，以保证团队成员、部署和持续集成安装完全相同的依赖关系。
+* 利用存储库的“时间旅行”功能，可以回到 node_modules 先前状态，而无需提交目录本身。
+* 通过可读的源代码控制差异促进树变化的更大可见性。
+* 通过允许 npm 跳过以前安装的包的重复元数据解析来优化安装过程。
+* 从 npm v7 开始，lockfiles 包含足够的信息来获得包树的完整图片，减少了读取 package.json 文件的需要，并允许显着提高性能。
+
+::: warning 注意
+
+package-lock.json 文件的树结构与 node_modules 的模块树结构保持一致。
+
+:::
+
+以下介绍文件的格式，[详情可参考官网](https://docs.npmjs.com/cli/v8/configuring-npm/package-lock-json#file-format)
+
+```json
+{
+  # 包名称，匹配 package.json 中 name 字段
+  "name": "npm_install_02",
+  # 包版本，匹配 package.json 中 version 字段
+  "version": "1.0.0",
+  # package-lock 文件的版本，对于 npm v6 为 1，对于 npm v7 为 2
+  "lockfileVersion": 1,
+  # 项目依赖关系
+  "dependencies": {
+  	...
+	}
+}
+```
+
+
+
+
+
+
 
 ## 参考
 
